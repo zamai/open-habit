@@ -10,17 +10,17 @@ cleanup() {
 trap cleanup EXIT
 export SIGNING_DIR
 printf '%s' "$ASC_PRIVATE_KEY" > "$SIGNING_DIR/AuthKey.p8"
-printf '%s' "$SIGNING_P12" | base64 --decode > "$SIGNING_DIR/signing.p12"
+printf '%s' "$SIGNING_P12" | base64 -D > "$SIGNING_DIR/signing.p12"
 security create-keychain -p "$SIGNING_PASSWORD" "$KEYCHAIN"
 security set-keychain-settings -lut 21600 "$KEYCHAIN"
 security unlock-keychain -p "$SIGNING_PASSWORD" "$KEYCHAIN"
 security import "$SIGNING_DIR/signing.p12" -P "$SIGNING_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
 security set-key-partition-list -S apple-tool:,apple: -k "$SIGNING_PASSWORD" "$KEYCHAIN" >/dev/null
 security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
-PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+PROFILE_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
 mkdir -p "$PROFILE_DIR"
-printf '%s' "$APP_PROFILE" | base64 --decode > "$PROFILE_DIR/open-habit.mobileprovision"
-printf '%s' "$WIDGET_PROFILE" | base64 --decode > "$PROFILE_DIR/open-habit-widgets.mobileprovision"
+printf '%s' "$APP_PROFILE" | base64 -D > "$PROFILE_DIR/open-habit.mobileprovision"
+printf '%s' "$WIDGET_PROFILE" | base64 -D > "$PROFILE_DIR/open-habit-widgets.mobileprovision"
 # Scope each profile to its target; the extension has a different bundle identifier.
 python3 - <<'PY'
 from pathlib import Path
@@ -33,8 +33,8 @@ p.write_text(s)
 PY
 command -v xcodegen >/dev/null || brew install xcodegen
 xcodegen generate
-# Start after local build 3; retries receive a fresh build number.
-BUILD_NUMBER="$((${GITHUB_RUN_NUMBER} + 3)).${GITHUB_RUN_ATTEMPT}"
+# Start above the existing local builds; retries receive a fresh build number.
+BUILD_NUMBER="$((${GITHUB_RUN_NUMBER} + 4)).${GITHUB_RUN_ATTEMPT}"
 VERSION=$(sed -n "s/.*MARKETING_VERSION: '\(.*\)'/\1/p" project.yml)
 if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
   VERSION="${GITHUB_REF#refs/tags/v}"
