@@ -51,6 +51,8 @@ The signed Release archive is `/tmp/OpenHabit-2-final.xcarchive`, with app and w
 
 Build 1.0 (3) includes custom habit colors, the title beside its emoji, and removal of the Today panel from Habit Detail. The Release archive `/tmp/OpenHabit-3.xcarchive` passed with build number 3 in both app and widget. Organizer uploaded it on September 5, 2026. The 1Password App Store Connect key was then verified against Open Habit through the API: build `c4a3695e-2724-4d86-82bb-de62ca997eeb` is `VALID`, assigned to Internal Testers, and `IN_BETA_TESTING`, with automatic notification enabled. External state remains `READY_FOR_BETA_SUBMISSION`. Future releases should follow the API-first instructions in `AGENTS.md`.
 
+GitHub Actions run [33990168840](https://github.com/zamai/open-habit/actions/runs/33990168840) completed the first end-to-end CI release on September 5, 2026. It passed 14 core tests and 2 signed Simulator integration/rendering tests, archived with the dedicated distribution certificate and profiles, uploaded build 1.0 (6.1), and waited until App Store Connect reported build `01831879-7409-4290-a450-6a51a9209caf` as `VALID`, assigned to Internal Testers, and `IN_BETA_TESTING`. The SpringBoard widget-install UI test remains local because its result depends on persistent Home Screen state.
+
 ## Captured UI
 
 - [iPhone overview](screenshots/iphone-overview.png)
