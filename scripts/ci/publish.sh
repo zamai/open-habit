@@ -37,8 +37,11 @@ xcodegen generate
 BUILD_NUMBER="$((${GITHUB_RUN_NUMBER} + 4)).${GITHUB_RUN_ATTEMPT}"
 VERSION=$(sed -n "s/.*MARKETING_VERSION: '\(.*\)'/\1/p" project.yml)
 if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-  VERSION="${GITHUB_REF#refs/tags/v}"
-  [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Use a vMAJOR.MINOR.PATCH tag'; exit 1; }
+  TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+  [[ "$TAG_VERSION" == "$VERSION" || "$TAG_VERSION" == "$VERSION.0" ]] || {
+    echo "Tag $TAG_VERSION does not match MARKETING_VERSION $VERSION in project.yml"
+    exit 1
+  }
 fi
 xcodebuild -project OpenHabit.xcodeproj -scheme OpenHabit -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/OpenHabit.xcarchive" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" MARKETING_VERSION="$VERSION" archive
 python3 - <<'PY'

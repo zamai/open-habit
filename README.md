@@ -55,7 +55,7 @@ xcodebuild -exportArchive -archivePath /tmp/OpenHabit.xcarchive \
 
 The export command uploads to App Store Connect and uses automatic distribution signing. The Internal Testers group automatically receives processed builds. External testing requires a separate Beta App Review submission.
 
-GitHub Actions runs the core, intent, and widget-rendering tests for pull requests. Every successful push to `main` receives a unique CI build number, is signed with the `testflight` environment credentials, uploaded, and verified as available to Internal Testers. A `vMAJOR.MINOR.PATCH` tag uses that version for the TestFlight build and creates a draft GitHub Release after processing; selecting the build and submitting it for App Review remains deliberate. The SpringBoard widget-install smoke test stays local because it depends on the Home Screen state of a persistent Simulator.
+GitHub Actions runs the core, intent, and widget-rendering tests for pull requests. Every successful push to `main` receives a unique CI build number, is signed with the `testflight` environment credentials, uploaded, and verified as available to Internal Testers. A matching release tag (for example, `v1.0.0` when `MARKETING_VERSION` is `1.0`) creates another TestFlight build and a draft GitHub Release after processing; selecting the build and submitting it for App Review remains deliberate. The SpringBoard widget-install smoke test stays local because it depends on the Home Screen state of a persistent Simulator.
 
 The CI distribution certificate and profiles expire on September 5, 2027. Renew them before that date and replace the `SIGNING_P12`, `SIGNING_PASSWORD`, `APP_PROFILE`, and `WIDGET_PROFILE` environment secrets.
 
