@@ -112,9 +112,13 @@ struct ToggleHabitIntent: AppIntent {
     init(id: UUID) { habitID = id.uuidString }
     func perform() async throws -> some IntentResult {
         guard let id = UUID(uuidString: habitID) else { throw HabitError.missingHabit }
-        try performLocalEdit { try $0.toggle(id) }
-        _ = try? await CloudSync.shared.synchronize()
-        WidgetCenter.shared.reloadAllTimelines()
+        // WidgetKit reloads the timeline after this returns. Keep that critical path local;
+        // the journal remains the durable upload queue if this best-effort sync is suspended.
+        try sharedStore().transaction { try $0.toggle(id) }
+        Task(priority: .utility) {
+            _ = try? await CloudSync.shared.synchronize()
+            WidgetCenter.shared.reloadAllTimelines()
+        }
         return .result()
     }
 }

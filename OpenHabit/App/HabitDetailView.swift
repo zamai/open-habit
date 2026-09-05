@@ -87,7 +87,7 @@ private struct MonthCalendar: View {
                 Spacer()
                 Button("Next month", systemImage: "chevron.right") { month = calendar.date(byAdding: .month, value: 1, to: month)! }.labelStyle(.iconOnly).frame(width: 44, height: 44)
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 4) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
                 ForEach(0..<7, id: \.self) { index in
                     Text(calendar.veryShortWeekdaySymbols[(index + calendar.firstWeekday - 1) % 7]).font(.caption.weight(.medium)).foregroundStyle(.secondary)
                 }

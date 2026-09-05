@@ -62,7 +62,10 @@ struct CompletionButton: View {
     let count: Int
     let action: () -> Void
     var body: some View {
-        Button(action: action) { CompletionGlyph(count: count, target: habit.target, color: habit.tint).padding(3) }
+        Button(action: action) {
+            CompletionGlyph(count: count, target: habit.target, color: habit.tint)
+                .frame(width: 56, height: 56, alignment: .center)
+        }
             .buttonStyle(CompletionStyle())
             .accessibilityLabel("\(habit.name), \(count) Completions today, Daily Target \(habit.target)")
             .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
