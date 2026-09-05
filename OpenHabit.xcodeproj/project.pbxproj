@@ -1,0 +1,800 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		05BAC5CECEC2960F59DC1EF0 /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D164BBCCAE5874C2C25B801 /* SharedStore.swift */; };
+		0634E4F5AF2B1FD69F488A54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08CE54FF173592E32D6B5418 /* Assets.xcassets */; };
+		0B4CC8B373A3D9C257996AE1 /* WidgetLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE5AC14C1BFE87E3A8EBBEE /* WidgetLayoutTests.swift */; };
+		108D38CA8C288B5A2393B0C0 /* IntentIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5AAC4418FB424D2DB5EBC0F /* IntentIntegrationTests.swift */; };
+		12BCFB098619C14842A65F69 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AC82FEFE33085BE2621C27 /* AppModel.swift */; };
+		19E250EACF64644EA639232E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B0662758E894912B6B7DD97D /* PrivacyInfo.xcprivacy */; };
+		1C6C9A337A8CC83BB63D0FDE /* HabitDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FE4A18CAF7B6C581E12D08 /* HabitDetailView.swift */; };
+		255624308EB40131C9A12700 /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D164BBCCAE5874C2C25B801 /* SharedStore.swift */; };
+		329940063A7AD3F6038CF55C /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3760EEFF129A82CA87576726 /* OpenHabitCore */; };
+		331371D1E296A3B956903543 /* HabitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */; };
+		38789A7DE3B252C61EC252D5 /* OpenHabitWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23415D4CDEA5722AE5FB0FBC /* OpenHabitWidgets.swift */; };
+		3A9F0DAF6A2EB19B71C0618B /* OpenHabitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930C2515644CD54F9ACD9E40 /* OpenHabitApp.swift */; };
+		3E070FBB0EBC0DD82715AFAD /* WidgetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629B9C172642BD503791ECE0 /* WidgetUITests.swift */; };
+		67668BD896DEB07994BDC41D /* HabitWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */; };
+		6E2A48900630C267F5597326 /* HabitWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */; };
+		7574FB776B7EFEA3EDB3B40C /* HabitVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */; };
+		77F44A2CB26063467B999B13 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1E203BB3C4FB682412D0ECE /* CloudSync.swift */; };
+		7E587AF68215396AF668E2E9 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1E203BB3C4FB682412D0ECE /* CloudSync.swift */; };
+		8A4C51CB8F05A6B79F632A14 /* HabitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */; };
+		9EC563A43A66F1AB07CF2087 /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4E39577694E79816BB981CC1 /* OpenHabitCore */; };
+		A766AB177DCF3661F7DFFDD4 /* HabitVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */; };
+		AF1CF90A974B57A501DEC0FA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D403E24DB410F714097FFC5E /* SettingsView.swift */; };
+		B5226EDE5DF0144DA94C8AD2 /* Previews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6E12A19A1FC02234EC8F07 /* Previews.swift */; };
+		B85A1DDE3AD5C35585AFC051 /* OpenHabitWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 38BA391909BE888F0144AD0D /* OpenHabitWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B8ECC6B946F245C3210F389F /* HabitEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D8B16028A1C167D86F734A /* HabitEditor.swift */; };
+		C0B1DB153D3240BCA5FBF7A1 /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = CFA001260E814B07646529BA /* OpenHabitCore */; };
+		E4CA5266E3E00387FFF044A2 /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8259AB12F1BC7BEEF985B827 /* OverviewView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0D444EB68A9698A976DD7B0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C819005FEC4D4AE0665ED0DC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 03EB540A8DDCDC391B7E7E4F;
+			remoteInfo = OpenHabitWidgets;
+		};
+		447F45DDFD8E57749F75BBB0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C819005FEC4D4AE0665ED0DC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BAE39B497656C559D9178B57;
+			remoteInfo = OpenHabit;
+		};
+		4973DEB29D0671D9AA5AB1A4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C819005FEC4D4AE0665ED0DC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BAE39B497656C559D9178B57;
+			remoteInfo = OpenHabit;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F8195EA921357B822FFFF41E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B85A1DDE3AD5C35585AFC051 /* OpenHabitWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		08CE54FF173592E32D6B5418 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitWidgetContent.swift; sourceTree = "<group>"; };
+		23415D4CDEA5722AE5FB0FBC /* OpenHabitWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenHabitWidgets.swift; sourceTree = "<group>"; };
+		366C96F85D6309FA8CDA9DA1 /* OpenHabitCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OpenHabitCore; path = OpenHabitCore; sourceTree = SOURCE_ROOT; };
+		369B2205DF7BED0C3A469B66 /* OpenHabitUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OpenHabitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		38BA391909BE888F0144AD0D /* OpenHabitWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = OpenHabitWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		44AC82FEFE33085BE2621C27 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		585229E5D111A46C575777E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		5D164BBCCAE5874C2C25B801 /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
+		629B9C172642BD503791ECE0 /* WidgetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetUITests.swift; sourceTree = "<group>"; };
+		62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIntents.swift; sourceTree = "<group>"; };
+		7156FB95578D7B4822AF6C6B /* OpenHabit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenHabit.entitlements; sourceTree = "<group>"; };
+		7430E705935DB2F9A634CC00 /* OpenHabitWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenHabitWidgets.entitlements; sourceTree = "<group>"; };
+		7D6E12A19A1FC02234EC8F07 /* Previews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Previews.swift; sourceTree = "<group>"; };
+		8259AB12F1BC7BEEF985B827 /* OverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewView.swift; sourceTree = "<group>"; };
+		8FE5AC14C1BFE87E3A8EBBEE /* WidgetLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLayoutTests.swift; sourceTree = "<group>"; };
+		92D8B16028A1C167D86F734A /* HabitEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEditor.swift; sourceTree = "<group>"; };
+		930C2515644CD54F9ACD9E40 /* OpenHabitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenHabitApp.swift; sourceTree = "<group>"; };
+		A2CEF39454582E591F63A033 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A79740D55713A0D974950385 /* OpenHabit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = OpenHabit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B0662758E894912B6B7DD97D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B5AAC4418FB424D2DB5EBC0F /* IntentIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentIntegrationTests.swift; sourceTree = "<group>"; };
+		B66D1CBBFE6BD88E034389B4 /* OpenHabitTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OpenHabitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1E203BB3C4FB682412D0ECE /* CloudSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSync.swift; sourceTree = "<group>"; };
+		D403E24DB410F714097FFC5E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E3FE4A18CAF7B6C581E12D08 /* HabitDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDetailView.swift; sourceTree = "<group>"; };
+		E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitVisuals.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		47F034090D0A3E6DFDBA0B37 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9EC563A43A66F1AB07CF2087 /* OpenHabitCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE8202284A6F2D24117054AE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				329940063A7AD3F6038CF55C /* OpenHabitCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E51FC2557DC579AF07DB49AA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0B1DB153D3240BCA5FBF7A1 /* OpenHabitCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		11A05846A23C56EDD19F1E51 = {
+			isa = PBXGroup;
+			children = (
+				73B0510E80947462D5AAB6E9 /* App */,
+				BFF629099B85BEC797A7DE01 /* OpenHabitTests */,
+				AB4EC5E3357FF5808D84A983 /* OpenHabitUITests */,
+				F522D5E1AD96053E0488AF42 /* Packages */,
+				55D24CADB5BA1A9859B30469 /* Resources */,
+				CDE1FB2B70D9ADD57C76834A /* Shared */,
+				4036E96A0E4C2786C3582BE1 /* Widgets */,
+				AECBA570DADE1E1BDF922422 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4036E96A0E4C2786C3582BE1 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				585229E5D111A46C575777E8 /* Info.plist */,
+				7430E705935DB2F9A634CC00 /* OpenHabitWidgets.entitlements */,
+				23415D4CDEA5722AE5FB0FBC /* OpenHabitWidgets.swift */,
+			);
+			name = Widgets;
+			path = OpenHabit/Widgets;
+			sourceTree = "<group>";
+		};
+		55D24CADB5BA1A9859B30469 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				08CE54FF173592E32D6B5418 /* Assets.xcassets */,
+				B0662758E894912B6B7DD97D /* PrivacyInfo.xcprivacy */,
+			);
+			name = Resources;
+			path = OpenHabit/Resources;
+			sourceTree = "<group>";
+		};
+		73B0510E80947462D5AAB6E9 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				44AC82FEFE33085BE2621C27 /* AppModel.swift */,
+				E3FE4A18CAF7B6C581E12D08 /* HabitDetailView.swift */,
+				92D8B16028A1C167D86F734A /* HabitEditor.swift */,
+				A2CEF39454582E591F63A033 /* Info.plist */,
+				7156FB95578D7B4822AF6C6B /* OpenHabit.entitlements */,
+				930C2515644CD54F9ACD9E40 /* OpenHabitApp.swift */,
+				8259AB12F1BC7BEEF985B827 /* OverviewView.swift */,
+				7D6E12A19A1FC02234EC8F07 /* Previews.swift */,
+				D403E24DB410F714097FFC5E /* SettingsView.swift */,
+			);
+			name = App;
+			path = OpenHabit/App;
+			sourceTree = "<group>";
+		};
+		AB4EC5E3357FF5808D84A983 /* OpenHabitUITests */ = {
+			isa = PBXGroup;
+			children = (
+				629B9C172642BD503791ECE0 /* WidgetUITests.swift */,
+			);
+			path = OpenHabitUITests;
+			sourceTree = "<group>";
+		};
+		AECBA570DADE1E1BDF922422 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A79740D55713A0D974950385 /* OpenHabit.app */,
+				B66D1CBBFE6BD88E034389B4 /* OpenHabitTests.xctest */,
+				369B2205DF7BED0C3A469B66 /* OpenHabitUITests.xctest */,
+				38BA391909BE888F0144AD0D /* OpenHabitWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BFF629099B85BEC797A7DE01 /* OpenHabitTests */ = {
+			isa = PBXGroup;
+			children = (
+				B5AAC4418FB424D2DB5EBC0F /* IntentIntegrationTests.swift */,
+				8FE5AC14C1BFE87E3A8EBBEE /* WidgetLayoutTests.swift */,
+			);
+			path = OpenHabitTests;
+			sourceTree = "<group>";
+		};
+		CDE1FB2B70D9ADD57C76834A /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				C1E203BB3C4FB682412D0ECE /* CloudSync.swift */,
+				62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */,
+				E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */,
+				0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */,
+				5D164BBCCAE5874C2C25B801 /* SharedStore.swift */,
+			);
+			name = Shared;
+			path = OpenHabit/Shared;
+			sourceTree = "<group>";
+		};
+		F522D5E1AD96053E0488AF42 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				366C96F85D6309FA8CDA9DA1 /* OpenHabitCore */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		03EB540A8DDCDC391B7E7E4F /* OpenHabitWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B865548D3FB0E2239F007A15 /* Build configuration list for PBXNativeTarget "OpenHabitWidgets" */;
+			buildPhases = (
+				54A9B1EBF045837E173A512D /* Sources */,
+				47F034090D0A3E6DFDBA0B37 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenHabitWidgets;
+			packageProductDependencies = (
+				4E39577694E79816BB981CC1 /* OpenHabitCore */,
+			);
+			productName = OpenHabitWidgets;
+			productReference = 38BA391909BE888F0144AD0D /* OpenHabitWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		4CD901F5D1603A21567588D5 /* OpenHabitUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 739464526B164ADCEFCB9D9C /* Build configuration list for PBXNativeTarget "OpenHabitUITests" */;
+			buildPhases = (
+				7735E82CCD7A1AFFC6EE9A2D /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FF835F2601CC3BA46EF4FD10 /* PBXTargetDependency */,
+			);
+			name = OpenHabitUITests;
+			packageProductDependencies = (
+			);
+			productName = OpenHabitUITests;
+			productReference = 369B2205DF7BED0C3A469B66 /* OpenHabitUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		9C67A61F9177C0D82D285A83 /* OpenHabitTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 83E38845EADAB12108105C8D /* Build configuration list for PBXNativeTarget "OpenHabitTests" */;
+			buildPhases = (
+				B3110CA58E221D49FE8144A6 /* Sources */,
+				AE8202284A6F2D24117054AE /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				21AAE69557CEDF9D7EF96EB9 /* PBXTargetDependency */,
+			);
+			name = OpenHabitTests;
+			packageProductDependencies = (
+				3760EEFF129A82CA87576726 /* OpenHabitCore */,
+			);
+			productName = OpenHabitTests;
+			productReference = B66D1CBBFE6BD88E034389B4 /* OpenHabitTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		BAE39B497656C559D9178B57 /* OpenHabit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 820276ECB137CD62B773A165 /* Build configuration list for PBXNativeTarget "OpenHabit" */;
+			buildPhases = (
+				FC6C9EB74730F129081BB699 /* Sources */,
+				1D31374BB5506073AC125FBB /* Resources */,
+				E51FC2557DC579AF07DB49AA /* Frameworks */,
+				F8195EA921357B822FFFF41E /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2E5142D36BD96196B83616C3 /* PBXTargetDependency */,
+			);
+			name = OpenHabit;
+			packageProductDependencies = (
+				CFA001260E814B07646529BA /* OpenHabitCore */,
+			);
+			productName = OpenHabit;
+			productReference = A79740D55713A0D974950385 /* OpenHabit.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C819005FEC4D4AE0665ED0DC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					03EB540A8DDCDC391B7E7E4F = {
+						DevelopmentTeam = 539QCPHM7F;
+						ProvisioningStyle = Automatic;
+					};
+					4CD901F5D1603A21567588D5 = {
+						DevelopmentTeam = 539QCPHM7F;
+						ProvisioningStyle = Automatic;
+						TestTargetID = BAE39B497656C559D9178B57;
+					};
+					9C67A61F9177C0D82D285A83 = {
+						DevelopmentTeam = 539QCPHM7F;
+						ProvisioningStyle = Automatic;
+					};
+					BAE39B497656C559D9178B57 = {
+						DevelopmentTeam = 539QCPHM7F;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 5EC2CE34A727158AE1A640DA /* Build configuration list for PBXProject "OpenHabit" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 11A05846A23C56EDD19F1E51;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				119EF5FF28C52183AB1A2BDF /* XCLocalSwiftPackageReference "OpenHabitCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AECBA570DADE1E1BDF922422 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BAE39B497656C559D9178B57 /* OpenHabit */,
+				03EB540A8DDCDC391B7E7E4F /* OpenHabitWidgets */,
+				9C67A61F9177C0D82D285A83 /* OpenHabitTests */,
+				4CD901F5D1603A21567588D5 /* OpenHabitUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1D31374BB5506073AC125FBB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0634E4F5AF2B1FD69F488A54 /* Assets.xcassets in Resources */,
+				19E250EACF64644EA639232E /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		54A9B1EBF045837E173A512D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				77F44A2CB26063467B999B13 /* CloudSync.swift in Sources */,
+				8A4C51CB8F05A6B79F632A14 /* HabitIntents.swift in Sources */,
+				A766AB177DCF3661F7DFFDD4 /* HabitVisuals.swift in Sources */,
+				6E2A48900630C267F5597326 /* HabitWidgetContent.swift in Sources */,
+				38789A7DE3B252C61EC252D5 /* OpenHabitWidgets.swift in Sources */,
+				05BAC5CECEC2960F59DC1EF0 /* SharedStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7735E82CCD7A1AFFC6EE9A2D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3E070FBB0EBC0DD82715AFAD /* WidgetUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B3110CA58E221D49FE8144A6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				108D38CA8C288B5A2393B0C0 /* IntentIntegrationTests.swift in Sources */,
+				0B4CC8B373A3D9C257996AE1 /* WidgetLayoutTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FC6C9EB74730F129081BB699 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				12BCFB098619C14842A65F69 /* AppModel.swift in Sources */,
+				7E587AF68215396AF668E2E9 /* CloudSync.swift in Sources */,
+				1C6C9A337A8CC83BB63D0FDE /* HabitDetailView.swift in Sources */,
+				B8ECC6B946F245C3210F389F /* HabitEditor.swift in Sources */,
+				331371D1E296A3B956903543 /* HabitIntents.swift in Sources */,
+				7574FB776B7EFEA3EDB3B40C /* HabitVisuals.swift in Sources */,
+				67668BD896DEB07994BDC41D /* HabitWidgetContent.swift in Sources */,
+				3A9F0DAF6A2EB19B71C0618B /* OpenHabitApp.swift in Sources */,
+				E4CA5266E3E00387FFF044A2 /* OverviewView.swift in Sources */,
+				B5226EDE5DF0144DA94C8AD2 /* Previews.swift in Sources */,
+				AF1CF90A974B57A501DEC0FA /* SettingsView.swift in Sources */,
+				255624308EB40131C9A12700 /* SharedStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		21AAE69557CEDF9D7EF96EB9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BAE39B497656C559D9178B57 /* OpenHabit */;
+			targetProxy = 4973DEB29D0671D9AA5AB1A4 /* PBXContainerItemProxy */;
+		};
+		2E5142D36BD96196B83616C3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 03EB540A8DDCDC391B7E7E4F /* OpenHabitWidgets */;
+			targetProxy = 0D444EB68A9698A976DD7B0F /* PBXContainerItemProxy */;
+		};
+		FF835F2601CC3BA46EF4FD10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BAE39B497656C559D9178B57 /* OpenHabit */;
+			targetProxy = 447F45DDFD8E57749F75BBB0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		10B52561046071852A28E024 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = OpenHabit/App/OpenHabit.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = OpenHabit/App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Open Habit";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1232E42CC9F4958312AAA189 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = OpenHabit/Widgets/OpenHabitWidgets.entitlements;
+				INFOPLIST_FILE = OpenHabit/Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		3A3FD3C40554557969B7540A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = OpenHabit/Widgets/OpenHabitWidgets.entitlements;
+				INFOPLIST_FILE = OpenHabit/Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3AB5A611288DE30C01BC71F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenHabit.app/OpenHabit";
+			};
+			name = Release;
+		};
+		51AAEC2759FF248BAA19C377 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = OpenHabit;
+			};
+			name = Release;
+		};
+		96F2DB3ADE89F5FF73156541 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 3;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 539QCPHM7F;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A477F129187A1407F1DD96E7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 3;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 539QCPHM7F;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A52C957F6ABAA234A14F50A6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = OpenHabit/App/OpenHabit.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = OpenHabit/App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Open Habit";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D98E5F70061030B90DE5B117 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenHabit.app/OpenHabit";
+			};
+			name = Debug;
+		};
+		F60C5B4E8731D7B53525EBA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = OpenHabit;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5EC2CE34A727158AE1A640DA /* Build configuration list for PBXProject "OpenHabit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96F2DB3ADE89F5FF73156541 /* Debug */,
+				A477F129187A1407F1DD96E7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		739464526B164ADCEFCB9D9C /* Build configuration list for PBXNativeTarget "OpenHabitUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F60C5B4E8731D7B53525EBA0 /* Debug */,
+				51AAEC2759FF248BAA19C377 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		820276ECB137CD62B773A165 /* Build configuration list for PBXNativeTarget "OpenHabit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				10B52561046071852A28E024 /* Debug */,
+				A52C957F6ABAA234A14F50A6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		83E38845EADAB12108105C8D /* Build configuration list for PBXNativeTarget "OpenHabitTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D98E5F70061030B90DE5B117 /* Debug */,
+				3AB5A611288DE30C01BC71F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B865548D3FB0E2239F007A15 /* Build configuration list for PBXNativeTarget "OpenHabitWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A3FD3C40554557969B7540A /* Debug */,
+				1232E42CC9F4958312AAA189 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		119EF5FF28C52183AB1A2BDF /* XCLocalSwiftPackageReference "OpenHabitCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = OpenHabitCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3760EEFF129A82CA87576726 /* OpenHabitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OpenHabitCore;
+		};
+		4E39577694E79816BB981CC1 /* OpenHabitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OpenHabitCore;
+		};
+		CFA001260E814B07646529BA /* OpenHabitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OpenHabitCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = C819005FEC4D4AE0665ED0DC /* Project object */;
+}

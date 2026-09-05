@@ -1,0 +1,113 @@
+name: OpenHabit
+options:
+  bundleIdPrefix: com.alex.openhabit
+  deploymentTarget:
+    iOS: '17.0'
+packages:
+  OpenHabitCore:
+    path: OpenHabitCore
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    TARGETED_DEVICE_FAMILY: '1,2'
+    MARKETING_VERSION: '1.0'
+    CURRENT_PROJECT_VERSION: 3
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 539QCPHM7F
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+targets:
+  OpenHabit:
+    type: application
+    platform: iOS
+    sources:
+      - OpenHabit/App
+      - OpenHabit/Shared
+      - OpenHabit/Resources
+    dependencies:
+      - package: OpenHabitCore
+      - target: OpenHabitWidgets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit
+        INFOPLIST_KEY_CFBundleDisplayName: Open Habit
+    info:
+      path: OpenHabit/App/Info.plist
+      properties:
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleDisplayName: Open Habit
+        UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [openhabit]
+        UIBackgroundModes: [remote-notification]
+    entitlements:
+      path: OpenHabit/App/OpenHabit.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.alex.openhabit]
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.alex.openhabit]
+        com.apple.developer.icloud-services: [CloudKit]
+        aps-environment: development
+  OpenHabitWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - OpenHabit/Widgets
+      - OpenHabit/Shared
+    dependencies:
+      - package: OpenHabitCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit.widgets
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+    info:
+      path: OpenHabit/Widgets/Info.plist
+      properties:
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleDisplayName: Open Habit
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: OpenHabit/Widgets/OpenHabitWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.alex.openhabit]
+        com.apple.developer.icloud-container-identifiers: [iCloud.com.alex.openhabit]
+        com.apple.developer.icloud-services: [CloudKit]
+  OpenHabitTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [OpenHabitTests]
+    dependencies:
+      - target: OpenHabit
+      - package: OpenHabitCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit.tests
+  OpenHabitUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [OpenHabitUITests]
+    dependencies:
+      - target: OpenHabit
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit.uitests
+schemes:
+  OpenHabit:
+    build:
+      targets:
+        OpenHabit: all
+        OpenHabitWidgets: all
+    test:
+      targets: [OpenHabitTests, OpenHabitUITests]
+    run:
+      config: Debug
