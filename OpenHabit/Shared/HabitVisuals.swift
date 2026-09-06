@@ -67,6 +67,7 @@ struct CompletionButton: View {
                 .frame(width: 56, height: 56, alignment: .center)
         }
             .buttonStyle(CompletionStyle())
+            .sensoryFeedback(.impact(weight: .light), trigger: count)
             .accessibilityLabel("\(habit.name), \(count) Completions today, Daily Target \(habit.target)")
             .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
             .accessibilityIdentifier("complete-\(habit.id.uuidString)")

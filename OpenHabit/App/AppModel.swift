@@ -19,7 +19,6 @@ final class AppModel {
         do {
             try performLocalEdit(operation)
             reload()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             Task { await sync() }
         } catch { self.error = error.localizedDescription }
     }

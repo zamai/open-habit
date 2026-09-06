@@ -8,14 +8,24 @@ struct HabitEditor: View {
     let isNew: Bool
     @State private var previewCount = 0
     @State private var deleting = false
+    @State private var choosingEmoji = false
     private var valid: Bool { (try? habit.validate()) != nil }
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     HStack(spacing: 16) {
-                        TextField("Emoji", text: $habit.emoji).font(.largeTitle).frame(width: 60).multilineTextAlignment(.center)
-                            .onChange(of: habit.emoji) { _, value in habit.emoji = String(value.prefix(1)) }
+                        Button { choosingEmoji = true } label: {
+                            ZStack(alignment: .bottomTrailing) {
+                                Text(habit.emoji).font(.largeTitle)
+                                Image(systemName: "chevron.down.circle.fill")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                            .frame(width: 60, height: 52)
+                            .contentShape(Rectangle())
+                        }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Choose emoji, current selection \(habit.emoji)")
                             .accessibilityIdentifier("habit-emoji")
                         TextField("Habit name", text: $habit.name).onChange(of: habit.name) { _, value in habit.name = String(value.prefix(60)) }
                             .accessibilityIdentifier("habit-name")
@@ -80,6 +90,55 @@ struct HabitEditor: View {
             .confirmationDialog("Delete this Habit permanently?", isPresented: $deleting, titleVisibility: .visible) {
                 Button("Delete Habit and History", role: .destructive) { model.delete(habit.id); if model.error == nil { dismiss() } }
             } message: { Text("Its Completions and Day Notes will be removed from all synchronized devices.") }
+            .sheet(isPresented: $choosingEmoji) { HabitEmojiPicker(selection: $habit.emoji) }
         }
+    }
+}
+
+private struct HabitEmojiPicker: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selection: String
+    private let choices = [
+        "🌱", "🌿", "🌳", "🌻", "✨", "⭐️", "🔥", "💪",
+        "🏃", "🚶", "🚴", "🏊", "🧘", "🏋️", "⚽️", "🏀",
+        "💧", "🥤", "🍎", "🥗", "🥕", "🍳", "☕️", "🫖",
+        "📖", "✍️", "📝", "🎓", "🧠", "💻", "🎨", "🎸",
+        "🎹", "🎧", "📷", "🧹", "🧺", "🛏️", "🚿", "🪥",
+        "💊", "🩺", "😴", "⏰", "📵", "💰", "📅", "✅",
+        "🙏", "❤️", "😊", "🫶", "👨‍👩‍👧‍👦", "🐕", "🐈", "🌍",
+        "☀️", "🌙", "🏠", "🚗", "✈️", "🎯", "🏆", "🔁"
+    ]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 10)], spacing: 10) {
+                    ForEach(choices, id: \.self) { emoji in
+                        Button {
+                            selection = emoji
+                            dismiss()
+                        } label: {
+                            Text(emoji).font(.system(size: 30))
+                                .frame(width: 52, height: 52)
+                                .background(selection == emoji ? Color.accentColor.opacity(0.18) : Color(.secondarySystemGroupedBackground),
+                                            in: RoundedRectangle(cornerRadius: 14))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(selection == emoji ? Color.accentColor : .clear, lineWidth: 2)
+                                }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Select \(emoji)")
+                        .accessibilityAddTraits(selection == emoji ? .isSelected : [])
+                    }
+                }
+                .padding(20)
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Choose Emoji")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+        }
+        .presentationDetents([.medium, .large])
     }
 }

@@ -7,6 +7,8 @@ struct HabitDetailView: View {
     @State private var selected = LocalDay.string()
     @State private var month = Date()
     @State private var sheet: AppSheet?
+    @State private var noteDraft = ""
+    @FocusState private var noteFocused: Bool
     var body: some View {
         Group {
             if let habit = model.data.habit(habitID) {
@@ -33,12 +35,22 @@ struct HabitDetailView: View {
                                 Spacer(); Image(systemName: "circle.fill").font(.system(size: 4)); Text("Day Note")
                             }.font(.caption2).foregroundStyle(.secondary)
                         }
-                        MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected) { date in sheet = .day(DaySelection(habitID: habitID, date: date)) }
+                        MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
+                                      complete: { date in
+                                          selected = date
+                                          model.update { try $0.toggle(habitID, day: date) }
+                                      },
+                                      edit: { date in sheet = .day(DaySelection(habitID: habitID, date: date)) })
                         selectedDay(habit)
                     }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
                 }.background(Color(.systemGroupedBackground))
                     .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) } } }
             } else { ContentUnavailableView("Habit unavailable", systemImage: "leaf", description: Text("This Habit may have been deleted from another device.")) }
+        }
+        .onAppear { loadSelectedNote() }
+        .onChange(of: selected) { _, _ in loadSelectedNote() }
+        .onChange(of: model.data.day(habitID, selected).note) { oldValue, newValue in
+            if !noteFocused && noteDraft == oldValue { noteDraft = newValue }
         }
         .navigationTitle("Habit Detail").navigationBarTitleDisplayMode(.inline)
         .sheet(item: $sheet) { destination in
@@ -52,6 +64,7 @@ struct HabitDetailView: View {
     }
     private func selectedDay(_ habit: Habit) -> some View {
         let day = model.data.day(habitID, selected)
+        let future = selected > LocalDay.string()
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(LocalDay.date(selected)?.formatted(date: .abbreviated, time: .omitted) ?? selected).font(.headline)
@@ -59,9 +72,30 @@ struct HabitDetailView: View {
                 if selected <= LocalDay.string() { Button("Edit Day") { sheet = .day(DaySelection(habitID: habitID, date: selected)) } }
             }
             Text("\(day.count) Completions · Daily Target \(habit.target)").foregroundStyle(habit.tint)
-            if selected > LocalDay.string() { Text("Future dates are read-only.").foregroundStyle(.secondary) }
-            else { Text(day.note.isEmpty ? "No Day Note. There’s room for a few words." : day.note).foregroundStyle(day.note.isEmpty ? .secondary : .primary) }
+            if future { Text("Future dates are read-only.").foregroundStyle(.secondary) }
+            else {
+                TextField("Add a Day Note", text: $noteDraft, axis: .vertical)
+                    .lineLimit(2...5)
+                    .focused($noteFocused)
+                    .onChange(of: noteDraft) { _, value in noteDraft = String(value.prefix(500)) }
+                    .padding(12)
+                    .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+                    .accessibilityLabel("Day Note")
+                HStack {
+                    Text("\(noteDraft.count) / 500").font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Save Note", systemImage: "checkmark") {
+                        model.update { try $0.setNote(habitID, day: selected, note: noteDraft) }
+                        if model.error == nil { noteFocused = false }
+                    }
+                    .disabled(noteDraft == day.note)
+                }
+            }
         }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22))
+    }
+
+    private func loadSelectedNote() {
+        noteDraft = model.data.day(habitID, selected).note
     }
 }
 
@@ -70,6 +104,7 @@ private struct MonthCalendar: View {
     let data: Dataset
     @Binding var month: Date
     @Binding var selected: String
+    let complete: (String) -> Void
     let edit: (String) -> Void
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -97,7 +132,8 @@ private struct MonthCalendar: View {
                         let date = calendar.date(byAdding: .day, value: index - offset, to: start)!
                         let key = LocalDay.string(date)
                         let day = data.day(habit.id, key)
-                        Button { selected = key } label: {
+                        let canComplete = !habit.archived && key <= LocalDay.string()
+                        Button { if canComplete { complete(key) } } label: {
                             Text("\(index - offset + 1)").font(.body.monospacedDigit())
                                 .foregroundStyle(key > LocalDay.string() ? .secondary : .primary)
                                 .frame(maxWidth: .infinity, minHeight: 44)
@@ -105,8 +141,10 @@ private struct MonthCalendar: View {
                                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(key == selected ? habit.tint : key == LocalDay.string() ? Color.primary.opacity(0.5) : .clear, lineWidth: key == selected ? 2 : 1) }
                                 .overlay(alignment: .bottom) { if !day.note.isEmpty { Circle().fill(.primary).frame(width: 4, height: 4).padding(.bottom, 3) } }
                         }.buttonStyle(.plain)
-                            .simultaneousGesture(LongPressGesture().onEnded { _ in if key <= LocalDay.string() { selected = key; edit(key) } })
+                            .disabled(!canComplete)
+                            .sensoryFeedback(.impact(weight: .light), trigger: day.count)
                             .accessibilityLabel("\(key), \(day.count) Completions, target \(habit.target)\(day.note.isEmpty ? "" : ", has Day Note")")
+                            .accessibilityHint(canComplete ? (day.count >= habit.target ? "Clear this day’s Completions" : "Add one Completion") : "Future dates and Archived Habits are read-only")
                             .accessibilityAddTraits(key == selected ? .isSelected : [])
                             .accessibilityAction(named: "Edit Habit Day") { if key <= LocalDay.string() { edit(key) } }
                     }
@@ -134,7 +172,7 @@ struct DayEditor: View {
                 Section {
                     Text(LocalDay.date(selection.date)?.formatted(date: .complete, time: .omitted) ?? selection.date).font(.headline)
                     Stepper("Completions: \(count)", value: $count, in: 0...max(99, count))
-                    Text("Current Daily Target: \(model.data.habit(selection.habitID)?.target ?? 1)").foregroundStyle(.secondary)
+                        .sensoryFeedback(.impact(weight: .light), trigger: count)
                 }
                 Section {
                     TextEditor(text: $note).frame(minHeight: 150).accessibilityLabel("Day Note")
