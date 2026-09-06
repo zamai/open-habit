@@ -33,8 +33,8 @@ p.write_text(s)
 PY
 command -v xcodegen >/dev/null || brew install xcodegen
 xcodegen generate
-# Start above the existing local builds; retries receive a fresh build number.
-BUILD_NUMBER="$((${GITHUB_RUN_NUMBER} + 4)).${GITHUB_RUN_ATTEMPT}"
+# Continue from the highest build already known to App Store Connect.
+BUILD_NUMBER="$(python3 scripts/ci/wait-testflight.py --next-build-number)"
 VERSION=$(sed -n "s/.*MARKETING_VERSION: '\(.*\)'/\1/p" project.yml)
 if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
   TAG_VERSION="${GITHUB_REF#refs/tags/v}"

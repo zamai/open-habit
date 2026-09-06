@@ -1,4 +1,7 @@
 import base64, json, os, subprocess, sys, tempfile, time, urllib.request
+from decimal import Decimal, InvalidOperation, ROUND_FLOOR
+
+APP_ID = '6808947599'
 f = {'key_id': os.environ['ASC_KEY_ID'], 'issuer_id': os.environ['ASC_ISSUER_ID'], 'private_key': os.environ['ASC_PRIVATE_KEY']}
 def b64(x): return base64.urlsafe_b64encode(x).rstrip(b'=')
 h=b64(json.dumps({'alg':'ES256','kid':f['key_id'],'typ':'JWT'}).encode())
@@ -16,11 +19,27 @@ assert sig[i]==2
 n=sig[i+1];s=int.from_bytes(sig[i+2:i+2+n],'big')
 token=(msg+b'.'+b64(r.to_bytes(32,'big')+s.to_bytes(32,'big'))).decode()
 def get(path):
- req=urllib.request.Request('https://api.appstoreconnect.apple.com/v1/'+path,headers={'Authorization':'Bearer '+token})
+ url = path if path.startswith('https://') else 'https://api.appstoreconnect.apple.com/v1/' + path
+ req=urllib.request.Request(url,headers={'Authorization':'Bearer '+token})
  with urllib.request.urlopen(req) as res:return json.load(res)
 
+if sys.argv[1] == '--next-build-number':
+    versions = []
+    path = 'builds?filter[app]=' + APP_ID + '&limit=200'
+    while path:
+        page = get(path)
+        for build in page['data']:
+            try:
+                versions.append(Decimal(build['attributes']['version']))
+            except InvalidOperation:
+                pass
+        path = page.get('links', {}).get('next')
+    highest = max(versions, default=Decimal(0))
+    print(int(highest.to_integral_value(rounding=ROUND_FLOOR)) + 1)
+    raise SystemExit(0)
+
 for attempt in range(60):
-    builds = get('builds?filter[app]=6808947599&filter[version]=' + sys.argv[1] + '&include=betaGroups')
+    builds = get('builds?filter[app]=' + APP_ID + '&filter[version]=' + sys.argv[1] + '&include=betaGroups')
     for build in builds['data']:
         state = build['attributes']['processingState']
         print('Build', sys.argv[1], state, flush=True)

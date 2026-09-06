@@ -27,6 +27,9 @@ jobs:
   testflight:
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     needs: test
+    concurrency:
+      group: testflight-publish
+      cancel-in-progress: false
     runs-on: macos-26
     timeout-minutes: 40
     environment: testflight
