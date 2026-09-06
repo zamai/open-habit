@@ -10,7 +10,9 @@ final class IntentIntegrationTests: XCTestCase {
         defer { try? performLocalEdit { $0.append(.delete(habit.id)) } }
         let entity = HabitEntity(habit)
         let add = AddCompletionsIntent(); add.habit = ActiveHabitEntity(habit); add.amount = 2
+        let addStarted = ContinuousClock.now
         _ = try await add.perform()
+        XCTAssertLessThan(ContinuousClock.now - addStarted, .milliseconds(500), "Add Completions must return after local persistence")
         XCTAssertEqual(try sharedStore().read().dataset.day(habit.id, LocalDay.string()).count, 2)
         let toggle = ToggleHabitIntent(id: habit.id)
         _ = try await toggle.perform()

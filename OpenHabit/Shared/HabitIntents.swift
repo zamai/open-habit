@@ -2,6 +2,16 @@ import AppIntents
 import OpenHabitCore
 import WidgetKit
 
+private func performIntentEdit(_ edit: (inout Journal) throws -> Void) throws {
+    // Persist before returning, then keep CloudKit and widget refreshes off the interaction path.
+    // The journal is the durable upload queue if the extension is suspended before sync finishes.
+    try sharedStore().transaction(edit)
+    Task(priority: .utility) {
+        _ = try? await CloudSync.shared.synchronize()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+}
+
 struct HabitEntity: AppEntity {
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Habit"
     static let defaultQuery = HabitQuery()
@@ -44,8 +54,7 @@ struct AddCompletionsIntent: AppIntent {
     @Parameter(title: "Date") var date: Date?
     static var parameterSummary: some ParameterSummary { Summary("Add \(\.$amount) Completions to \(\.$habit)") { \.$date } }
     func perform() async throws -> some IntentResult {
-        try performLocalEdit { try $0.add(habit.id, day: LocalDay.string(date ?? Date()), amount: amount) }
-        _ = try? await CloudSync.shared.synchronize()
+        try performIntentEdit { try $0.add(habit.id, day: LocalDay.string(date ?? Date()), amount: amount) }
         return .result()
     }
 }
@@ -57,8 +66,7 @@ struct RemoveCompletionsIntent: AppIntent {
     @Parameter(title: "Date") var date: Date?
     static var parameterSummary: some ParameterSummary { Summary("Remove \(\.$amount) Completions from \(\.$habit)") { \.$date } }
     func perform() async throws -> some IntentResult {
-        try performLocalEdit { try $0.remove(habit.id, day: LocalDay.string(date ?? Date()), amount: amount) }
-        _ = try? await CloudSync.shared.synchronize()
+        try performIntentEdit { try $0.remove(habit.id, day: LocalDay.string(date ?? Date()), amount: amount) }
         return .result()
     }
 }
@@ -99,8 +107,7 @@ struct SetDayNoteIntent: AppIntent {
     @Parameter(title: "Text") var text: String
     static var parameterSummary: some ParameterSummary { Summary("Set \(\.$habit) Day Note to \(\.$text)") { \.$date } }
     func perform() async throws -> some IntentResult {
-        try performLocalEdit { try $0.setNote(habit.id, day: LocalDay.string(date ?? Date()), note: text) }
-        _ = try? await CloudSync.shared.synchronize()
+        try performIntentEdit { try $0.setNote(habit.id, day: LocalDay.string(date ?? Date()), note: text) }
         return .result()
     }
 }
@@ -112,13 +119,7 @@ struct ToggleHabitIntent: AppIntent {
     init(id: UUID) { habitID = id.uuidString }
     func perform() async throws -> some IntentResult {
         guard let id = UUID(uuidString: habitID) else { throw HabitError.missingHabit }
-        // WidgetKit reloads the timeline after this returns. Keep that critical path local;
-        // the journal remains the durable upload queue if this best-effort sync is suspended.
-        try sharedStore().transaction { try $0.toggle(id) }
-        Task(priority: .utility) {
-            _ = try? await CloudSync.shared.synchronize()
-            WidgetCenter.shared.reloadAllTimelines()
-        }
+        try performIntentEdit { try $0.toggle(id) }
         return .result()
     }
 }
