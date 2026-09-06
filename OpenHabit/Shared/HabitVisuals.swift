@@ -74,15 +74,11 @@ struct CompletionButton: View {
     }
 }
 struct CompletionStyle: ButtonStyle {
-    @ViewBuilder func makeBody(configuration: Configuration) -> some View {
-        if #available(iOS 26, *) {
-            configuration.label
-                .scaleEffect(configuration.isPressed ? 0.94 : 1)
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 18))
-        } else {
-            configuration.label.background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
-                .opacity(configuration.isPressed ? 0.7 : 1)
-        }
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .opacity(configuration.isPressed ? 0.75 : 1)
+            .contentShape(.rect(cornerRadius: 18))
     }
 }
 
