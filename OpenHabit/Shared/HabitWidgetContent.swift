@@ -89,23 +89,26 @@ struct HabitWidgetContent: View {
     private func compactRow(_ habit: Habit, dates: [Date], tileSide: CGFloat, iconSide: CGFloat,
                             iconGap: CGFloat, columnSpacing: CGFloat) -> some View {
         HStack(spacing: iconGap) {
-            Button(intent: ToggleHabitIntent(id: habit.id)) {
-                Text(habit.emoji).font(.system(size: tileSide * 0.7))
-                    .frame(width: iconSide, height: iconSide)
-                    .background(habit.tint.opacity(0.24), in: RoundedRectangle(cornerRadius: iconSide * 0.26))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Track \(habit.name)")
-            Link(destination: URL(string: "openhabit://habit/\(habit.id.uuidString)")!) {
-                HStack(spacing: columnSpacing) {
-                    ForEach(dates, id: \.self) { date in
-                        RecentDayTile(day: entry.data.day(habit.id, LocalDay.string(date)), target: habit.target,
-                                      color: habit.tint, today: LocalDay.string(date) == LocalDay.string(entry.date), size: tileSide)
+            Text(habit.emoji).font(.system(size: tileSide * 0.7))
+                .frame(width: iconSide, height: iconSide)
+                .background(habit.tint.opacity(0.24), in: RoundedRectangle(cornerRadius: iconSide * 0.26))
+                .accessibilityLabel(habit.name)
+            HStack(spacing: columnSpacing) {
+                ForEach(dates, id: \.self) { date in
+                    let today = LocalDay.string(date) == LocalDay.string(entry.date)
+                    let tile = RecentDayTile(day: entry.data.day(habit.id, LocalDay.string(date)), target: habit.target,
+                                             color: habit.tint, today: today, size: tileSide)
+                    if today {
+                        Button(intent: ToggleHabitIntent(id: habit.id)) { tile }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Track \(habit.name)")
+                    } else {
+                        Link(destination: URL(string: "openhabit://habit/\(habit.id.uuidString)")!) { tile }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Open \(habit.name) history")
                     }
                 }
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Open \(habit.name) history")
         }
     }
 
