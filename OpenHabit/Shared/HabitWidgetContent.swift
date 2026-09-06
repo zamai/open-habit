@@ -7,29 +7,34 @@ struct HabitEntry: TimelineEntry {
     let date: Date
     let data: Dataset
     let ids: [UUID?]
+
     static var example: HabitEntry {
         var journal = Journal(); journal.seedIfEmpty()
-        return HabitEntry(date: Date(), data: journal.dataset, ids: journal.dataset.active.map { $0.id })
+        var data = journal.dataset
+        data.habits += [
+            Habit(id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!, name: "Meditate", emoji: "🧘", color: .pink),
+            Habit(id: UUID(uuidString: "00000000-0000-0000-0000-000000000005")!, name: "Check in", emoji: "❤️", color: .teal, target: 3),
+            Habit(id: UUID(uuidString: "00000000-0000-0000-0000-000000000006")!, name: "Practice", emoji: "🥁", color: .yellow)
+        ]
+        for (habitIndex, habit) in data.habits.enumerated() {
+            for offset in 0..<10 where (offset + habitIndex * 2) % 4 == 0 {
+                let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date())!
+                data.days[Dataset.key(habit.id, LocalDay.string(date))] = HabitDay(count: habit.target)
+            }
+        }
+        return HabitEntry(date: Date(), data: data, ids: data.active.map { $0.id })
     }
 }
+
 struct HabitWidgetContent: View {
     let entry: HabitEntry
-    let medium: Bool
+    let compactRows: Int?
+
     var body: some View {
         GeometryReader { geometry in
             Group {
-                if medium {
-                    VStack(spacing: 0) {
-                        ForEach(0..<3, id: \.self) { row in
-                            let id = entry.ids.indices.contains(row) ? entry.ids[row] : nil
-                            Group {
-                                if let id, let habit = entry.data.habit(id), !habit.archived {
-                                    widgetRow(habit)
-                                } else { placeholder(row: row) }
-                            }
-                            .frame(height: max(0, geometry.size.height / 3))
-                        }
-                    }
+                if let compactRows {
+                    compactWidget(rows: compactRows, size: geometry.size)
                 } else if let id = entry.ids.first ?? nil, let habit = entry.data.habit(id), !habit.archived {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 6) {
@@ -40,34 +45,92 @@ struct HabitWidgetContent: View {
                         }.frame(height: 44)
                         WidgetHistory(habit: habit, data: entry.data, weeks: 10, spacing: 4, end: entry.date)
                     }.widgetURL(URL(string: "openhabit://habit/\(habit.id.uuidString)"))
-                } else { placeholder(row: 0) }
+                } else {
+                    singlePlaceholder
+                }
             }
-            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
         }
-        .padding(14)
+        .padding(compactRows == nil ? 14 : 12)
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)
         .containerBackground(for: .widget) { Color.black }
     }
-    private func widgetRow(_ habit: Habit) -> some View {
-        GeometryReader { geometry in
-            let linkWidth = max(0, geometry.size.width - 54)
-            HStack(spacing: 10) {
-                Link(destination: URL(string: "openhabit://habit/\(habit.id.uuidString)")!) {
-                    HStack(spacing: 8) {
-                        Text(habit.emoji).font(.title2).frame(width: 28)
-                        WidgetHistory(habit: habit, data: entry.data, weeks: 24, spacing: 1.5, end: entry.date)
-                            .frame(width: max(0, linkWidth - 62))
-                        Text("\(entry.data.day(habit.id, LocalDay.string(entry.date)).count)")
-                            .font(.system(.headline, design: .rounded)).foregroundStyle(habit.tint).frame(width: 18)
+
+    private func compactWidget(rows: Int, size: CGSize) -> some View {
+        let dates = recentDates
+        let columnSpacing: CGFloat = 4
+        let iconGap: CGFloat = 8
+        let tileSide = min(27, max(0, (size.width - iconGap - columnSpacing * 9 - 4) / 11))
+        let iconSide = tileSide + 4
+        return VStack(spacing: rows == 6 ? 8 : 7) {
+            HStack(spacing: iconGap) {
+                Color.clear.frame(width: iconSide, height: 12)
+                HStack(spacing: columnSpacing) {
+                    ForEach(dates, id: \.self) { date in
+                        Text(weekday(date)).font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary).frame(width: tileSide)
                     }
-                    .frame(width: linkWidth, height: geometry.size.height)
-                }.buttonStyle(.plain).accessibilityLabel("Open \(habit.name)")
-                widgetButton(habit, size: 32)
+                }
+            }
+            ForEach(0..<rows, id: \.self) { row in
+                let id = entry.ids.indices.contains(row) ? entry.ids[row] : nil
+                if let id, let habit = entry.data.habit(id), !habit.archived {
+                    compactRow(habit, dates: dates, tileSide: tileSide, iconSide: iconSide,
+                               iconGap: iconGap, columnSpacing: columnSpacing)
+                } else {
+                    compactPlaceholder(row: row, height: iconSide)
+                }
             }
         }
-        .padding(.vertical, 3)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
+
+    private func compactRow(_ habit: Habit, dates: [Date], tileSide: CGFloat, iconSide: CGFloat,
+                            iconGap: CGFloat, columnSpacing: CGFloat) -> some View {
+        HStack(spacing: iconGap) {
+            Button(intent: ToggleHabitIntent(id: habit.id)) {
+                Text(habit.emoji).font(.system(size: tileSide * 0.7))
+                    .frame(width: iconSide, height: iconSide)
+                    .background(habit.tint.opacity(0.24), in: RoundedRectangle(cornerRadius: iconSide * 0.26))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Track \(habit.name)")
+            Link(destination: URL(string: "openhabit://habit/\(habit.id.uuidString)")!) {
+                HStack(spacing: columnSpacing) {
+                    ForEach(dates, id: \.self) { date in
+                        RecentDayTile(day: entry.data.day(habit.id, LocalDay.string(date)), target: habit.target,
+                                      color: habit.tint, today: LocalDay.string(date) == LocalDay.string(entry.date), size: tileSide)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open \(habit.name) history")
+        }
+    }
+
+    private func compactPlaceholder(row: Int, height: CGFloat) -> some View {
+        Label("Choose Habit \(row + 1)", systemImage: "leaf")
+            .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, minHeight: height, alignment: .leading)
+    }
+
+    private var singlePlaceholder: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Label("Choose a Habit", systemImage: "leaf").font(.caption.weight(.semibold))
+            Text("Hold widget → Edit Widget").font(.caption2).foregroundStyle(.secondary)
+        }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var recentDates: [Date] {
+        (0..<10).compactMap { Calendar.current.date(byAdding: .day, value: $0 - 9, to: entry.date) }
+    }
+
+    private func weekday(_ date: Date) -> String {
+        let index = Calendar.current.component(.weekday, from: date) - 1
+        return String(Calendar.current.shortWeekdaySymbols[index].prefix(2))
+    }
+
     private func widgetButton(_ habit: Habit, size: CGFloat) -> some View {
         let count = entry.data.day(habit.id, LocalDay.string(entry.date)).count
         return Button(intent: ToggleHabitIntent(id: habit.id)) {
@@ -76,11 +139,31 @@ struct HabitWidgetContent: View {
             .accessibilityLabel("\(habit.name), \(count) Completions, Daily Target \(habit.target)")
             .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
     }
-    private func placeholder(row: Int) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Label(medium ? "Choose Habit \(row + 1)" : "Choose a Habit", systemImage: "leaf").font(.caption.weight(.semibold))
-            Text("Hold widget → Edit Widget").font(.caption2).foregroundStyle(.secondary)
-        }.frame(maxWidth: .infinity, alignment: .leading)
+}
+
+private struct RecentDayTile: View {
+    let day: HabitDay
+    let target: Int
+    let color: Color
+    let today: Bool
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.22)
+                .fill(color.opacity(day.count == 0 ? 0.20 : day.count >= target ? 1 : 0.28))
+            if day.count > 0 && day.count < target {
+                Circle().trim(from: 0, to: day.progress(target: target))
+                    .stroke(color, style: StrokeStyle(lineWidth: max(2, size * 0.11), lineCap: .round))
+                    .rotationEffect(.degrees(-90)).padding(size * 0.20)
+            }
+        }
+        .frame(width: size, height: size)
+        .overlay {
+            if today {
+                RoundedRectangle(cornerRadius: size * 0.22).strokeBorder(.white.opacity(0.85), lineWidth: 1.3)
+            }
+        }
     }
 }
 
