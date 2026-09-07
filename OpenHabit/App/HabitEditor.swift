@@ -138,6 +138,7 @@ struct HabitEditor: View {
 private struct HabitEmojiPicker: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selection: String
+    @State private var choosingCustomEmoji = false
     private let choices = [
         "🌱", "🌿", "🌳", "🌻", "✨", "⭐️", "🔥", "💪",
         "🏃", "🚶", "🚴", "🏊", "🧘", "🏋️", "⚽️", "🏀",
@@ -171,6 +172,18 @@ private struct HabitEmojiPicker: View {
                         .accessibilityLabel("Select \(emoji)")
                         .accessibilityAddTraits(selection == emoji ? .isSelected : [])
                     }
+                    Button { choosingCustomEmoji = true } label: {
+                        VStack(spacing: 3) {
+                            Image(systemName: "face.smiling")
+                                .font(.system(size: 24))
+                            Text("Custom")
+                                .font(.caption2.weight(.medium))
+                        }
+                        .frame(width: 52, height: 52)
+                        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Choose a custom emoji")
                 }
                 .padding(20)
             }
@@ -180,5 +193,98 @@ private struct HabitEmojiPicker: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         }
         .presentationDetents([.medium, .large])
+        .sheet(isPresented: $choosingCustomEmoji) {
+            CustomEmojiPicker(selection: $selection) { dismiss() }
+        }
+    }
+}
+
+private struct CustomEmojiPicker: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selection: String
+    let finish: () -> Void
+    @State private var emoji = ""
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 18) {
+                Text("Choose any emoji from the system keyboard.")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                SystemEmojiField(text: $emoji)
+                    .frame(height: 76)
+                    .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+                    .accessibilityLabel("Custom emoji")
+                    .accessibilityIdentifier("custom-emoji")
+                Text(validEmoji ? "One emoji selected" : "Select one emoji")
+                    .font(.footnote)
+                    .foregroundStyle(validEmoji ? Color.accentColor : .secondary)
+                Spacer()
+            }
+            .padding(20)
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Custom Emoji")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Use Emoji") {
+                        selection = emoji
+                        dismiss()
+                        finish()
+                    }
+                    .disabled(!validEmoji)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private var validEmoji: Bool {
+        emoji.count == 1 && emoji.unicodeScalars.contains {
+            $0.properties.isEmojiPresentation || $0.value == 0xFE0F || ($0.properties.isEmoji && $0.value > 0x238C)
+        }
+    }
+}
+
+private struct SystemEmojiField: UIViewRepresentable {
+    @Binding var text: String
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeUIView(context: Context) -> EmojiTextField {
+        let field = EmojiTextField()
+        field.delegate = context.coordinator
+        field.font = .systemFont(ofSize: 44)
+        field.textAlignment = .center
+        field.autocorrectionType = .no
+        field.addTarget(context.coordinator, action: #selector(Coordinator.textChanged), for: .editingChanged)
+        DispatchQueue.main.async { field.becomeFirstResponder() }
+        return field
+    }
+
+    func updateUIView(_ field: EmojiTextField, context: Context) {
+        if field.text != text { field.text = text }
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        private var parent: SystemEmojiField
+
+        init(_ parent: SystemEmojiField) { self.parent = parent }
+
+        @objc func textChanged(_ field: UITextField) {
+            let value = field.text ?? ""
+            let latestEmoji = value.last.map(String.init) ?? ""
+            if field.text != latestEmoji { field.text = latestEmoji }
+            parent.text = latestEmoji
+        }
+    }
+}
+
+private final class EmojiTextField: UITextField {
+    override var textInputContextIdentifier: String? { "OpenHabit.EmojiPicker" }
+
+    override var textInputMode: UITextInputMode? {
+        UITextInputMode.activeInputModes.first { $0.primaryLanguage == "emoji" } ?? super.textInputMode
     }
 }
