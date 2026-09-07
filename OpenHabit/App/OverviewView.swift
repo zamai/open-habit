@@ -123,6 +123,20 @@ private struct HabitCard<Menu: View>: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(habit.name).font(.system(.headline, design: .rounded)).foregroundStyle(.primary).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                             Text(habit.detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            if let goal = habit.streakGoal {
+                                let streak = data.currentStreak(for: habit, asOf: now)
+                                let unit = goal.period == .daily
+                                    ? (streak == 1 ? "day" : "days")
+                                    : (streak == 1 ? "week" : "weeks")
+                                Label("\(streak) \(unit)", systemImage: "flame.fill")
+                                    .font(.caption2.monospacedDigit().weight(.semibold))
+                                    .foregroundStyle(habit.tint)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(habit.tint.opacity(0.12), in: Capsule())
+                                    .fixedSize()
+                                    .accessibilityLabel("Current streak: \(streak) \(unit)")
+                            }
                         }.padding(.top, 3).frame(maxWidth: .infinity, alignment: .leading)
                     }.contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityHint("Open Habit Detail")
