@@ -23,7 +23,7 @@ n=sig[i+1];r=int.from_bytes(sig[i+2:i+2+n],'big');i+=2+n
 assert sig[i]==2
 n=sig[i+1];s=int.from_bytes(sig[i+2:i+2+n],'big')
 token=(msg+b'.'+b64(r.to_bytes(32,'big')+s.to_bytes(32,'big'))).decode()
-def request(method, path, body=None):
+def request(method, path, body=None, beta_review_conflict_ok=False):
  url = path if path.startswith('https://') else 'https://api.appstoreconnect.apple.com/v1/' + path
  data = json.dumps(body).encode() if body is not None else None
  req=urllib.request.Request(url,data=data,method=method,headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
@@ -33,9 +33,13 @@ def request(method, path, body=None):
  except urllib.error.HTTPError as error:
   try:
    payload = json.load(error)
-   details = '; '.join(item.get('detail') or item.get('title') or item.get('code', 'unknown error') for item in payload.get('errors', []))
+   errors = payload.get('errors', [])
+   details = '; '.join(item.get('detail') or item.get('title') or item.get('code', 'unknown error') for item in errors)
   except (json.JSONDecodeError, UnicodeDecodeError):
+   errors = []
    details = 'no response details'
+  if beta_review_conflict_ok and error.code == 422 and any('already in beta review' in (item.get('detail') or '') for item in errors):
+   return None
   raise SystemExit('App Store Connect API ' + method + ' failed (' + str(error.code) + '): ' + details)
 
 def get(path): return request('GET', path)
@@ -57,9 +61,12 @@ def distribute_externally(build):
  detail = get('builds/' + build_id + '/buildBetaDetail')['data']['attributes']
  state = detail['externalBuildState']
  if state == 'READY_FOR_BETA_SUBMISSION':
-  submission = request('POST', 'betaAppReviewSubmissions', {'data': {'type': 'betaAppReviewSubmissions', 'relationships': {'build': {'data': {'type': 'builds', 'id': build_id}}}}})
-  state = submission['data']['attributes']['betaReviewState']
-  message = 'Build ' + build['attributes']['version'] + ' was added to the external group and submitted for Beta App Review (' + state + ').'
+  submission = request('POST', 'betaAppReviewSubmissions', {'data': {'type': 'betaAppReviewSubmissions', 'relationships': {'build': {'data': {'type': 'builds', 'id': build_id}}}}}, beta_review_conflict_ok=True)
+  if submission:
+   state = submission['data']['attributes']['betaReviewState']
+   message = 'Build ' + build['attributes']['version'] + ' was added to the external group and submitted for Beta App Review (' + state + ').'
+  else:
+   message = 'Build ' + build['attributes']['version'] + ' is assigned to the external group; Beta App Review submission is deferred while another build is in review.'
  elif state in ('WAITING_FOR_BETA_REVIEW', 'IN_BETA_REVIEW', 'BETA_APPROVED', 'READY_FOR_BETA_TESTING', 'IN_BETA_TESTING'):
   message = 'Build ' + build['attributes']['version'] + ' is assigned to the external group (' + state + ').'
  else:
@@ -81,6 +88,16 @@ if sys.argv[1] == '--next-build-number':
         path = page.get('links', {}).get('next')
     highest = max(versions, default=Decimal(0))
     print(int(highest.to_integral_value(rounding=ROUND_FLOOR)) + 1)
+    raise SystemExit(0)
+
+if sys.argv[1] == '--retry-external-review':
+    builds = get('builds?filter[app]=' + APP_ID + '&limit=200&sort=-uploadedDate&include=betaGroups')['data']
+    for build in builds:
+        groups = build['relationships']['betaGroups']['data']
+        if build['attributes']['processingState'] == 'VALID' and any(g['id'] == EXTERNAL_GROUP_ID for g in groups):
+            distribute_externally(build)
+            raise SystemExit(0)
+    print('No valid build is assigned to the external group.')
     raise SystemExit(0)
 
 distribute_external = '--distribute-external' in sys.argv[2:]
