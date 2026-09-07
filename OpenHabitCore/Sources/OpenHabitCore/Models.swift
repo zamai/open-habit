@@ -112,17 +112,49 @@ public struct Backup: Codable, Sendable {
     public let formatVersion: Int
     public let exportedAt: Date
     public var dataset: Dataset
-    public init(dataset: Dataset) { formatVersion = 1; exportedAt = Date(); self.dataset = dataset }
+    public init(dataset: Dataset) { formatVersion = 2; exportedAt = Date(); self.dataset = dataset }
     public static func decode(_ data: Data) throws -> Backup {
         struct Header: Decodable { let formatVersion: Int }
         let header = try JSONDecoder().decode(Header.self, from: data)
-        guard header.formatVersion == 1 else { throw HabitError.invalidBackup("Format version \(header.formatVersion) is not supported by this app.") }
-        let backup = try JSONDecoder().decode(Self.self, from: data)
+        guard (1...2).contains(header.formatVersion) else { throw HabitError.invalidBackup("Format version \(header.formatVersion) is not supported by this app.") }
+        let decoder = JSONDecoder()
+        if header.formatVersion == 2 {
+            decoder.dateDecodingStrategy = .custom { decoder in
+                let container = try decoder.singleValueContainer()
+                let text = try container.decode(String.self)
+                // Parse the whole second separately to retain Date's subsecond precision.
+                if let dot = text.firstIndex(of: "."), text.hasSuffix("Z") {
+                    let digits = text[text.index(after: dot)..<text.index(before: text.endIndex)]
+                    guard !digits.isEmpty, digits.count <= 9, digits.allSatisfy({ $0.isASCII && $0.isNumber }),
+                          let fraction = Double("0." + digits),
+                          let whole = ISO8601DateFormatter().date(from: String(text[..<dot]) + "Z") else {
+                        throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected an ISO 8601 UTC timestamp.")
+                    }
+                    return whole.addingTimeInterval(fraction)
+                }
+                guard let date = ISO8601DateFormatter().date(from: text) else {
+                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected an ISO 8601 timestamp.")
+                }
+                return date
+            }
+        }
+        let backup = try decoder.decode(Self.self, from: data)
         try backup.dataset.validate()
         return backup
     }
     public func encoded() throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        if formatVersion == 2 {
+            encoder.dateEncodingStrategy = .custom { date, encoder in
+                let seconds = date.timeIntervalSinceReferenceDate
+                let whole = floor(seconds)
+                let prefix = ISO8601DateFormatter().string(from: Date(timeIntervalSinceReferenceDate: whole)).dropLast()
+                // Nine fractional digits preserve the precision of contemporary Date values.
+                let fraction = String(format: "%.9f", locale: Locale(identifier: "en_US_POSIX"), seconds - whole).dropFirst()
+                var container = encoder.singleValueContainer()
+                try container.encode(String(prefix) + fraction + "Z")
+            }
+        }
         return try encoder.encode(self)
     }
 }

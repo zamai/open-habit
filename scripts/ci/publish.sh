@@ -52,4 +52,4 @@ options.update(signingStyle='manual',signingCertificate='Apple Distribution',pro
 Path(os.environ['SIGNING_DIR'],'ExportOptions.plist').write_bytes(plistlib.dumps(options))
 PY
 xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/OpenHabit.xcarchive" -exportPath "$RUNNER_TEMP/export" -exportOptionsPlist "$SIGNING_DIR/ExportOptions.plist" -authenticationKeyPath "$SIGNING_DIR/AuthKey.p8" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" -allowProvisioningUpdates
-python3 scripts/ci/wait-testflight.py "$BUILD_NUMBER"
+python3 scripts/ci/wait-testflight.py "$BUILD_NUMBER" --distribute-external

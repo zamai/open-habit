@@ -214,7 +214,7 @@ The repository's architectural rationale is recorded in [ADR 0001](./adr/0001-ke
 
 ## JSON backup and restore
 
-Only Open Habit's native JSON format is supported in the MVP. CSV and HabitKit-specific imports are deferred.
+Open Habit keeps its own native JSON backup format. HabitKit import is planned after weekly goals and categories are implemented, so migration can preserve those features. CSV import remains deferred.
 
 ### Export
 
@@ -227,7 +227,7 @@ Export produces one versioned, full-fidelity JSON document containing:
 - Names, emoji, descriptions, colors, Daily Targets, and optional Streak Goals.
 - Completion data and Day Notes.
 
-The export contains no iCloud account or device identifiers.
+The export contains no iCloud account or device identifiers. Native format version 2 writes `exportedAt` and Habit `createdAt` as ISO 8601 UTC strings with nine fractional-second digits. Habit Day keys remain fixed `YYYY-MM-DD` dates. Restore also accepts version 1 backups, whose timestamps are numeric seconds since 2001-01-01 UTC. New exports use version 2; older app builds that only support version 1 cannot restore them.
 
 ### Restore
 
@@ -278,7 +278,7 @@ The source-code link is added when the repository becomes public.
 - Categories, multiple overview modes, aggregate statistics beyond Month Total and Current Streak, or charts.
 - Sharing cards, social features, coaching, or gamification.
 - Rich-text notes, multiple notes per Habit Day, tags, or attachments.
-- CSV or third-party backup import.
+- CSV import. HabitKit import is a planned extension pending weekly goals and categories.
 - Large, Lock Screen, or alternative-style widgets.
 
 ## MVP acceptance criteria

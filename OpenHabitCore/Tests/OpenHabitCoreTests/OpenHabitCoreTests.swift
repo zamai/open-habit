@@ -133,6 +133,45 @@ final class OpenHabitCoreTests: XCTestCase {
         var invalid = journal.dataset; invalid.habits.append(habit)
         XCTAssertThrowsError(try Backup.decode(Backup(dataset: invalid).encoded()))
     }
+    func testBackupISO8601DatesPreserveFractionalSeconds() throws {
+        var data = Dataset()
+        let createdAt = Date(timeIntervalSinceReferenceDate: 810123456.1234567)
+        data.habits = [Habit(name: "Water", createdAt: createdAt)]
+        let original = Backup(dataset: data)
+        let encoded = try original.encoded()
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        XCTAssertEqual(json["formatVersion"] as? Int, 2)
+        XCTAssertTrue(try XCTUnwrap(json["exportedAt"] as? String).hasSuffix("Z"))
+        let dataset = try XCTUnwrap(json["dataset"] as? [String: Any])
+        let habits = try XCTUnwrap(dataset["habits"] as? [[String: Any]])
+        XCTAssertEqual(habits[0]["createdAt"] as? String, "2026-09-03T10:17:36.123456717Z")
+        let decoded = try Backup.decode(encoded)
+        XCTAssertEqual(decoded.dataset, data)
+        XCTAssertEqual(decoded.exportedAt, original.exportedAt)
+        let malformed = String(decoding: encoded, as: UTF8.self)
+            .replacingOccurrences(of: "2026-09-03T10:17:36.123456717Z", with: "not-a-date")
+        XCTAssertThrowsError(try Backup.decode(Data(malformed.utf8)))
+    }
+
+    func testLegacyNumericBackupStillRestoresAndReexportsAsVersion2() throws {
+        let legacy = Data("""
+        {"formatVersion":1,"exportedAt":810123456.25,"dataset":{
+          "initialized":true,"settings":{"appearance":"dark","weekStart":"monday","examplesDismissed":true},
+          "habits":[{"id":"00000000-0000-0000-0000-000000000001","name":"Water","emoji":"💧",
+            "detail":"Drink water","color":"blue","target":3,"createdAt":810123456.125,"archived":true}],
+          "days":{"00000000-0000-0000-0000-000000000001/2026-09-03":{"count":2,"note":"Keep going"}}}}
+        """.utf8)
+        let backup = try Backup.decode(legacy)
+        XCTAssertEqual(backup.exportedAt, Date(timeIntervalSinceReferenceDate: 810123456.25))
+        XCTAssertEqual(backup.dataset.habits[0].createdAt, Date(timeIntervalSinceReferenceDate: 810123456.125))
+        var journal = Journal()
+        try journal.restore(backup)
+        XCTAssertEqual(journal.dataset, backup.dataset)
+        let reexported = try Backup.decode(Backup(dataset: journal.dataset).encoded())
+        XCTAssertEqual(reexported.formatVersion, 2)
+        XCTAssertEqual(reexported.dataset, backup.dataset)
+    }
+
     func testFailedTransactionPreservesExactOriginalAndAtomicRestore() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
