@@ -24,11 +24,13 @@ struct HabitDetailView: View {
                             if !habit.detail.isEmpty { Text(habit.detail).foregroundStyle(.secondary) }
                             if habit.archived { Label("Archived Habit", systemImage: "archivebox").font(.subheadline).foregroundStyle(.secondary) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
+                        Label("Daily Target: \(habit.target)", systemImage: "target")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(habit.tint)
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("A year of small steps").font(.headline)
                             ScrollView(.horizontal) {
                                 HistoryGrid(habit: habit, data: model.data, weeks: 53, onSelect: { selected = $0 }, onEdit: { sheet = .day(DaySelection(habitID: habitID, date: $0)) })
-                                    .frame(width: 900)
+                                    .frame(width: 1_035)
                             }.defaultScrollAnchor(.trailing)
                             HStack(spacing: 6) {
                                 Text("Empty"); ForEach([0, 1, 3], id: \.self) { count in DayTile(day: HabitDay(count: count), target: 3, color: habit.tint, today: false).frame(width: 13, height: 13) }; Text("Complete")
@@ -43,12 +45,17 @@ struct HabitDetailView: View {
                                       edit: { date in sheet = .day(DaySelection(habitID: habitID, date: date)) })
                         selectedDay(habit)
                     }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
-                }.background(Color(.systemGroupedBackground))
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .background(Color(.systemGroupedBackground))
                     .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) } } }
             } else { ContentUnavailableView("Habit unavailable", systemImage: "leaf", description: Text("This Habit may have been deleted from another device.")) }
         }
         .onAppear { loadSelectedNote() }
-        .onChange(of: selected) { _, _ in loadSelectedNote() }
+        .onChange(of: selected) { _, _ in
+            noteFocused = false
+            loadSelectedNote()
+        }
         .onChange(of: model.data.day(habitID, selected).note) { oldValue, newValue in
             if !noteFocused && noteDraft == oldValue { noteDraft = newValue }
         }
@@ -69,9 +76,11 @@ struct HabitDetailView: View {
             HStack {
                 Text(LocalDay.date(selected)?.formatted(date: .abbreviated, time: .omitted) ?? selected).font(.headline)
                 Spacer()
-                if selected <= LocalDay.string() { Button("Edit Day") { sheet = .day(DaySelection(habitID: habitID, date: selected)) } }
+                if !future {
+                    Button("Save Note", systemImage: "checkmark") { saveSelectedNote() }
+                        .disabled(noteDraft == day.note)
+                }
             }
-            Text("\(day.count) Completions · Daily Target \(habit.target)").foregroundStyle(habit.tint)
             if future { Text("Future dates are read-only.").foregroundStyle(.secondary) }
             else {
                 TextField("Add a Day Note", text: $noteDraft, axis: .vertical)
@@ -81,21 +90,18 @@ struct HabitDetailView: View {
                     .padding(12)
                     .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
                     .accessibilityLabel("Day Note")
-                HStack {
-                    Text("\(noteDraft.count) / 500").font(.caption).foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Save Note", systemImage: "checkmark") {
-                        model.update { try $0.setNote(habitID, day: selected, note: noteDraft) }
-                        if model.error == nil { noteFocused = false }
-                    }
-                    .disabled(noteDraft == day.note)
-                }
+                Text("\(noteDraft.count) / 500").font(.caption).foregroundStyle(.secondary)
             }
         }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22))
     }
 
     private func loadSelectedNote() {
         noteDraft = model.data.day(habitID, selected).note
+    }
+
+    private func saveSelectedNote() {
+        model.update { try $0.setNote(habitID, day: selected, note: noteDraft) }
+        if model.error == nil { noteFocused = false }
     }
 }
 
