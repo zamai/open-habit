@@ -176,6 +176,30 @@ final class OpenHabitCoreTests: XCTestCase {
         journal.seedIfEmpty()
         XCTAssertTrue(journal.dataset.habits.isEmpty)
     }
+    func testDailyStreakKeepsAnIncompleteCurrentDayOpen() {
+        let habit = Habit(name: "Run", target: 1, streakGoal: StreakGoal(period: .daily), createdAt: LocalDay.date("2026-09-01")!)
+        var data = Dataset(); data.habits = [habit]
+        for day in ["2026-09-04", "2026-09-05", "2026-09-06"] {
+            data.days[Dataset.key(habit.id, day)] = HabitDay(count: 1)
+        }
+        XCTAssertEqual(data.currentStreak(for: habit, asOf: LocalDay.date("2026-09-07")!), 3)
+        data.days[Dataset.key(habit.id, "2026-09-07")] = HabitDay(count: 1)
+        XCTAssertEqual(data.currentStreak(for: habit, asOf: LocalDay.date("2026-09-07")!), 4)
+    }
+    func testWeeklyStreakUsesCompletedDaysAndVisibleMonthCountsCompletions() {
+        let habit = Habit(name: "Run", target: 1, streakGoal: StreakGoal(period: .weekly, target: 3), createdAt: LocalDay.date("2026-08-24")!)
+        var data = Dataset(); data.habits = [habit]; data.settings.weekStart = .monday
+        for day in ["2026-08-24", "2026-08-26", "2026-08-28", "2026-08-31", "2026-09-02", "2026-09-04"] {
+            data.days[Dataset.key(habit.id, day)] = HabitDay(count: day == "2026-09-02" ? 2 : 1)
+        }
+        XCTAssertEqual(data.currentStreak(for: habit, asOf: LocalDay.date("2026-09-07")!), 2)
+        for day in ["2026-09-07", "2026-09-09", "2026-09-11"] {
+            data.days[Dataset.key(habit.id, day)] = HabitDay(count: 1)
+        }
+        XCTAssertEqual(data.completedDays(for: habit, inWeekContaining: LocalDay.date("2026-09-10")!), 3)
+        XCTAssertEqual(data.currentStreak(for: habit, asOf: LocalDay.date("2026-09-11")!), 3)
+        XCTAssertEqual(data.completionTotal(for: habit.id, inMonthContaining: LocalDay.date("2026-09-01")!), 6)
+    }
     func testHabitValidation() {
         for emoji in ["a", "1", "", "🌱💧"] {
             XCTAssertThrowsError(try Habit(name: "Valid", emoji: emoji).validate())
@@ -185,5 +209,6 @@ final class OpenHabitCoreTests: XCTestCase {
         }
         XCTAssertThrowsError(try Habit(name: "   ").validate())
         XCTAssertThrowsError(try Habit(name: String(repeating: "a", count: 61)).validate())
+        XCTAssertThrowsError(try Habit(name: "Run", streakGoal: StreakGoal(period: .weekly, target: 8)).validate())
     }
 }

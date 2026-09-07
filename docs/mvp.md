@@ -10,7 +10,7 @@ Open Habit will be free to use and released as open source under the MIT license
 
 ## Observable MVP outcome
 
-A person can create and organize multiple daily Habits, record each one from the app or a Home Screen widget, inspect and correct their history, attach a short note to a day, automate tracking with Shortcuts, synchronize through their private iCloud account, and export or restore all data as JSON. Every tracking flow continues to work without a network connection or an Open Habit account.
+A person can create and organize multiple Habits, record each one from the app or a Home Screen widget, inspect and correct their history, track an optional daily or weekly streak, attach a short note to a day, automate tracking with Shortcuts, synchronize through their private iCloud account, and export or restore all data as JSON. Every tracking flow continues to work without a network connection or an Open Habit account.
 
 ## Platform
 
@@ -31,11 +31,12 @@ Each Habit has:
 - An optional one-sentence description of at most 160 characters.
 - A color selected from a curated palette.
 - A Daily Target from 1 through 99.
+- An optional daily or weekly Streak Goal. A weekly goal requires between one and seven completed Habit Days per calendar week.
 - One immutable creation date.
 - A manual position in the overview.
 - An active or archived state.
 
-Only positive daily Habits are supported. There are no schedules, due days, rest days, weekly goals, monthly goals, or avoidance Habits.
+Only positive Habits are supported. Streak Goals do not schedule particular days or mark empty days as failed. There are no due days, rest days, monthly goals, or avoidance Habits.
 
 ### Habit Days and Daily Progress
 
@@ -127,6 +128,7 @@ Creation and editing use a modal screen containing:
 - A curated color palette.
 - Daily Target stepper from 1 through 99.
 - A live preview of the completion control.
+- An optional Streak Goal with Daily or Weekly period and a completed-days target for Weekly goals.
 - Create or Save action.
 - Archive and Delete actions when editing an existing Habit.
 
@@ -137,7 +139,8 @@ Custom icon sets, arbitrary colors, schedules, categories, reminders, and advanc
 Habit Detail follows the supplied HabitKit reference and contains:
 
 - Emoji, name, and description.
-- Today's count with completion and correction controls.
+- Daily Target, optional Current Streak, and current-week progress for a Weekly Streak Goal.
+- Month Total for the calendar month currently visible.
 - A GitHub-style rolling year grid.
 - A month calendar for selecting an exact date.
 - The selected Habit Day's Completion count, current Daily Target, and Day Note.
@@ -147,7 +150,7 @@ The user may edit the Completion count and Day Note for today or any past date. 
 
 Tapping a calendar day selects it. Pressing and holding a day opens the Habit Day editor. The editor contains a count control and one optional multiline plain-text Day Note of at most 500 characters. Notes have no formatting, tags, or attachments.
 
-Streak chips, aggregate statistics, charts, sharing, and year-in-review are excluded.
+Best-streak statistics, charts, sharing, and year-in-review are excluded.
 
 ## Home Screen widgets
 
@@ -221,7 +224,7 @@ Export produces one versioned, full-fidelity JSON document containing:
 - Application settings.
 - Habit ordering.
 - Active and Archived Habits with stable identifiers and creation dates.
-- Names, emoji, descriptions, colors, and Daily Targets.
+- Names, emoji, descriptions, colors, Daily Targets, and optional Streak Goals.
 - Completion data and Day Notes.
 
 The export contains no iCloud account or device identifiers.
@@ -270,9 +273,9 @@ The source-code link is added when the repository becomes public.
 - Web, Android, watchOS, or dedicated macOS clients.
 - Native webhooks.
 - Avoidance or quit Habits.
-- Schedules, reminders, notifications, rest days, or non-daily goals.
+- Schedules, reminders, notifications, rest days, or monthly goals.
 - Overachievement as a state or quick-log behavior.
-- Categories, multiple overview modes, streak goals, aggregate statistics, or charts.
+- Categories, multiple overview modes, aggregate statistics beyond Month Total and Current Streak, or charts.
 - Sharing cards, social features, coaching, or gamification.
 - Rich-text notes, multiple notes per Habit Day, tags, or attachments.
 - CSV or third-party backup import.
@@ -292,3 +295,4 @@ The source-code link is added when the repository becomes public.
 10. Tracking works with networking and iCloud unavailable; when iCloud returns, two devices converge according to the documented conflict rules.
 11. Reinstalling on the same iCloud account recovers the synchronized dataset without recreating Starter Habits.
 12. JSON export contains the complete dataset, and a valid restore atomically replaces it while an invalid restore changes nothing.
+13. A Habit may derive a Daily or Weekly Current Streak, and Habit Detail shows the Month Total for its visible calendar month.

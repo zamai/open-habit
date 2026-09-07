@@ -4,7 +4,7 @@
 
 Validated with Xcode 26.3 and the iOS 26.3 Simulator on 5 September 2026: 13 domain tests, two app-hosted integration/rendering tests, and one Home Screen UI test passed. Both final Simulator and unsigned device builds passed.
 
-- The pure Swift domain suite covers starter seeding exactly once, target-1 and multi-target toggling, capped additions, concurrent merge and retry idempotency, nonnegative removals, current-target history presentation, archive versus property edits, permanent-deletion visibility, restore generation isolation, fixed date keys, note/date validation, full-fidelity JSON round trips, unsupported versions, failed-transaction rollback, and 40 concurrent store writers.
+- The pure Swift domain suite covers starter seeding exactly once, target-1 and multi-target toggling, capped additions, concurrent merge and retry idempotency, nonnegative removals, current-target history presentation, daily and weekly Current Streak derivation, visible-month Completion totals, archive versus property edits, permanent-deletion visibility, restore generation isolation, fixed date keys, note/date validation, full-fidelity JSON round trips, unsupported versions, failed-transaction rollback, and 40 concurrent store writers.
 - The widget rendering test produces native images at small and medium widget dimensions. Both images were inspected for row allocation and clipping.
 - The application-hosted integration suite exercises the four Shortcut intents and the widget toggle against the App Group store. These tests create and tombstone only their own fixture Habit.
 - Both Simulator and unsigned generic-device builds compile the application and widget extension. The latter includes the live CloudKit implementation.

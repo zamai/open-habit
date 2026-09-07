@@ -5,6 +5,15 @@ public enum HabitColor: String, Codable, CaseIterable, Sendable {
 }
 public enum Appearance: String, Codable, CaseIterable, Sendable { case system, light, dark }
 public enum WeekStart: String, Codable, CaseIterable, Sendable { case system, monday, sunday }
+public enum StreakPeriod: String, Codable, CaseIterable, Sendable { case daily, weekly }
+public struct StreakGoal: Codable, Equatable, Sendable {
+    public var period: StreakPeriod
+    public var target: Int
+    public init(period: StreakPeriod, target: Int = 1) {
+        self.period = period
+        self.target = period == .daily ? 1 : target
+    }
+}
 public struct Settings: Codable, Equatable, Sendable {
     public var appearance: Appearance = .system
     public var weekStart: WeekStart = .system
@@ -19,14 +28,16 @@ public struct Habit: Codable, Identifiable, Equatable, Sendable {
     public var color: HabitColor
     public var customColorRGB: UInt32? = nil
     public var target: Int
+    public var streakGoal: StreakGoal? = nil
     public var createdAt: Date
     public var archived: Bool
-    public init(id: UUID = UUID(), name: String = "", emoji: String = "🌱", detail: String = "", color: HabitColor = .green, target: Int = 1, createdAt: Date = Date(), archived: Bool = false) {
+    public init(id: UUID = UUID(), name: String = "", emoji: String = "🌱", detail: String = "", color: HabitColor = .green, target: Int = 1, streakGoal: StreakGoal? = nil, createdAt: Date = Date(), archived: Bool = false) {
         self.id = id; self.name = name; self.emoji = emoji; self.detail = detail
-        self.color = color; self.target = target; self.createdAt = createdAt; self.archived = archived
+        self.color = color; self.target = target; self.streakGoal = streakGoal; self.createdAt = createdAt; self.archived = archived
     }
     public func validate() throws {
         guard customColorRGB.map({ $0 <= 0xFFFFFF }) ?? true else { throw HabitError.invalidHabit }
+        guard streakGoal.map({ $0.period == .daily ? $0.target == 1 : (1...7).contains($0.target) }) ?? true else { throw HabitError.invalidHabit }
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.count <= 60,
               emoji.count == 1, emoji.unicodeScalars.contains(where: { $0.properties.isEmojiPresentation || $0.value == 0xFE0F || ($0.properties.isEmoji && $0.value > 0x238C) }),
               detail.count <= 160, !detail.contains("\n"), (1...99).contains(target), createdAt.timeIntervalSince1970.isFinite else {

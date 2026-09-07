@@ -68,6 +68,25 @@ struct HabitEditor: View {
                         CompletionButton(habit: habit, count: previewCount) { previewCount = previewCount >= habit.target ? 0 : previewCount + 1 }
                     }.padding(.vertical, 8)
                 } footer: { Text("Your current Daily Target also applies to all past Habit Days. Changing it may change how your history looks.") }
+                Section {
+                    Toggle("Track a streak", isOn: streakEnabled)
+                    if habit.streakGoal != nil {
+                        Picker("Streak period", selection: streakPeriod) {
+                            Text("Daily").tag(StreakPeriod.daily)
+                            Text("Weekly").tag(StreakPeriod.weekly)
+                        }
+                        .pickerStyle(.segmented)
+                        if habit.streakGoal?.period == .weekly {
+                            Stepper("Weekly Goal: \(habit.streakGoal?.target ?? 3) days", value: weeklyStreakTarget, in: 1...7)
+                        }
+                    }
+                } header: { Text("Streak Goal") } footer: {
+                    if habit.streakGoal?.period == .weekly {
+                        Text("A week extends the streak when this Habit reaches its Daily Target on the chosen number of days.")
+                    } else {
+                        Text("A day extends the streak when this Habit reaches its Daily Target.")
+                    }
+                }
                 if !isNew {
                     Section {
                         Button(habit.archived ? "Restore Habit" : "Archive Habit", systemImage: habit.archived ? "arrow.uturn.backward" : "archivebox") {
@@ -92,6 +111,27 @@ struct HabitEditor: View {
             } message: { Text("Its Completions and Day Notes will be removed from all synchronized devices.") }
             .sheet(isPresented: $choosingEmoji) { HabitEmojiPicker(selection: $habit.emoji) }
         }
+    }
+
+    private var streakEnabled: Binding<Bool> {
+        Binding(
+            get: { habit.streakGoal != nil },
+            set: { enabled in habit.streakGoal = enabled ? StreakGoal(period: .daily) : nil }
+        )
+    }
+
+    private var streakPeriod: Binding<StreakPeriod> {
+        Binding(
+            get: { habit.streakGoal?.period ?? .daily },
+            set: { period in habit.streakGoal = StreakGoal(period: period, target: period == .weekly ? 3 : 1) }
+        )
+    }
+
+    private var weeklyStreakTarget: Binding<Int> {
+        Binding(
+            get: { habit.streakGoal?.target ?? 3 },
+            set: { habit.streakGoal = StreakGoal(period: .weekly, target: $0) }
+        )
     }
 }
 

@@ -5,7 +5,7 @@ This context describes personal habits and the daily record a person builds by p
 ## Language
 
 **Habit**:
-A positive behaviour a person intends to practise every calendar day. A Habit has a name, emoji, color, one-sentence Habit Description, and Daily Target, and remains active until it is archived or deleted.
+A positive behaviour a person intends to practise regularly. A Habit has a name, emoji, color, one-sentence Habit Description, Daily Target, and optional Streak Goal, and remains active until it is archived or deleted.
 _Avoid_: Goal, task, avoidance habit
 
 **Habit Description**:
@@ -23,6 +23,18 @@ _Avoid_: Historical target, streak goal
 **Daily Progress**:
 The comparison between a Habit Day's Completion count and the Habit’s current Daily Target: empty, in progress, or complete. It is derived from those values rather than recorded independently; there is no separate overachievement or failure state.
 _Avoid_: Stored status, failed day
+
+**Streak Goal**:
+An optional rule for deriving a Current Streak. A Daily Streak Goal requires one completed Habit Day per day. A Weekly Streak Goal requires a chosen number of completed Habit Days, from one through seven, in each calendar week.
+_Avoid_: Stored streak, Completion Target
+
+**Current Streak**:
+The number of consecutive days or weeks that satisfy a Habit's Streak Goal. It is derived from Habit Days using the current Daily Target and Streak Goal. An unfinished current day or week does not break it.
+_Avoid_: Saved streak count
+
+**Month Total**:
+The sum of all Completions for a Habit in the calendar month currently visible in Habit Detail.
+_Avoid_: Completed days, monthly streak
 
 **Habit Day**:
 One Habit on one local calendar date, including its Completion count and optional Day Note. Its date is fixed when recorded, and an empty Habit Day means only that no Completions were recorded.

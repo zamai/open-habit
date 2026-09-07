@@ -24,9 +24,7 @@ struct HabitDetailView: View {
                             if !habit.detail.isEmpty { Text(habit.detail).foregroundStyle(.secondary) }
                             if habit.archived { Label("Archived Habit", systemImage: "archivebox").font(.subheadline).foregroundStyle(.secondary) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
-                        Label("Daily Target: \(habit.target)", systemImage: "target")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(habit.tint)
+                        metrics(for: habit)
                         VStack(alignment: .leading, spacing: 12) {
                             ScrollView(.horizontal) {
                                 HistoryGrid(habit: habit, data: model.data, weeks: 53, onSelect: { selected = $0 }, onEdit: { sheet = .day(DaySelection(habitID: habitID, date: $0)) })
@@ -95,6 +93,20 @@ struct HabitDetailView: View {
         }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22))
     }
 
+    private func metrics(for habit: Habit) -> some View {
+        let streak = model.data.currentStreak(for: habit)
+        let monthTotal = model.data.completionTotal(for: habit.id, inMonthContaining: month)
+        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 10)], spacing: 10) {
+            HabitMetric(value: "\(habit.target)", label: "Daily Target", color: habit.tint)
+            HabitMetric(value: "\(monthTotal)", label: "\(month.formatted(.dateTime.month(.abbreviated))) Total", color: habit.tint)
+            if let goal = habit.streakGoal {
+                let weeklyProgress = model.data.completedDays(for: habit, inWeekContaining: Date())
+                let label = goal.period == .daily ? "Day Streak" : "Week Streak\n\(weeklyProgress) / \(goal.target) this week"
+                HabitMetric(value: "\(streak)", label: label, color: habit.tint)
+            }
+        }
+    }
+
     private func loadSelectedNote() {
         noteDraft = model.data.day(habitID, selected).note
     }
@@ -102,6 +114,23 @@ struct HabitDetailView: View {
     private func saveSelectedNote() {
         model.update { try $0.setNote(habitID, day: selected, note: noteDraft) }
         if model.error == nil { noteFocused = false }
+    }
+}
+
+private struct HabitMetric: View {
+    let value: String
+    let label: String
+    let color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(value).font(.title2.monospacedDigit().weight(.bold)).foregroundStyle(color)
+            Text(label).font(.caption).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .accessibilityElement(children: .combine)
     }
 }
 
