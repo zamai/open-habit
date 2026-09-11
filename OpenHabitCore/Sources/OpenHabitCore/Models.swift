@@ -1,7 +1,7 @@
 import Foundation
 
 public enum HabitColor: String, Codable, CaseIterable, Sendable {
-    case orange, blue, green, pink, purple, teal, red, yellow
+    case orange, blue, green, pink, purple, teal, red, yellow, indigo, mint, brown
 }
 public enum Appearance: String, Codable, CaseIterable, Sendable { case system, light, dark }
 public enum WeekStart: String, Codable, CaseIterable, Sendable { case system, monday, sunday }

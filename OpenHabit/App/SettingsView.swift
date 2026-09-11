@@ -26,10 +26,6 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Label(model.syncStatus, systemImage: model.syncStatus == "Synced" ? "checkmark.icloud" : "icloud")
-                    Button("Sync now") { Task { await model.sync() } }.disabled(model.syncing)
-                } header: { Text("iCloud") } footer: { Text("Private iCloud sync keeps your devices together and can recover your data after reinstalling. It isn’t a versioned backup: edits and deletions sync too.") }
-                Section("Preferences") {
                     Picker("Appearance", selection: Binding(get: { model.data.settings.appearance }, set: { value in model.setSettings { $0.appearance = value } })) {
                         ForEach(Appearance.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                     }
@@ -38,12 +34,37 @@ struct SettingsView: View {
                     }
                 }
                 Section {
+                    HStack {
+                        Label(model.syncStatus, systemImage: model.syncStatus == "Synced" ? "checkmark.icloud" : "icloud")
+                        Spacer()
+                        Button {
+                            Task { await model.sync() }
+                        } label: {
+                            Label("Sync now", systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(model.syncing)
+                    }
+                } footer: { Text("Private iCloud sync keeps your devices together and can recover your data after reinstalling. It isn’t a versioned backup: edits and deletions sync too.") }
+                Section {
                     NavigationLink { ArchivedHabitsView() } label: { Label("Archived Habits", systemImage: "archivebox") }
-                    Button("Export Backup", systemImage: "square.and.arrow.up") {
+                    Button {
                         do { document = BackupDocument(data: try Backup(dataset: sharedStore().read().dataset).encoded()); exporting = true }
                         catch { problem = error.localizedDescription }
+                    } label: {
+                        Label {
+                            Text("Export Backup").foregroundStyle(.primary)
+                        } icon: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
                     }
-                    Button("Restore from Backup", systemImage: "arrow.counterclockwise") { importing = true }
+                    Button { importing = true } label: {
+                        Label {
+                            Text("Restore from Backup").foregroundStyle(.primary)
+                        } icon: {
+                            Image(systemName: "arrow.counterclockwise")
+                        }
+                    }
                 }
                 Section {
                     NavigationLink("About Open Habit") {
@@ -55,7 +76,7 @@ struct SettingsView: View {
                             Text("Version 1.0").font(.caption).foregroundStyle(.secondary)
                         }.padding(30).navigationTitle("About")
                     }
-                    Button("Delete All Data", systemImage: "trash", role: .destructive) { deleting = true }
+                    Button("Delete All Data", role: .destructive) { deleting = true }
                 }
             }
             .navigationTitle("Settings").navigationBarTitleDisplayMode(.inline)
@@ -69,11 +90,12 @@ struct SettingsView: View {
                 } catch { problem = error.localizedDescription }
             }
             .sheet(item: $pending) { item in RestoreConfirmation(backup: item.backup) }
-            .confirmationDialog("Delete all data from every synchronized device?", isPresented: $deleting, titleVisibility: .visible) {
-                Button("Delete All Data", role: .destructive) {
+            .alert("Delete all data from every synchronized device?", isPresented: $deleting) {
+                Button("Yes, erase all", role: .destructive) {
                     model.update { journal in var empty = Dataset(); empty.initialized = true; empty.settings.examplesDismissed = true; journal.append(.replace(empty)) }
                     UINotificationFeedbackGenerator().notificationOccurred(.warning)
                 }
+                Button("Cancel", role: .cancel) {}
             } message: { Text("This permanently removes all Habits, Completions, and Day Notes. Export a backup first if you want to keep a copy. Example Habits will not return.") }
             .alert("Backup problem", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) { Button("OK") { problem = nil } } message: { Text(problem ?? "") }
         }

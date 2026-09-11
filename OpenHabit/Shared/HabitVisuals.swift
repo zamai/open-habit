@@ -12,6 +12,9 @@ extension HabitColor {
         case .teal: .teal
         case .red: .red
         case .yellow: Color(red: 0.78, green: 0.61, blue: 0.08)
+        case .indigo: .indigo
+        case .mint: .mint
+        case .brown: .brown
         }
     }
 }

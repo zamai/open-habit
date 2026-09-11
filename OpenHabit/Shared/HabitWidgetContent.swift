@@ -160,6 +160,11 @@ private struct RecentDayTile: View {
                     .stroke(color, style: StrokeStyle(lineWidth: max(2, size * 0.11), lineCap: .round))
                     .rotationEffect(.degrees(-90)).padding(size * 0.20)
             }
+            if day.count >= target {
+                Image(systemName: "checkmark")
+                    .font(.system(size: max(7, size * 0.36), weight: .bold))
+                    .foregroundStyle(.white)
+            }
         }
         .frame(width: size, height: size)
         .overlay {

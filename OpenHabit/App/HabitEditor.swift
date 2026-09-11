@@ -30,11 +30,11 @@ struct HabitEditor: View {
                         TextField("Habit name", text: $habit.name).onChange(of: habit.name) { _, value in habit.name = String(value.prefix(60)) }
                             .accessibilityIdentifier("habit-name")
                     }.padding(.vertical, 8)
-                    TextField("One-sentence description (optional)", text: $habit.detail)
+                    TextField("Description", text: $habit.detail)
                         .onChange(of: habit.detail) { _, value in habit.detail = String(value.replacingOccurrences(of: "\n", with: " ").prefix(160)) }
-                } header: { Text("Make it yours") } footer: { Text("One emoji. A small, positive action to practise every day.") }
+                }
                 Section("Color") {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 48))], spacing: 14) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 14) {
                         ForEach(HabitColor.allCases, id: \.self) { color in
                             Button { habit.color = color; habit.customColorRGB = nil } label: {
                                 Circle().fill(color.tint).frame(width: 40, height: 40)
@@ -43,18 +43,13 @@ struct HabitEditor: View {
                             }.buttonStyle(.plain).accessibilityLabel(color.rawValue.capitalized)
                                 .accessibilityAddTraits(habit.customColorRGB == nil && habit.color == color ? .isSelected : [])
                         }
+                        ColorPicker("Custom color", selection: customColor, supportsOpacity: false)
+                            .labelsHidden()
+                            .frame(width: 48, height: 48)
+                            .accessibilityLabel("Custom color")
+                            .accessibilityIdentifier("custom-habit-color")
+                            .accessibilityAddTraits(habit.customColorRGB != nil ? .isSelected : [])
                     }.padding(.vertical, 4)
-                    ColorPicker("Custom color", selection: Binding(
-                        get: { habit.tint },
-                        set: { color in
-                            let resolved = color.resolve(in: EnvironmentValues())
-                            let red = UInt32((min(1, max(0, resolved.red)) * 255).rounded())
-                            let green = UInt32((min(1, max(0, resolved.green)) * 255).rounded())
-                            let blue = UInt32((min(1, max(0, resolved.blue)) * 255).rounded())
-                            habit.customColorRGB = (red << 16) | (green << 8) | blue
-                        }
-                    ), supportsOpacity: false)
-                    .accessibilityIdentifier("custom-habit-color")
                 }
                 Section {
                     Stepper("Daily Target: \(habit.target)", value: $habit.target, in: 1...99)
@@ -111,6 +106,19 @@ struct HabitEditor: View {
             } message: { Text("Its Completions and Day Notes will be removed from all synchronized devices.") }
             .sheet(isPresented: $choosingEmoji) { HabitEmojiPicker(selection: $habit.emoji) }
         }
+    }
+
+    private var customColor: Binding<Color> {
+        Binding(
+            get: { habit.tint },
+            set: { color in
+                let resolved = color.resolve(in: EnvironmentValues())
+                let red = UInt32((min(1, max(0, resolved.red)) * 255).rounded())
+                let green = UInt32((min(1, max(0, resolved.green)) * 255).rounded())
+                let blue = UInt32((min(1, max(0, resolved.blue)) * 255).rounded())
+                habit.customColorRGB = (red << 16) | (green << 8) | blue
+            }
+        )
     }
 
     private var streakEnabled: Binding<Bool> {
