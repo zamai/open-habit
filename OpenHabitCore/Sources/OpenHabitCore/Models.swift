@@ -20,6 +20,15 @@ public struct Settings: Codable, Equatable, Sendable {
     public var examplesDismissed = false
     public init() {}
 }
+public struct HabitCategory: Codable, Identifiable, Equatable, Sendable {
+    public var id: UUID
+    public var name: String
+    public var icon: String
+    public var createdAt: Date
+    public init(id: UUID, name: String, icon: String, createdAt: Date) {
+        self.id = id; self.name = name; self.icon = icon; self.createdAt = createdAt
+    }
+}
 public struct Habit: Codable, Identifiable, Equatable, Sendable {
     public var id: UUID
     public var name: String
@@ -29,6 +38,7 @@ public struct Habit: Codable, Identifiable, Equatable, Sendable {
     public var customColorRGB: UInt32? = nil
     public var target: Int
     public var streakGoal: StreakGoal? = nil
+    public var categoryIDs: [UUID]? = nil
     public var createdAt: Date
     public var archived: Bool
     public init(id: UUID = UUID(), name: String = "", emoji: String = "🌱", detail: String = "", color: HabitColor = .green, target: Int = 1, streakGoal: StreakGoal? = nil, createdAt: Date = Date(), archived: Bool = false) {
@@ -56,6 +66,7 @@ public struct Dataset: Codable, Equatable, Sendable {
     public var habits: [Habit] = []
     public var days: [String: HabitDay] = [:]
     public var settings = Settings()
+    public var categories: [HabitCategory]? = nil
     public init() {}
     public var active: [Habit] { habits.filter { !$0.archived } }
     public func habit(_ id: UUID) -> Habit? { habits.first { $0.id == id } }
@@ -63,11 +74,22 @@ public struct Dataset: Codable, Equatable, Sendable {
     public func day(_ id: UUID, _ date: String) -> HabitDay { days[Self.key(id, date)] ?? HabitDay() }
     public func validate() throws {
         guard Set(habits.map(\.id)).count == habits.count else { throw HabitError.invalidBackup("Duplicate Habit identifiers.") }
-        for habit in habits { try habit.validate() }
+        let categoryIDs = Set((categories ?? []).map(\.id))
+        guard categoryIDs.count == (categories ?? []).count,
+              (categories ?? []).allSatisfy({ !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.createdAt.timeIntervalSince1970.isFinite }) else {
+            throw HabitError.invalidBackup("Invalid or duplicate categories.")
+        }
+        for habit in habits {
+            try habit.validate()
+            guard Set(habit.categoryIDs ?? []).isSubset(of: categoryIDs),
+                  Set(habit.categoryIDs ?? []).count == (habit.categoryIDs ?? []).count else {
+                throw HabitError.invalidBackup("Invalid category assignments for \(habit.name).")
+            }
+        }
         for (key, day) in days {
             let parts = key.split(separator: "/")
             guard parts.count == 2, let id = UUID(uuidString: String(parts[0])), habit(id) != nil,
-                  LocalDay.isValid(String(parts[1])), day.count >= 0, day.note.count <= 500 else {
+                  key == Self.key(id, String(parts[1])), LocalDay.isValid(String(parts[1])), day.count >= 0, day.note.count <= 500 else {
                 throw HabitError.invalidBackup("Invalid Habit Day or Day Note.")
             }
         }
@@ -109,16 +131,21 @@ public enum HabitError: LocalizedError {
     }
 }
 public struct Backup: Codable, Sendable {
+    public var format: String? = "open-habit"
     public let formatVersion: Int
     public let exportedAt: Date
     public var dataset: Dataset
-    public init(dataset: Dataset) { formatVersion = 2; exportedAt = Date(); self.dataset = dataset }
+    public init(dataset: Dataset) { formatVersion = 3; exportedAt = Date(); self.dataset = dataset }
     public static func decode(_ data: Data) throws -> Backup {
-        struct Header: Decodable { let formatVersion: Int }
+        struct Header: Decodable { let formatVersion: Int; let format: String? }
         let header = try JSONDecoder().decode(Header.self, from: data)
-        guard (1...2).contains(header.formatVersion) else { throw HabitError.invalidBackup("Format version \(header.formatVersion) is not supported by this app.") }
+        guard (1...3).contains(header.formatVersion) else { throw HabitError.invalidBackup("Format version \(header.formatVersion) is not supported by this app.") }
+        guard header.format == nil || header.format == "open-habit",
+              header.formatVersion < 3 || header.format == "open-habit" else {
+            throw HabitError.invalidBackup("This is not an Open Habit backup. Choose the matching import option.")
+        }
         let decoder = JSONDecoder()
-        if header.formatVersion == 2 {
+        if header.formatVersion >= 2 {
             decoder.dateDecodingStrategy = .custom { decoder in
                 let container = try decoder.singleValueContainer()
                 let text = try container.decode(String.self)
@@ -144,9 +171,10 @@ public struct Backup: Codable, Sendable {
     }
     public func encoded() throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        if formatVersion == 2 {
+        if formatVersion >= 2 {
             encoder.dateEncodingStrategy = .custom { date, encoder in
                 let seconds = date.timeIntervalSinceReferenceDate
+                guard seconds.isFinite else { throw HabitError.invalidBackup("Invalid timestamp.") }
                 let whole = floor(seconds)
                 let prefix = ISO8601DateFormatter().string(from: Date(timeIntervalSinceReferenceDate: whole)).dropLast()
                 // Nine fractional digits preserve the precision of contemporary Date values.

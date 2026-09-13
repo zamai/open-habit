@@ -22,6 +22,25 @@ final class AppModel {
             Task { await sync() }
         } catch { self.error = error.localizedDescription }
     }
+    func importData(_ data: Dataset, replacing: Bool) {
+        error = nil
+        do {
+            if replacing { try sharedStore().restoreBackup(Backup(dataset: data)) }
+            else { try sharedStore().importDataset(data) }
+            reload()
+            WidgetCenter.shared.reloadAllTimelines()
+            Task { await sync() }
+        } catch { self.error = error.localizedDescription }
+    }
+    func eraseData() {
+        error = nil
+        do {
+            try sharedStore().deleteAllData()
+            reload()
+            WidgetCenter.shared.reloadAllTimelines()
+            Task { await sync() }
+        } catch { self.error = error.localizedDescription }
+    }
     func sync() async {
         guard !syncing else { return }
         syncing = true; syncStatus = "Syncing"

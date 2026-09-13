@@ -1,0 +1,144 @@
+{
+  "formatVersion": 2,
+  "habits": [
+    {
+      "id": "00000000-0000-0000-0000-000000000065",
+      "name": "Drum practice",
+      "description": "Synthetic import fixture",
+      "icon": "drums",
+      "color": "lime",
+      "archived": false,
+      "orderIndex": 1,
+      "createdAt": "2025-01-01T00:00:00.123456Z",
+      "isInverse": false,
+      "inverseStartDate": null,
+      "inverseSpanBounds": [],
+      "emoji": null
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000066",
+      "name": "Вода 💧",
+      "description": "Synthetic import fixture",
+      "icon": "glass",
+      "color": "blue",
+      "archived": false,
+      "orderIndex": 2,
+      "createdAt": "2025-01-01T00:00:00.123456Z",
+      "isInverse": false,
+      "inverseStartDate": null,
+      "inverseSpanBounds": [],
+      "emoji": null
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000067",
+      "name": "Archived reading",
+      "description": "Synthetic import fixture",
+      "icon": "glass",
+      "color": "blue",
+      "archived": true,
+      "orderIndex": 3,
+      "createdAt": "2025-01-01T00:00:00.123456Z",
+      "isInverse": false,
+      "inverseStartDate": null,
+      "inverseSpanBounds": [],
+      "emoji": "📚"
+    }
+  ],
+  "completions": [
+    {
+      "id": "00000000-0000-0000-0000-00000000012d",
+      "habitId": "00000000-0000-0000-0000-000000000065",
+      "date": "2025-01-20T23:00:00.123456Z",
+      "timezoneOffsetInMinutes": 60,
+      "amountOfCompletions": 1,
+      "note": null
+    },
+    {
+      "id": "00000000-0000-0000-0000-00000000012e",
+      "habitId": "00000000-0000-0000-0000-000000000066",
+      "date": "2025-01-20T23:00:00.123456Z",
+      "timezoneOffsetInMinutes": 60,
+      "amountOfCompletions": 2,
+      "note": "First note\nSecond line"
+    },
+    {
+      "id": "00000000-0000-0000-0000-00000000012f",
+      "habitId": "00000000-0000-0000-0000-000000000067",
+      "date": "2025-01-20T23:00:00.123456Z",
+      "timezoneOffsetInMinutes": 60,
+      "amountOfCompletions": 3,
+      "note": null
+    }
+  ],
+  "intervals": [
+    {
+      "id": "00000000-0000-0000-0000-0000000000c9",
+      "habitId": "00000000-0000-0000-0000-000000000065",
+      "startDate": "2024-01-01T00:00:00Z",
+      "endDate": null,
+      "type": "week",
+      "requiredNumberOfCompletions": 3,
+      "requiredNumberOfCompletionsPerDay": 1,
+      "unitType": "incremental",
+      "streakType": "day",
+      "allowExceedingGoal": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000ca",
+      "habitId": "00000000-0000-0000-0000-000000000066",
+      "startDate": "2024-01-01T00:00:00Z",
+      "endDate": null,
+      "type": "day",
+      "requiredNumberOfCompletions": null,
+      "requiredNumberOfCompletionsPerDay": 2,
+      "unitType": "incremental",
+      "streakType": "day",
+      "allowExceedingGoal": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000cb",
+      "habitId": "00000000-0000-0000-0000-000000000067",
+      "startDate": "2024-01-01T00:00:00Z",
+      "endDate": null,
+      "type": "day",
+      "requiredNumberOfCompletions": null,
+      "requiredNumberOfCompletionsPerDay": 1,
+      "unitType": "incremental",
+      "streakType": "day",
+      "allowExceedingGoal": false
+    }
+  ],
+  "categories": [
+    {
+      "id": "00000000-0000-0000-0000-00000000001e",
+      "name": "Practice",
+      "icon": "palette",
+      "orderIndex": 0,
+      "createdAt": "2025-01-01T00:00:00.123456Z"
+    }
+  ],
+  "categoryMappings": [
+    {
+      "id": "00000000-0000-0000-0000-000000000191",
+      "habitId": "00000000-0000-0000-0000-000000000065",
+      "categoryId": "00000000-0000-0000-0000-00000000001e",
+      "orderIndex": 0,
+      "createdAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000192",
+      "habitId": "00000000-0000-0000-0000-000000000066",
+      "categoryId": "00000000-0000-0000-0000-00000000001e",
+      "orderIndex": 0,
+      "createdAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000193",
+      "habitId": "00000000-0000-0000-0000-000000000067",
+      "categoryId": "00000000-0000-0000-0000-00000000001e",
+      "orderIndex": 0,
+      "createdAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "reminders": []
+}

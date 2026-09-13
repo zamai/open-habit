@@ -214,7 +214,7 @@ The repository's architectural rationale is recorded in [ADR 0001](./adr/0001-ke
 
 ## JSON backup and restore
 
-Open Habit keeps its own native JSON backup format. HabitKit import is planned after weekly goals and categories are implemented, so migration can preserve those features. CSV import remains deferred.
+Open Habit keeps its own native JSON backup format and supports HabitKit version 2 import with daily/weekly goals and category preservation. CSV import remains deferred. See [Data format and migration](data-format/README.md) for the schema, limitations, and verification workflow.
 
 ### Export
 
@@ -227,16 +227,16 @@ Export produces one versioned, full-fidelity JSON document containing:
 - Names, emoji, descriptions, colors, Daily Targets, and optional Streak Goals.
 - Completion data and Day Notes.
 
-The export contains no iCloud account or device identifiers. Native format version 2 writes `exportedAt` and Habit `createdAt` as ISO 8601 UTC strings with nine fractional-second digits. Habit Day keys remain fixed `YYYY-MM-DD` dates. Restore also accepts version 1 backups, whose timestamps are numeric seconds since 2001-01-01 UTC. New exports use version 2; older app builds that only support version 1 cannot restore them.
+The export contains no iCloud account or device identifiers. Native format version 3 includes the `open-habit` format identifier and category data, and writes `exportedAt` and Habit `createdAt` as ISO 8601 UTC strings with nine fractional-second digits. Habit Day keys remain fixed `YYYY-MM-DD` dates. Restore also accepts version 2 ISO 8601 backups and version 1 backups, whose timestamps are numeric seconds since 2001-01-01 UTC. New exports use version 3; older app builds cannot restore them.
 
 ### Restore
 
-Import is presented as **Restore from Backup**:
+Settings → **Import** offers **Open Habit import** and **HabitKit data import**. Imports add new Habit IDs and preserve existing data and settings; repeated IDs are skipped. The preview shows changes and requires explicit resolution of duplicate Habit Days. Open Habit import also offers **Replace all data**:
 
 1. Parse and validate the entire document without changing current data.
 2. Show a summary of the backup's contents.
 3. Require explicit confirmation that the current dataset will be replaced.
-4. Replace the dataset atomically.
+4. Save a local recovery backup, then replace the dataset atomically. A recovery-write failure prevents replacement.
 5. Synchronize the restored result through iCloud so other devices converge.
 
 Any parsing, validation, or write failure leaves the original dataset unchanged. Importing an unsupported future format version produces an explanatory error rather than a partial restore.
@@ -250,7 +250,8 @@ The Settings screen contains only:
 - First day of week: System Default, Monday, or Sunday.
 - Archived Habits.
 - Export Backup.
-- Restore from Backup.
+- Import (Open Habit or HabitKit).
+- Recovery Backups (restore, export, or delete local recovery files).
 - About Open Habit.
 - Delete All Data, with explicit confirmation and a warning that synchronized data will also be removed.
 
@@ -275,10 +276,10 @@ The source-code link is added when the repository becomes public.
 - Avoidance or quit Habits.
 - Schedules, reminders, notifications, rest days, or monthly goals.
 - Overachievement as a state or quick-log behavior.
-- Categories, multiple overview modes, aggregate statistics beyond Month Total and Current Streak, or charts.
+- Category filtering/editing, multiple overview modes, aggregate statistics beyond Month Total and Current Streak, or charts.
 - Sharing cards, social features, coaching, or gamification.
 - Rich-text notes, multiple notes per Habit Day, tags, or attachments.
-- CSV import. HabitKit import is a planned extension pending weekly goals and categories.
+- CSV import.
 - Large, Lock Screen, or alternative-style widgets.
 
 ## MVP acceptance criteria

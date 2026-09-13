@@ -140,7 +140,7 @@ final class OpenHabitCoreTests: XCTestCase {
         let original = Backup(dataset: data)
         let encoded = try original.encoded()
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
-        XCTAssertEqual(json["formatVersion"] as? Int, 2)
+        XCTAssertEqual(json["formatVersion"] as? Int, 3)
         XCTAssertTrue(try XCTUnwrap(json["exportedAt"] as? String).hasSuffix("Z"))
         let dataset = try XCTUnwrap(json["dataset"] as? [String: Any])
         let habits = try XCTUnwrap(dataset["habits"] as? [[String: Any]])
@@ -153,7 +153,7 @@ final class OpenHabitCoreTests: XCTestCase {
         XCTAssertThrowsError(try Backup.decode(Data(malformed.utf8)))
     }
 
-    func testLegacyNumericBackupStillRestoresAndReexportsAsVersion2() throws {
+    func testLegacyNumericBackupStillRestoresAndReexportsAsCurrentVersion() throws {
         let legacy = Data("""
         {"formatVersion":1,"exportedAt":810123456.25,"dataset":{
           "initialized":true,"settings":{"appearance":"dark","weekStart":"monday","examplesDismissed":true},
@@ -168,7 +168,7 @@ final class OpenHabitCoreTests: XCTestCase {
         try journal.restore(backup)
         XCTAssertEqual(journal.dataset, backup.dataset)
         let reexported = try Backup.decode(Backup(dataset: journal.dataset).encoded())
-        XCTAssertEqual(reexported.formatVersion, 2)
+        XCTAssertEqual(reexported.formatVersion, 3)
         XCTAssertEqual(reexported.dataset, backup.dataset)
     }
 

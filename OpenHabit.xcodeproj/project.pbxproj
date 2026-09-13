@@ -34,6 +34,7 @@
 		B8ECC6B946F245C3210F389F /* HabitEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D8B16028A1C167D86F734A /* HabitEditor.swift */; };
 		C0B1DB153D3240BCA5FBF7A1 /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = CFA001260E814B07646529BA /* OpenHabitCore */; };
 		E4CA5266E3E00387FFF044A2 /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8259AB12F1BC7BEEF985B827 /* OverviewView.swift */; };
+		EDC8C5667542AD1D62AD3F46 /* ImportUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 628DF07485DBFC431E79B585 /* ImportUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,6 +85,7 @@
 		44AC82FEFE33085BE2621C27 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		585229E5D111A46C575777E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5D164BBCCAE5874C2C25B801 /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
+		628DF07485DBFC431E79B585 /* ImportUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportUITests.swift; sourceTree = "<group>"; };
 		629B9C172642BD503791ECE0 /* WidgetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetUITests.swift; sourceTree = "<group>"; };
 		62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIntents.swift; sourceTree = "<group>"; };
 		7156FB95578D7B4822AF6C6B /* OpenHabit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenHabit.entitlements; sourceTree = "<group>"; };
@@ -187,6 +189,7 @@
 		AB4EC5E3357FF5808D84A983 /* OpenHabitUITests */ = {
 			isa = PBXGroup;
 			children = (
+				628DF07485DBFC431E79B585 /* ImportUITests.swift */,
 				629B9C172642BD503791ECE0 /* WidgetUITests.swift */,
 			);
 			path = OpenHabitUITests;
@@ -398,6 +401,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EDC8C5667542AD1D62AD3F46 /* ImportUITests.swift in Sources */,
 				3E070FBB0EBC0DD82715AFAD /* WidgetUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -6,6 +6,7 @@ public struct Edit: Codable, Identifiable, Equatable, Sendable {
         case redacted
         case initialize(Dataset)
         case replace(Dataset)
+        case importData(Dataset)
         case save(Habit)
         case archive(UUID, Bool)
         case delete(UUID)
@@ -69,6 +70,7 @@ public struct Journal: Codable, Sendable {
             }
             guard edits[index].generation == current else { edits[index].action = .redacted; continue }
             switch edits[index].action {
+            case .importData(let data): edits[index].action = .importData(cleaned(data))
             case .initialize(let data): edits[index].action = .initialize(cleaned(data))
             case .save(let habit): if deleted.contains(habit.id) { edits[index].action = .redacted }
             case .archive(let id, _), .add(let id, _, _, _), .remove(let id, _, _), .count(let id, _, _), .note(let id, _, _):
@@ -90,6 +92,17 @@ public struct Journal: Codable, Sendable {
             switch edit.action {
             case .initialize(let data):
                 if !result.initialized { result = data; result.initialized = true }
+            case .importData(let data):
+                // A snapshot is added only once per Habit ID, even across offline imports.
+                let existing = Set(result.habits.map(\.id)).union(deleted)
+                let added = data.habits.filter { !existing.contains($0.id) }
+                let addedIDs = Set(added.map { $0.id.uuidString })
+                result.habits.append(contentsOf: added)
+                for (key, day) in data.days where addedIDs.contains(String(key.prefix(36))) { result.days[key] = day }
+                let categoryIDs = Set((result.categories ?? []).map(\.id))
+                let categories = (data.categories ?? []).filter { !categoryIDs.contains($0.id) }
+                if !categories.isEmpty { result.categories = (result.categories ?? []) + categories }
+                result.initialized = true
             case .replace, .redacted: break
             case .save(var habit):
                 guard !deleted.contains(habit.id) else { continue }
@@ -173,6 +186,18 @@ public struct Journal: Codable, Sendable {
         guard !habit.archived else { throw HabitError.archivedHabit }
         if dataset.day(id, day).count >= habit.target { try setCount(id, day: day, count: 0, now: now) }
         else { try add(id, day: day, now: now) }
+    }
+    public var unavailableImportIDs: Set<UUID> {
+        let current = generation
+        return Set(dataset.habits.map(\.id)).union(edits.compactMap { edit in
+            guard edit.generation == current else { return nil }
+            if case .delete(let id) = edit.action { return id }
+            return nil
+        })
+    }
+    public mutating func importDataset(_ data: Dataset) throws {
+        try data.validate()
+        append(.importData(data))
     }
     public mutating func restore(_ backup: Backup) throws {
         try backup.dataset.validate()

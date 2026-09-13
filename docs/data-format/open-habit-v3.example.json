@@ -1,0 +1,88 @@
+{
+  "dataset" : {
+    "categories" : [
+      {
+        "createdAt" : "2025-01-01T00:00:00.123456001Z",
+        "icon" : "palette",
+        "id" : "00000000-0000-0000-0000-00000000001E",
+        "name" : "Practice"
+      }
+    ],
+    "days" : {
+      "00000000-0000-0000-0000-000000000065\/2025-01-21" : {
+        "count" : 1,
+        "note" : ""
+      },
+      "00000000-0000-0000-0000-000000000066\/2025-01-21" : {
+        "count" : 2,
+        "note" : "First note\nSecond line"
+      },
+      "00000000-0000-0000-0000-000000000067\/2025-01-21" : {
+        "count" : 3,
+        "note" : ""
+      }
+    },
+    "habits" : [
+      {
+        "archived" : false,
+        "categoryIDs" : [
+          "00000000-0000-0000-0000-00000000001E"
+        ],
+        "color" : "green",
+        "createdAt" : "2025-01-01T00:00:00.123456001Z",
+        "detail" : "Synthetic import fixture",
+        "emoji" : "🥁",
+        "id" : "00000000-0000-0000-0000-000000000065",
+        "name" : "Drum practice",
+        "streakGoal" : {
+          "period" : "weekly",
+          "target" : 3
+        },
+        "target" : 1
+      },
+      {
+        "archived" : false,
+        "categoryIDs" : [
+          "00000000-0000-0000-0000-00000000001E"
+        ],
+        "color" : "blue",
+        "createdAt" : "2025-01-01T00:00:00.123456001Z",
+        "detail" : "Synthetic import fixture",
+        "emoji" : "💧",
+        "id" : "00000000-0000-0000-0000-000000000066",
+        "name" : "Вода 💧",
+        "streakGoal" : {
+          "period" : "daily",
+          "target" : 1
+        },
+        "target" : 2
+      },
+      {
+        "archived" : true,
+        "categoryIDs" : [
+          "00000000-0000-0000-0000-00000000001E"
+        ],
+        "color" : "blue",
+        "createdAt" : "2025-01-01T00:00:00.123456001Z",
+        "detail" : "Synthetic import fixture",
+        "emoji" : "📚",
+        "id" : "00000000-0000-0000-0000-000000000067",
+        "name" : "Archived reading",
+        "streakGoal" : {
+          "period" : "daily",
+          "target" : 1
+        },
+        "target" : 1
+      }
+    ],
+    "initialized" : true,
+    "settings" : {
+      "appearance" : "system",
+      "examplesDismissed" : false,
+      "weekStart" : "system"
+    }
+  },
+  "exportedAt" : "2026-09-13T07:16:19.389873981Z",
+  "format" : "open-habit",
+  "formatVersion" : 3
+}

@@ -47,3 +47,7 @@ _Avoid_: Habit note, journal entry
 **Archived Habit**:
 A Habit preserved with its history but excluded from current tracking views and widgets. Dates while it is archived remain ordinary empty Habit Days.
 _Avoid_: Deleted habit, inactive habit
+
+**Category**:
+A named grouping of Habits. A Habit may belong to multiple Categories, and a Category may have no Habits.
+_Avoid_: Habit, schedule

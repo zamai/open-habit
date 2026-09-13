@@ -62,3 +62,7 @@ GitHub Actions run [33990168840](https://github.com/zamai/open-habit/actions/run
 - [Configured widgets on Home Screen](screenshots/widgets-home-screen.png)
 
 The widget images are native rendering-test captures at WidgetKit dimensions. Both sizes also have verified Home Screen interactions. The Home Screen UI smoke test requires an English-language Simulator and may add a small widget and enter Home Screen editing.
+
+## Import/export verification
+
+See [Data format verification](data-format/README.md#verification) for core and Files-based UI round-trip coverage, the reproducible disposable-Simulator command, and verification of the original HabitKit export.

@@ -38,6 +38,8 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleDisplayName: Open Habit
         UILaunchScreen: {}
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
         ITSAppUsesNonExemptEncryption: false
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: true
