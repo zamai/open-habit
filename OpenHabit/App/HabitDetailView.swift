@@ -23,8 +23,19 @@ struct HabitDetailView: View {
                             }
                             if !habit.detail.isEmpty { Text(habit.detail).foregroundStyle(.secondary) }
                             if habit.archived { Label("Archived Habit", systemImage: "archivebox").font(.subheadline).foregroundStyle(.secondary) }
+                            if let state = model.sharedHabit(for: habit.id) {
+                                Label("\(state.snapshot.members.count) \(state.snapshot.members.count == 1 ? "Member" : "Members")", systemImage: "person.2.fill").font(.subheadline).foregroundStyle(.secondary)
+                            }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         metrics(for: habit)
+                        if let state = model.sharedHabit(for: habit.id) {
+                            SharedHabitMembersSection(state: state)
+                        } else if !habit.archived {
+                            if #available(iOS 18.0, *) {
+                                Button("Share Habit", systemImage: "person.2.badge.plus") { sheet = .share(habit) }
+                                    .buttonStyle(.bordered)
+                            }
+                        }
                         VStack(alignment: .leading, spacing: 12) {
                             ScrollView(.horizontal) {
                                 HistoryGrid(habit: habit, data: model.data, weeks: 53, onSelect: { selected = $0 }, onEdit: { sheet = .day(DaySelection(habitID: habitID, date: $0)) })
@@ -45,11 +56,19 @@ struct HabitDetailView: View {
                     }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
                 }
                 .scrollDismissesKeyboard(.interactively)
+                .refreshable { await model.sync() }
                 .background(Color(.systemGroupedBackground))
-                    .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) } } }
+                    .toolbar {
+                        if model.sharedHabit(for: habit.id)?.membership.role != .member {
+                            ToolbarItem(placement: .topBarTrailing) { Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) } }
+                        }
+                    }
             } else { ContentUnavailableView("Habit unavailable", systemImage: "leaf", description: Text("This Habit may have been deleted from another device.")) }
         }
         .onAppear { loadSelectedNote() }
+        .task(id: habitID) {
+            if model.sharedHabit(for: habitID) != nil { await model.sync() }
+        }
         .onChange(of: selected) { _, _ in
             noteFocused = false
             loadSelectedNote()
@@ -64,6 +83,7 @@ struct HabitDetailView: View {
             case .day(let day): DayEditor(selection: day, data: model.data)
             case .create: HabitEditor(habit: Habit(), isNew: true)
             case .settings: SettingsView()
+            case .share(let habit): SharedHabitSetupView(habit: habit)
             }
         }
     }

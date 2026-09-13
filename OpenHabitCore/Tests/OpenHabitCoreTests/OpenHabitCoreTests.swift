@@ -250,4 +250,53 @@ final class OpenHabitCoreTests: XCTestCase {
         XCTAssertThrowsError(try Habit(name: String(repeating: "a", count: 61)).validate())
         XCTAssertThrowsError(try Habit(name: "Run", streakGoal: StreakGoal(period: .weekly, target: 8)).validate())
     }
+
+    func testSharedHabitKeepsPrivateNotesOutOfProgressProjection() throws {
+        var data = Dataset()
+        let habit = Habit(name: "Exercise", emoji: "🏃", target: 3)
+        data.habits = [habit]
+        data.days[Dataset.key(habit.id, "2026-09-05")] = HabitDay(count: 2, note: "Private detail")
+        data.days[Dataset.key(habit.id, "2026-09-06")] = HabitDay(count: 3, note: "Also private")
+        data.days[Dataset.key(habit.id, "2026-09-07")] = HabitDay(count: 0, note: "Note without progress")
+
+        XCTAssertEqual(data.sharedCounts(for: habit.id, visibleFromDay: "2026-09-06"), ["2026-09-06": 3])
+        let encoded = String(data: try JSONEncoder().encode(data.sharedCounts(for: habit.id, visibleFromDay: nil)), encoding: .utf8)!
+        XCTAssertFalse(encoded.contains("Private"))
+        XCTAssertFalse(encoded.contains("2026-09-07"))
+    }
+
+    func testSharedDefinitionAdoptsCommonFieldsAndKeepsLocalIdentityAndOrganization() {
+        var local = Habit(id: UUID(), name: "Gym", emoji: "🏋️", detail: "Old", color: .orange, target: 1, createdAt: now, archived: true)
+        local.categoryIDs = [UUID()]
+        var common = SharedHabitDefinition(habit: Habit(name: "Exercise", emoji: "🏃", detail: "Twenty minutes", color: .blue, target: 3, streakGoal: StreakGoal(period: .weekly, target: 3)), weekStart: .monday)
+        common.id = UUID()
+
+        let adopted = common.apply(to: local)
+        XCTAssertEqual(adopted.id, local.id)
+        XCTAssertEqual(adopted.createdAt, local.createdAt)
+        XCTAssertEqual(adopted.categoryIDs, local.categoryIDs)
+        XCTAssertFalse(adopted.archived)
+        XCTAssertEqual(adopted.name, "Exercise")
+        XCTAssertEqual(adopted.target, 3)
+        XCTAssertEqual(adopted.streakGoal, StreakGoal(period: .weekly, target: 3))
+    }
+
+    func testSharedMembersUseOneColorEachAndCurrentMemberSortsFirst() throws {
+        let owner = SharedMember(id: UUID(), name: "Alex", colorIndex: 0, role: .owner, joinedAt: now)
+        let first = SharedMember(id: UUID(), name: "Marta", colorIndex: 1, role: .member, joinedAt: now.addingTimeInterval(1))
+        let current = SharedMember(id: UUID(), name: "Jan", colorIndex: 2, role: .member, joinedAt: now.addingTimeInterval(2))
+        let definition = SharedHabitDefinition(habit: Habit(name: "Exercise", emoji: "🏃"), weekStart: .monday)
+        let snapshot = SharedHabitSnapshot(definition: definition, members: [first, current, owner])
+
+        try snapshot.validate()
+        XCTAssertEqual(snapshot.orderedMembers(currentMemberID: current.id).map(\.id), [current.id, owner.id, first.id])
+        XCTAssertEqual(SharedMember.nextColorIndex(usedBy: snapshot.members), 3)
+        XCTAssertEqual(SharedMember.palette.count, 10)
+
+        let membership = SharedHabitMembership(
+            sharedHabitID: definition.id, localHabitID: UUID(), memberID: current.id, role: .member,
+            visibleFromDay: nil, zoneName: "Test", zoneOwnerName: "Test", shareRecordName: "Test"
+        )
+        XCTAssertNoThrow(try SharedHabitState(membership: membership, snapshot: snapshot).validate())
+    }
 }

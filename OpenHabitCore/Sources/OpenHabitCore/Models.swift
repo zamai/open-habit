@@ -114,11 +114,12 @@ public enum LocalDay {
     }
 }
 public enum HabitError: LocalizedError {
-    case invalidHabit, missingHabit, archivedHabit, invalidDate, futureDate, invalidAmount, longNote, storageUnavailable
+    case invalidHabit, invalidSharedHabit, missingHabit, archivedHabit, invalidDate, futureDate, invalidAmount, longNote, storageUnavailable
     case invalidBackup(String)
     public var errorDescription: String? {
         switch self {
         case .invalidHabit: "Enter one emoji, a name of 1–60 characters, a single-line description up to 160 characters, and a Daily Target from 1–99."
+        case .invalidSharedHabit: "This Shared Habit contains invalid or inconsistent data."
         case .missingHabit: "This Habit was deleted. Choose another Habit."
         case .archivedHabit: "Restore this Archived Habit before adding Completions."
         case .invalidDate: "Choose a valid calendar date."

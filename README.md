@@ -3,6 +3,7 @@
 Open Habit is an offline-first iPhone and iPad habit tracker designed around interactive Home Screen widgets, Shortcuts, iCloud sync, and portable user-owned data.
 
 - [MVP product design](./docs/mvp.md)
+- [Shared Habits design](./docs/shared-habits.md)
 - [Domain language](./CONTEXT.md)
 - [Architecture decisions](./docs/adr/)
 
@@ -55,7 +56,7 @@ xcodebuild -exportArchive -archivePath /tmp/OpenHabit.xcarchive \
 
 The export command uploads to App Store Connect and uses automatic distribution signing. The Internal Testers group automatically receives processed builds. External testing requires a separate Beta App Review submission.
 
-GitHub Actions runs the core, intent, and widget-rendering tests for pull requests. Every successful push to `main` receives a unique CI build number, is signed with the `testflight` environment credentials, uploaded, verified as available to Internal Testers, added to the public external group, and submitted for Beta App Review. If Apple is already reviewing another build, an hourly reconciliation job retries the newest external build when the review slot becomes available. TestFlight notifies external testers when Apple makes the build available. A matching release tag (for example, `v1.0.0` when `MARKETING_VERSION` is `1.0`) creates another TestFlight build and a draft GitHub Release after processing. The SpringBoard widget-install smoke test stays local because it depends on the Home Screen state of a persistent Simulator.
+GitHub Actions runs the core, intent, and widget-rendering tests for pull requests. Every successful push to `main` receives a unique CI build number, is signed with the `testflight` environment credentials, uploaded, and verified as available to Internal Testers. External distribution is opt-in through the `distribute_external` workflow input; only that path adds the build to the public external group and submits it for Beta App Review. If Apple is already reviewing another opted-in build, an hourly reconciliation job retries the newest external build when the review slot becomes available. A matching release tag (for example, `v1.0.0` when `MARKETING_VERSION` is `1.0`) creates another TestFlight build and a draft GitHub Release after processing. The SpringBoard widget-install smoke test stays local because it depends on the Home Screen state of a persistent Simulator.
 
 The App Store Connect API key must have the **App Manager** or **Admin** role so CI can add builds to the external group and submit them for Beta App Review.
 

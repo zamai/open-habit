@@ -8,9 +8,9 @@ struct DaySelection: Identifiable {
     var id: String { Dataset.key(habitID, date) }
 }
 enum AppSheet: Identifiable {
-    case settings, create, edit(Habit), day(DaySelection)
+    case settings, create, edit(Habit), day(DaySelection), share(Habit)
     var id: String {
-        switch self { case .settings: "settings"; case .create: "create"; case .edit(let habit): "edit-\(habit.id)"; case .day(let day): day.id }
+        switch self { case .settings: "settings"; case .create: "create"; case .edit(let habit): "edit-\(habit.id)"; case .day(let day): day.id; case .share(let habit): "share-\(habit.id)" }
     }
 }
 
@@ -52,6 +52,7 @@ struct OverviewView: View {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: sizeClass == .regular && !typeSize.isAccessibilitySize ? 2 : 1), spacing: 16) {
                             ForEach(model.data.active) { habit in
                                 HabitCard(habit: habit, data: model.data, now: timeline.date,
+                                          sharedMemberCount: model.sharedHabit(for: habit.id)?.snapshot.members.count,
                                           open: { path.append(habit.id) },
                                           complete: { model.update { try $0.toggle(habit.id) } },
                                           quickMenu: { quickMenu(habit) })
@@ -80,7 +81,11 @@ struct OverviewView: View {
                 case .create: HabitEditor(habit: Habit(), isNew: true)
                 case .edit(let habit): HabitEditor(habit: habit, isNew: false)
                 case .day(let day): DayEditor(selection: day, data: model.data)
+                case .share(let habit): SharedHabitSetupView(habit: habit)
                 }
+            }
+            .sheet(item: Binding(get: { model.pendingJoin }, set: { model.pendingJoin = $0 })) { offer in
+                SharedHabitJoinView(offer: offer).interactiveDismissDisabled()
             }
             .confirmationDialog("Permanently delete \(deleting?.name ?? "Habit")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
                 Button("Delete Habit and History", role: .destructive) { if let habit = deleting { model.delete(habit.id) }; deleting = nil }
@@ -96,9 +101,13 @@ struct OverviewView: View {
         Button("Mark today complete", systemImage: "checkmark.circle") { model.update { try $0.setCount(habit.id, day: LocalDay.string(), count: habit.target) } }
         Button("Mark yesterday complete", systemImage: "clock.arrow.circlepath") { model.update { try $0.setCount(habit.id, day: LocalDay.string(Calendar.current.date(byAdding: .day, value: -1, to: Date())!), count: habit.target) } }
         Button("Edit today’s Habit Day", systemImage: "calendar") { sheet = .day(DaySelection(habitID: habit.id, date: LocalDay.string())) }
-        Button("Edit Habit", systemImage: "pencil") { sheet = .edit(habit) }
-        Button("Archive Habit", systemImage: "archivebox") { model.update { $0.append(.archive(habit.id, true)) } }
-        Button("Delete Habit", systemImage: "trash", role: .destructive) { deleting = habit }
+        if model.sharedHabit(for: habit.id)?.membership.role != .member {
+            Button("Edit Habit", systemImage: "pencil") { sheet = .edit(habit) }
+        }
+        if model.sharedHabit(for: habit.id) == nil {
+            Button("Archive Habit", systemImage: "archivebox") { model.update { $0.append(.archive(habit.id, true)) } }
+            Button("Delete Habit", systemImage: "trash", role: .destructive) { deleting = habit }
+        }
     }
     private func move(_ id: UUID, offset: Int) {
         var ids = model.data.habits.map(\.id)
@@ -111,6 +120,7 @@ private struct HabitCard<Menu: View>: View {
     let habit: Habit
     let data: Dataset
     let now: Date
+    let sharedMemberCount: Int?
     let open: () -> Void
     let complete: () -> Void
     @ViewBuilder let quickMenu: () -> Menu
@@ -123,6 +133,10 @@ private struct HabitCard<Menu: View>: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(habit.name).font(.system(.headline, design: .rounded)).foregroundStyle(.primary).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                             Text(habit.detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            if let sharedMemberCount {
+                                Label("\(sharedMemberCount) \(sharedMemberCount == 1 ? "Member" : "Members")", systemImage: "person.2.fill")
+                                    .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                            }
                             if let goal = habit.streakGoal {
                                 let streak = data.currentStreak(for: habit, asOf: now)
                                 let unit = goal.period == .daily

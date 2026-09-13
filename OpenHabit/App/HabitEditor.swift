@@ -82,12 +82,20 @@ struct HabitEditor: View {
                         Text("A day extends the streak when this Habit reaches its Daily Target.")
                     }
                 }
-                if !isNew {
+                if !isNew && model.sharedHabit(for: habit.id) == nil {
                     Section {
                         Button(habit.archived ? "Restore Habit" : "Archive Habit", systemImage: habit.archived ? "arrow.uturn.backward" : "archivebox") {
                             model.update { $0.append(.archive(habit.id, !habit.archived)) }; if model.error == nil { dismiss() }
                         }
                         Button("Delete Habit", systemImage: "trash", role: .destructive) { deleting = true }
+                    }
+                } else if let state = model.sharedHabit(for: habit.id) {
+                    Section {
+                        Label("This Shared Habit cannot be archived.", systemImage: "person.2")
+                    } footer: {
+                        Text(state.membership.role == .owner
+                             ? "Manage or delete sharing from the Members section in Habit Detail."
+                             : "Only the Owner can change the Shared Habit definition.")
                     }
                 }
             }

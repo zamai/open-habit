@@ -1,4 +1,17 @@
-# MVP verification
+# Open Habit verification
+
+## Shared Habits implementation (13 September 2026)
+
+The first end-to-end implementation slice is present in the app. It includes the isolated shared data projection, local membership cache, cross-device membership records, Owner setup with fresh/full history, single-use Invitation creation, CloudKit share acceptance, Start New and Use Existing joining, the Members presentation, Member identity editing, Invitation cancellation, Member removal, leaving, and Owner deletion.
+
+The core suite verifies that the shared projection excludes Day Notes and note-only Habit Days, preserves local identity and organization when adopting a shared definition, assigns all ten palette colors, and orders the current Member before the Owner and join order. The app-hosted rendering suite covers the ten-Member phone layout. Core, application, and widget tests pass, and both Simulator and unsigned generic-device builds compile with Xcode 26.3. The generic-device build compiles the live CloudKit code path; the Simulator intentionally does not execute it. Shared records reuse the deployed `HabitEdit.payload` asset envelope, so this slice requires no Production schema change.
+
+The following remain release blockers rather than inferred successes:
+
+1. Exercise creation, Invitation delivery, acceptance, synchronization, leaving, removal, and deletion on signed iOS 18-or-later devices using two different iCloud accounts.
+2. Confirm the one-time URL behavior on iOS 18 through iOS 26. Xcode 26 currently imports the public iOS 18 URL accessor with iOS 26 availability, so the iOS 18–25 compatibility path calls that public Objective-C selector dynamically.
+3. Inspect the Shared Habit, join, ten-Member, Dynamic Type, Dark Mode, and VoiceOver UI on devices. Automated rendering proves allocation, not usability.
+4. Add provisioned-device regression checks showing private Habit sync, widgets, App Intents, backup, import, and restore remain unaffected by the shared record-name prefixes.
 
 ## Automated checks
 

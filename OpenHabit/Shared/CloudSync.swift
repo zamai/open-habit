@@ -87,6 +87,7 @@ actor CloudSync {
                 operation.recordWasChangedBlock = { _, result in
                     do {
                         let record = try result.get()
+                        guard record.recordType == "HabitEdit", UUID(uuidString: record.recordID.recordName) != nil else { return }
                         guard let asset = record["payload"] as? CKAsset, let file = asset.fileURL else { throw HabitError.invalidBackup("iCloud record has no payload.") }
                         edits.append(try JSONDecoder().decode(Edit.self, from: Data(contentsOf: file)))
                     } catch { failure = error }
