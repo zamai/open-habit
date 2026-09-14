@@ -237,7 +237,7 @@ struct SharedHabitMembersSection: View {
                     NavigationLink {
                         SharedMemberDetailView(member: member, definition: state.snapshot.definition)
                     } label: {
-                        SharedMemberRow(member: member, definition: state.snapshot.definition, current: member.id == state.membership.memberID)
+                        SharedMemberRow(member: member, definition: state.snapshot.definition)
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -434,7 +434,6 @@ private struct InvitationReadyView: View {
 struct SharedMemberRow: View {
     let member: SharedMember
     let definition: SharedHabitDefinition
-    let current: Bool
 
     private var dataset: Dataset { Dataset().dataset(for: member, definition: definition) }
     private var habit: Habit { dataset.habits[0] }
@@ -445,14 +444,10 @@ struct SharedMemberRow: View {
                 .overlay { Text(String(member.name.prefix(1)).uppercased()).font(.caption.bold()).foregroundStyle(.white) }
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 5) {
-                    Text(member.name).font(.headline)
-                    if current { Text("You").font(.caption2.weight(.semibold)).foregroundStyle(.secondary) }
-                    if member.role == .owner { Image(systemName: "crown.fill").font(.caption2).foregroundStyle(.secondary).accessibilityLabel("Owner") }
-                }
+                Text(member.name).font(.headline).lineLimit(1).layoutPriority(1)
                 SevenDayProgress(member: member, definition: definition)
             }
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .trailing, spacing: 3) {
                 let today = member.counts[LocalDay.string()] ?? 0
                 Text("\(today) / \(definition.target)").font(.subheadline.monospacedDigit().weight(.semibold))
