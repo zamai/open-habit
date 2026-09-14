@@ -87,8 +87,9 @@ struct OverviewView: View {
             .sheet(item: Binding(get: { model.pendingJoin }, set: { model.pendingJoin = $0 })) { offer in
                 SharedHabitJoinView(offer: offer).interactiveDismissDisabled()
             }
-            .confirmationDialog("Permanently delete \(deleting?.name ?? "Habit")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
-                Button("Delete Habit and History", role: .destructive) { if let habit = deleting { model.delete(habit.id) }; deleting = nil }
+            .alert("Permanently delete \(deleting?.name ?? "Habit")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+                Button("Delete", role: .destructive) { if let habit = deleting { model.delete(habit.id) }; deleting = nil }
+                Button("Cancel", role: .cancel) { deleting = nil }
             } message: { Text("All Completions and Day Notes will also be deleted from your synchronized devices.") }
             .onOpenURL { url in
                 guard url.scheme == "openhabit", url.host == "habit", let id = UUID(uuidString: url.lastPathComponent) else { return }

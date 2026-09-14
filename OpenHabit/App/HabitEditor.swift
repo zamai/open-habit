@@ -109,8 +109,9 @@ struct HabitEditor: View {
                     }.disabled(!valid).accessibilityIdentifier("save-habit")
                 }
             }
-            .confirmationDialog("Delete this Habit permanently?", isPresented: $deleting, titleVisibility: .visible) {
-                Button("Delete Habit and History", role: .destructive) { model.delete(habit.id); if model.error == nil { dismiss() } }
+            .alert("Delete this Habit permanently?", isPresented: $deleting) {
+                Button("Delete", role: .destructive) { model.delete(habit.id); if model.error == nil { dismiss() } }
+                Button("Cancel", role: .cancel) {}
             } message: { Text("Its Completions and Day Notes will be removed from all synchronized devices.") }
             .sheet(isPresented: $choosingEmoji) { HabitEmojiPicker(selection: $habit.emoji) }
         }
