@@ -206,7 +206,6 @@ struct SharedHabitMembersSection: View {
     let state: SharedHabitState
     @State private var invitation: InvitationLink?
     @State private var inviting = false
-    @State private var editingIdentity = false
     @State private var removing: SharedMember?
     @State private var stoppingShare = false
     @State private var leaving = false
@@ -235,7 +234,11 @@ struct SharedHabitMembersSection: View {
             VStack(spacing: 0) {
                 ForEach(Array(state.snapshot.orderedMembers(currentMemberID: state.membership.memberID).enumerated()), id: \.element.id) { index, member in
                     NavigationLink {
-                        SharedMemberDetailView(member: member, definition: state.snapshot.definition)
+                        SharedMemberDetailView(
+                            member: member,
+                            definition: state.snapshot.definition,
+                            editableHabitID: member.id == state.membership.memberID ? state.membership.localHabitID : nil
+                        )
                     } label: {
                         SharedMemberRow(member: member, definition: state.snapshot.definition)
                     }
@@ -295,8 +298,6 @@ struct SharedHabitMembersSection: View {
                     Text("Invitations require iOS 18 or later.").font(.footnote).foregroundStyle(.secondary)
                 }
             }
-            Button("Edit My Member Identity", systemImage: "person.crop.circle") { editingIdentity = true }
-                .buttonStyle(.bordered)
             if state.membership.role == .owner {
                 Button("Stop Sharing", systemImage: "person.2.slash", role: .destructive) { stoppingShare = true }
                     .buttonStyle(.bordered)
@@ -307,11 +308,6 @@ struct SharedHabitMembersSection: View {
         }
         .sheet(item: $invitation) { invitation in
             InvitationReadyView(invitation: invitation)
-        }
-        .sheet(isPresented: $editingIdentity) {
-            if let member = state.snapshot.members.first(where: { $0.id == state.membership.memberID }) {
-                MemberIdentityEditor(habitID: state.membership.localHabitID, member: member)
-            }
         }
         .confirmationDialog("Remove \(removing?.name ?? "Member")?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
             Button("Remove Member", role: .destructive) {
@@ -488,27 +484,52 @@ private struct SevenDayProgress: View {
 }
 
 struct SharedMemberDetailView: View {
+    @Environment(AppModel.self) private var model
     let member: SharedMember
     let definition: SharedHabitDefinition
+    let editableHabitID: UUID?
+    @State private var editingIdentity = false
 
-    private var dataset: Dataset { Dataset().dataset(for: member, definition: definition) }
+    private var displayedMember: SharedMember {
+        guard let editableHabitID,
+              let updatedMember = model.sharedHabit(for: editableHabitID)?.snapshot.members.first(where: { $0.id == member.id }) else {
+            return member
+        }
+        return updatedMember
+    }
+    private var dataset: Dataset { Dataset().dataset(for: displayedMember, definition: definition) }
     private var habit: Habit { dataset.habits[0] }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 HStack(spacing: 14) {
-                    Circle().fill(member.tint).frame(width: 48, height: 48)
-                        .overlay { Text(String(member.name.prefix(1)).uppercased()).font(.headline).foregroundStyle(.white) }
+                    Circle().fill(displayedMember.tint).frame(width: 48, height: 48)
+                        .overlay { Text(String(displayedMember.name.prefix(1)).uppercased()).font(.headline).foregroundStyle(.white) }
                     VStack(alignment: .leading) {
-                        Text(member.name).font(.title.bold())
-                        if member.role == .owner { Label("Owner", systemImage: "crown.fill").font(.caption).foregroundStyle(.secondary) }
+                        HStack(spacing: 4) {
+                            Text(displayedMember.name).font(.title.bold())
+                            if editableHabitID != nil {
+                                Button {
+                                    editingIdentity = true
+                                } label: {
+                                    Image(systemName: "pencil")
+                                        .font(.subheadline.weight(.semibold))
+                                        .frame(width: 32, height: 32)
+                                }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(.secondary)
+                                .accessibilityLabel("Edit My Member Identity")
+                                .accessibilityHint("Edit your Member Name and Member Color")
+                            }
+                        }
+                        if displayedMember.role == .owner { Label("Owner", systemImage: "crown.fill").font(.caption).foregroundStyle(.secondary) }
                     }
                 }
                 HStack(spacing: 10) {
-                    SharedMetric(value: "\(member.counts[LocalDay.string()] ?? 0) / \(definition.target)", label: "Today", color: member.tint)
+                    SharedMetric(value: "\(displayedMember.counts[LocalDay.string()] ?? 0) / \(definition.target)", label: "Today", color: displayedMember.tint)
                     if habit.streakGoal != nil {
-                        SharedMetric(value: "\(dataset.currentStreak(for: habit))", label: "Current Streak", color: member.tint)
+                        SharedMetric(value: "\(dataset.currentStreak(for: habit))", label: "Current Streak", color: displayedMember.tint)
                     }
                 }
                 ScrollView(.horizontal) {
@@ -523,6 +544,11 @@ struct SharedMemberDetailView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Member Progress")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $editingIdentity) {
+            if let editableHabitID {
+                MemberIdentityEditor(habitID: editableHabitID, member: displayedMember)
+            }
+        }
     }
 }
 
