@@ -2,8 +2,6 @@ import base64, json, os, subprocess, sys, tempfile, time, urllib.error, urllib.r
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 
 APP_ID = '6808947599'
-INTERNAL_GROUP_ID = 'd92cb5bc-beac-44bd-8982-02b018381214'
-EXTERNAL_GROUP_ID = 'dda2338b-79c5-45bf-bd8a-4fea9705e911'
 WHAT_TO_TEST = 'Please test habit tracking, widgets, Shortcuts, and iCloud sync in this build.'
 f = {'key_id': os.environ['ASC_KEY_ID'], 'issuer_id': os.environ['ASC_ISSUER_ID'], 'private_key': os.environ['ASC_PRIVATE_KEY']}
 if len(f['private_key']) > 1 and f['private_key'][0] == f['private_key'][-1] and f['private_key'][0] in "'\"":
@@ -44,8 +42,31 @@ def request(method, path, body=None, beta_review_conflict_ok=False):
 
 def get(path): return request('GET', path)
 
-def distribute_externally(build):
+def distribute_to_all_testers(build):
  build_id = build['id']
+ groups = get('betaGroups?filter[app]=' + APP_ID + '&limit=200')['data']
+ if not groups:
+  raise SystemExit('Open Habit has no TestFlight tester groups.')
+ expected_group_ids = {group['id'] for group in groups}
+ external_group_ids = {group['id'] for group in groups if not group['attributes']['isInternalGroup']}
+ assigned_group_ids = {group['id'] for group in build['relationships']['betaGroups']['data']}
+ missing_group_ids = expected_group_ids - assigned_group_ids
+ if missing_group_ids:
+  request('POST', 'builds/' + build_id + '/relationships/betaGroups', {'data': [{'type': 'betaGroups', 'id': group_id} for group_id in sorted(missing_group_ids)]})
+
+ assigned = get('builds/' + build_id + '?include=betaGroups')['data']
+ assigned_group_ids = {group['id'] for group in assigned['relationships']['betaGroups']['data']}
+ unassigned_group_ids = expected_group_ids - assigned_group_ids
+ if unassigned_group_ids:
+  raise SystemExit('Build ' + build['attributes']['version'] + ' is not assigned to every TestFlight group: ' + ', '.join(sorted(unassigned_group_ids)))
+
+ if not external_group_ids:
+  message = 'Build ' + build['attributes']['version'] + ' is assigned to all ' + str(len(groups)) + ' TestFlight groups.'
+  print(message)
+  with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+   summary.write(message + '\n')
+  return
+
  localizations = get('betaBuildLocalizations?filter[build]=' + build_id)['data']
  if localizations:
   localization = localizations[0]
@@ -54,9 +75,6 @@ def distribute_externally(build):
   request('POST', 'betaBuildLocalizations', {'data': {'type': 'betaBuildLocalizations', 'attributes': {'locale': 'en-US', 'whatsNew': WHAT_TO_TEST}, 'relationships': {'build': {'data': {'type': 'builds', 'id': build_id}}}}})
 
  request('PATCH', 'buildBetaDetails/' + build_id, {'data': {'type': 'buildBetaDetails', 'id': build_id, 'attributes': {'autoNotifyEnabled': True}}})
- group_ids = [group['id'] for group in build['relationships']['betaGroups']['data']]
- if EXTERNAL_GROUP_ID not in group_ids:
-  request('POST', 'builds/' + build_id + '/relationships/betaGroups', {'data': [{'type': 'betaGroups', 'id': EXTERNAL_GROUP_ID}]})
 
  detail = get('builds/' + build_id + '/buildBetaDetail')['data']['attributes']
  state = detail['externalBuildState']
@@ -64,11 +82,11 @@ def distribute_externally(build):
   submission = request('POST', 'betaAppReviewSubmissions', {'data': {'type': 'betaAppReviewSubmissions', 'relationships': {'build': {'data': {'type': 'builds', 'id': build_id}}}}}, beta_review_conflict_ok=True)
   if submission:
    state = submission['data']['attributes']['betaReviewState']
-   message = 'Build ' + build['attributes']['version'] + ' was added to the external group and submitted for Beta App Review (' + state + ').'
+   message = 'Build ' + build['attributes']['version'] + ' is assigned to all ' + str(len(groups)) + ' TestFlight groups and submitted for Beta App Review (' + state + ').'
   else:
-   message = 'Build ' + build['attributes']['version'] + ' is assigned to the external group; Beta App Review submission is deferred while another build is in review.'
+   message = 'Build ' + build['attributes']['version'] + ' is assigned to all ' + str(len(groups)) + ' TestFlight groups; Beta App Review submission is deferred while another build is in review.'
  elif state in ('WAITING_FOR_BETA_REVIEW', 'IN_BETA_REVIEW', 'BETA_APPROVED', 'READY_FOR_BETA_TESTING', 'IN_BETA_TESTING'):
-  message = 'Build ' + build['attributes']['version'] + ' is assigned to the external group (' + state + ').'
+  message = 'Build ' + build['attributes']['version'] + ' is assigned to all ' + str(len(groups)) + ' TestFlight groups (' + state + ').'
  else:
   raise SystemExit('Build ' + build['attributes']['version'] + ' cannot be distributed externally from state ' + state + '.')
  print(message)
@@ -93,14 +111,15 @@ if sys.argv[1] == '--next-build-number':
 if sys.argv[1] == '--retry-external-review':
     builds = get('builds?filter[app]=' + APP_ID + '&limit=200&sort=-uploadedDate&include=betaGroups')['data']
     for build in builds:
-        groups = build['relationships']['betaGroups']['data']
-        if build['attributes']['processingState'] == 'VALID' and any(g['id'] == EXTERNAL_GROUP_ID for g in groups):
-            distribute_externally(build)
+        groups = get('betaGroups?filter[app]=' + APP_ID + '&limit=200')['data']
+        external_group_ids = {group['id'] for group in groups if not group['attributes']['isInternalGroup']}
+        assigned_group_ids = {group['id'] for group in build['relationships']['betaGroups']['data']}
+        if build['attributes']['processingState'] == 'VALID' and external_group_ids & assigned_group_ids:
+            distribute_to_all_testers(build)
             raise SystemExit(0)
     print('No valid build is assigned to the external group.')
     raise SystemExit(0)
 
-distribute_external = '--distribute-external' in sys.argv[2:]
 for attempt in range(60):
     builds = get('builds?filter[app]=' + APP_ID + '&filter[version]=' + sys.argv[1] + '&include=betaGroups')
     for build in builds['data']:
@@ -109,15 +128,9 @@ for attempt in range(60):
         if state in ('FAILED', 'INVALID'):
             raise SystemExit('Apple rejected processing; inspect App Store Connect.')
         if state == 'VALID':
+            distribute_to_all_testers(build)
             detail = get('builds/' + build['id'] + '/buildBetaDetail')['data']['attributes']
-            groups = build['relationships']['betaGroups']['data']
-            if detail['internalBuildState'] == 'IN_BETA_TESTING' and any(g['id'] == INTERNAL_GROUP_ID for g in groups):
-                message = 'Build ' + sys.argv[1] + ' is available to Internal Testers.'
-                print(message)
-                with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
-                    summary.write(message + '\n')
-                if distribute_external:
-                    distribute_externally(build)
+            if detail['internalBuildState'] == 'IN_BETA_TESTING':
                 raise SystemExit(0)
     time.sleep(15)
-raise SystemExit('Timed out waiting for Internal TestFlight availability; check App Store Connect before retrying.')
+raise SystemExit('Timed out waiting for TestFlight availability; check App Store Connect before retrying.')

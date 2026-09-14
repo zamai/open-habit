@@ -13,11 +13,6 @@ on:
         required: false
         default: false
         type: boolean
-      distribute_external:
-        description: Assign the build to External Testers and submit it for Beta App Review
-        required: false
-        default: false
-        type: boolean
 permissions:
   contents: read
 concurrency:
@@ -58,7 +53,6 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           APP_PROFILE: ${{ secrets.APP_PROFILE }}
           WIDGET_PROFILE: ${{ secrets.WIDGET_PROFILE }}
-          DISTRIBUTE_EXTERNAL: ${{ inputs.distribute_external }}
         run: bash scripts/ci/publish.sh
   local-testflight:
     if: github.event_name == 'workflow_dispatch' && inputs.local_testflight && github.ref == 'refs/heads/main'
@@ -79,7 +73,6 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           APP_PROFILE: ${{ secrets.APP_PROFILE }}
           WIDGET_PROFILE: ${{ secrets.WIDGET_PROFILE }}
-          DISTRIBUTE_EXTERNAL: ${{ inputs.distribute_external }}
         run: bash scripts/ci/publish.sh
   external-review-retry:
     if: github.event_name == 'schedule'
