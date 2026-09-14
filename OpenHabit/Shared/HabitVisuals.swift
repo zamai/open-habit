@@ -92,24 +92,93 @@ struct DayTile: View {
     let today: Bool
     var body: some View {
         GeometryReader { geometry in
-            RoundedRectangle(cornerRadius: min(2, geometry.size.width * 0.18))
+            RoundedRectangle(cornerRadius: geometry.size.width * 0.22)
                 .fill(day.count == 0 ? color.opacity(0.10) : color.opacity(0.25 + 0.75 * day.progress(target: target)))
-                .overlay(alignment: .bottom) {
-                    if day.count > 0 && day.count < target {
-                        Rectangle().fill(.primary.opacity(0.55)).frame(width: geometry.size.width * day.progress(target: target), height: 1)
-                    }
-                }
-                .overlay {
-                    if day.count >= target && geometry.size.width >= 13 {
-                        Image(systemName: "checkmark").font(.system(size: 7, weight: .bold)).foregroundStyle(.white)
-                    }
-                }
                 .overlay(alignment: .topTrailing) {
                     if !day.note.isEmpty { Circle().fill(.primary).frame(width: 3, height: 3).offset(x: 1, y: -1) }
                 }
-                .overlay { if today { RoundedRectangle(cornerRadius: min(2, geometry.size.width * 0.18)).strokeBorder(.primary.opacity(0.8), lineWidth: 1) } }
+                .overlay { if today { RoundedRectangle(cornerRadius: geometry.size.width * 0.22).strokeBorder(.primary.opacity(0.8), lineWidth: 1) } }
         }
         .aspectRatio(1, contentMode: .fit)
+    }
+}
+
+struct LabeledHistoryGrid: View {
+    let habit: Habit
+    let data: Dataset
+    var weeks = 24
+    var spacing: CGFloat = 3
+    var maxTileSide: CGFloat = 11
+    var end: Date = Date()
+
+    private var calendar: Calendar { historyCalendar(for: data) }
+    private var dates: [Date] { historyDates(weeks: weeks, end: end, calendar: calendar) }
+
+    var body: some View {
+        let dates = dates
+        let monthLabels = monthLabels(for: dates)
+        Canvas { context, size in
+            let labelWidth: CGFloat = 30
+            let labelGap: CGFloat = 10
+            let gridX = labelWidth + labelGap
+            let availableWidth = max(0, size.width - gridX)
+            let side = min(maxTileSide, max(0, (availableWidth - CGFloat(weeks - 1) * spacing) / CGFloat(weeks)))
+            let pitch = side + spacing
+            let gridY: CGFloat = 22
+
+            for (week, label) in monthLabels {
+                context.draw(Text(label).font(.caption).foregroundStyle(.secondary),
+                             at: CGPoint(x: gridX + CGFloat(week) * pitch, y: 0), anchor: .topLeading)
+            }
+            for row in 0..<7 {
+                let y = gridY + CGFloat(row) * pitch
+                let weekday = weekdayLabel(for: row)
+                if !weekday.isEmpty {
+                    context.draw(Text(weekday).font(.caption).foregroundStyle(.secondary),
+                                 at: CGPoint(x: 0, y: y + side / 2), anchor: .leading)
+                }
+                for week in 0..<weeks {
+                    let date = dates[week * 7 + row]
+                    let key = LocalDay.string(date)
+                    let isFuture = key > LocalDay.string(end)
+                    let day = isFuture ? HabitDay(count: 0) : data.day(habit.id, key)
+                    let rect = CGRect(x: gridX + CGFloat(week) * pitch, y: y, width: side, height: side)
+                    let shape = Path(roundedRect: rect, cornerRadius: side * 0.22)
+                    let opacity = day.count == 0 ? 0.10 : 0.25 + 0.75 * day.progress(target: habit.target)
+                    context.fill(shape, with: .color(habit.tint.opacity(opacity)))
+                    if key == LocalDay.string(end) {
+                        context.stroke(Path(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerRadius: side * 0.20),
+                                       with: .color(.primary.opacity(0.8)), lineWidth: 1)
+                    }
+                    if !isFuture && !day.note.isEmpty {
+                        let dot = CGRect(x: rect.maxX - 2, y: rect.minY - 1, width: 3, height: 3)
+                        context.fill(Path(ellipseIn: dot), with: .color(.primary))
+                    }
+                }
+            }
+        }
+        .frame(height: 112)
+        .accessibilityHidden(true)
+    }
+
+    private func monthLabels(for dates: [Date]) -> [Int: String] {
+        var labels: [Int: String] = [:]
+        for week in 0..<weeks {
+            let weekDates = dates[(week * 7)..<(week * 7 + 7)]
+            if week == 0, let first = weekDates.first {
+                labels[week] = first.formatted(.dateTime.month(.abbreviated))
+            }
+            if let monthStart = weekDates.first(where: { calendar.component(.day, from: $0) == 1 }) {
+                labels[week] = monthStart.formatted(.dateTime.month(.abbreviated))
+            }
+        }
+        return labels
+    }
+
+    private func weekdayLabel(for row: Int) -> String {
+        guard row.isMultiple(of: 2) == false else { return "" }
+        let symbolIndex = (calendar.firstWeekday - 1 + row) % 7
+        return calendar.shortWeekdaySymbols[symbolIndex]
     }
 }
 
@@ -122,16 +191,9 @@ struct HistoryGrid: View {
     var end: Date = Date()
     var onSelect: ((String) -> Void)?
     var onEdit: ((String) -> Void)?
-    private var calendar: Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        switch data.settings.weekStart { case .system: calendar.firstWeekday = Calendar.current.firstWeekday; case .monday: calendar.firstWeekday = 2; case .sunday: calendar.firstWeekday = 1 }
-        return calendar
-    }
+    private var calendar: Calendar { historyCalendar(for: data) }
     private var dates: [Date] {
-        let weekday = calendar.component(.weekday, from: end)
-        let trailing = (calendar.firstWeekday + 6 - weekday + 7) % 7
-        let last = calendar.date(byAdding: .day, value: trailing, to: end)!
-        return (0..<(weeks * 7)).map { calendar.date(byAdding: .day, value: $0 - weeks * 7 + 1, to: last)! }
+        historyDates(weeks: weeks, end: end, calendar: calendar)
     }
     var body: some View {
         let dates = dates
@@ -155,6 +217,23 @@ struct HistoryGrid: View {
             }
         }
     }
+}
+
+private func historyCalendar(for data: Dataset) -> Calendar {
+    var calendar = Calendar(identifier: .gregorian)
+    switch data.settings.weekStart {
+    case .system: calendar.firstWeekday = Calendar.current.firstWeekday
+    case .monday: calendar.firstWeekday = 2
+    case .sunday: calendar.firstWeekday = 1
+    }
+    return calendar
+}
+
+private func historyDates(weeks: Int, end: Date, calendar: Calendar) -> [Date] {
+    let weekday = calendar.component(.weekday, from: end)
+    let trailing = (calendar.firstWeekday + 6 - weekday + 7) % 7
+    let last = calendar.date(byAdding: .day, value: trailing, to: end)!
+    return (0..<(weeks * 7)).map { calendar.date(byAdding: .day, value: $0 - weeks * 7 + 1, to: last)! }
 }
 
 struct GlassGroup<Content: View>: View {

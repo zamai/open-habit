@@ -133,23 +133,28 @@ private struct HabitCard<Menu: View>: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(habit.name).font(.system(.headline, design: .rounded)).foregroundStyle(.primary).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                             Text(habit.detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                            if let sharedMemberCount {
-                                Label("\(sharedMemberCount) \(sharedMemberCount == 1 ? "Member" : "Members")", systemImage: "person.2.fill")
-                                    .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-                            }
-                            if let goal = habit.streakGoal {
-                                let streak = data.currentStreak(for: habit, asOf: now)
-                                let unit = goal.period == .daily
-                                    ? (streak == 1 ? "day" : "days")
-                                    : (streak == 1 ? "week" : "weeks")
-                                Label("\(streak) \(unit)", systemImage: "flame.fill")
-                                    .font(.caption2.monospacedDigit().weight(.semibold))
-                                    .foregroundStyle(habit.tint)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(habit.tint.opacity(0.12), in: Capsule())
-                                    .fixedSize()
-                                    .accessibilityLabel("Current streak: \(streak) \(unit)")
+                            if habit.streakGoal != nil || sharedMemberCount != nil {
+                                HStack(spacing: 8) {
+                                    if let goal = habit.streakGoal {
+                                        let streak = data.currentStreak(for: habit, asOf: now)
+                                        let unit = goal.period == .daily
+                                            ? (streak == 1 ? "day" : "days")
+                                            : (streak == 1 ? "week" : "weeks")
+                                        Label("\(streak) \(unit)", systemImage: "flame.fill")
+                                            .font(.caption2.monospacedDigit().weight(.semibold))
+                                            .foregroundStyle(habit.tint)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(habit.tint.opacity(0.12), in: Capsule())
+                                            .fixedSize()
+                                            .accessibilityLabel("Current streak: \(streak) \(unit)")
+                                    }
+                                    if let sharedMemberCount {
+                                        Label("\(sharedMemberCount) \(sharedMemberCount == 1 ? "Member" : "Members")", systemImage: "person.2.fill")
+                                            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                                            .fixedSize()
+                                    }
+                                }
                             }
                         }.padding(.top, 3).frame(maxWidth: .infinity, alignment: .leading)
                     }.contentShape(Rectangle())
@@ -157,7 +162,7 @@ private struct HabitCard<Menu: View>: View {
                 CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count, action: complete).contextMenu { quickMenu() }
             }
             Button(action: open) {
-                HistoryGrid(habit: habit, data: data, weeks: 18, end: now)
+                LabeledHistoryGrid(habit: habit, data: data, end: now)
                     .allowsHitTesting(false).accessibilityHidden(true)
             }.buttonStyle(.plain).accessibilityElement(children: .ignore).accessibilityLabel("View \(habit.name) history")
         }
