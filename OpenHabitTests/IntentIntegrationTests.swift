@@ -4,6 +4,13 @@ import OpenHabitCore
 @testable import OpenHabit
 
 final class IntentIntegrationTests: XCTestCase {
+    func testPrivateSyncIgnoresSharedRecordsInItsZone() {
+        XCTAssertTrue(CloudSync.isHabitEditRecordName(UUID().uuidString))
+        XCTAssertFalse(CloudSync.isHabitEditRecordName("Share-2C0CEC81-AE90-4A4A-8DB9-09C7702B6796"))
+        XCTAssertFalse(CloudSync.isHabitEditRecordName("SharedHabit-62AD12F6-7B5E-4257-924A-E9BE49DAD223"))
+        XCTAssertFalse(CloudSync.isHabitEditRecordName("SharedProgress-E147B1E0-4BC1-4BB7-90E7-5C38FF816ED4"))
+    }
+
     func testAllShortcutActionsAndWidgetToggleSharePersistentOperations() async throws {
         let habit = Habit(name: "Intent integration fixture", emoji: "💧", target: 3)
         try performLocalEdit { try $0.save(habit) }

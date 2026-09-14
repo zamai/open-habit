@@ -10,6 +10,10 @@ actor CloudSync {
     private var running = false
     private let zoneID = CKRecordZone.ID(zoneName: "OpenHabit", ownerName: CKCurrentUserDefaultName)
 
+    nonisolated static func isHabitEditRecordName(_ name: String) -> Bool {
+        UUID(uuidString: name) != nil
+    }
+
     func synchronize() async throws -> String {
         guard !running else { return "Syncing" }
         running = true
@@ -84,10 +88,13 @@ actor CloudSync {
                 var pageToken: CKServerChangeToken?
                 var hasMore = false
                 var failure: Error?
-                operation.recordWasChangedBlock = { _, result in
+                operation.recordWasChangedBlock = { recordID, result in
+                    // CKShare and Shared Habit records live in this zone too. A removed share can
+                    // arrive as an unavailable change, so exclude non-journal IDs before reading it.
+                    guard Self.isHabitEditRecordName(recordID.recordName) else { return }
                     do {
                         let record = try result.get()
-                        guard record.recordType == "HabitEdit", UUID(uuidString: record.recordID.recordName) != nil else { return }
+                        guard record.recordType == "HabitEdit" else { return }
                         guard let asset = record["payload"] as? CKAsset, let file = asset.fileURL else { throw HabitError.invalidBackup("iCloud record has no payload.") }
                         edits.append(try JSONDecoder().decode(Edit.self, from: Data(contentsOf: file)))
                     } catch { failure = error }
