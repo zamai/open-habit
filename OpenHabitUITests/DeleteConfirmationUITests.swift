@@ -39,5 +39,13 @@ final class DeleteConfirmationUITests: XCTestCase {
 
         delete.tap()
         app.alerts.buttons["Delete"].tap()
+
+        XCTAssertTrue(app.navigationBars["Open Habit"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(app.staticTexts["Habit unavailable"].exists)
+        XCTAssertTrue(habit.waitForNonExistence(timeout: 5))
+        let result = XCTAttachment(screenshot: app.screenshot())
+        result.name = "Main habits screen after deletion"
+        result.lifetime = .keepAlways
+        add(result)
     }
 }

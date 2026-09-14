@@ -18,6 +18,7 @@ struct OverviewView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var sheet: AppSheet?
     @State private var path: [UUID] = []
     @State private var deleting: Habit?
@@ -74,7 +75,9 @@ struct OverviewView: View {
                 ToolbarItem(placement: .topBarLeading) { Button("Settings", systemImage: "gearshape") { sheet = .settings } }
                 ToolbarItem(placement: .topBarTrailing) { Button("Add Habit", systemImage: "plus") { sheet = .create }.accessibilityIdentifier("add-habit") }
             }
-            .navigationDestination(for: UUID.self) { id in HabitDetailView(habitID: id) }
+            .navigationDestination(for: UUID.self) { id in
+                HabitDetailView(habitID: id, onDelete: deleteFromDetail)
+            }
             .sheet(item: $sheet) { destination in
                 switch destination {
                 case .settings: SettingsView()
@@ -88,7 +91,7 @@ struct OverviewView: View {
                 SharedHabitJoinView(offer: offer).interactiveDismissDisabled()
             }
             .alert("Permanently delete \(deleting?.name ?? "Habit")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
-                Button("Delete", role: .destructive) { if let habit = deleting { model.delete(habit.id) }; deleting = nil }
+                Button("Delete", role: .destructive) { if let habit = deleting { delete(habit) }; deleting = nil }
                 Button("Cancel", role: .cancel) { deleting = nil }
             } message: { Text("All Completions and Day Notes will also be deleted from your synchronized devices.") }
             .onOpenURL { url in
@@ -114,6 +117,16 @@ struct OverviewView: View {
         var ids = model.data.habits.map(\.id)
         guard let index = ids.firstIndex(of: id), ids.indices.contains(index + offset) else { return }
         ids.swapAt(index, index + offset); model.update { $0.append(.order(ids)) }
+    }
+    private func delete(_ habit: Habit) {
+        withAnimation(reduceMotion ? nil : .smooth) { model.delete(habit.id) }
+    }
+    private func deleteFromDetail(_ habit: Habit) {
+        withAnimation(reduceMotion ? nil : .smooth, completionCriteria: .logicallyComplete) {
+            path.removeAll { $0 == habit.id }
+        } completion: {
+            delete(habit)
+        }
     }
 }
 
@@ -170,6 +183,7 @@ private struct HabitCard<Menu: View>: View {
         .padding(18)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 26))
         .overlay { RoundedRectangle(cornerRadius: 26).strokeBorder(habit.tint.opacity(0.12), lineWidth: 1) }
+        .transition(.blurReplace)
     }
 }
 

@@ -6,6 +6,7 @@ struct HabitEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State var habit: Habit
     let isNew: Bool
+    var onDelete: ((Habit) -> Void)?
     @State private var previewCount = 0
     @State private var deleting = false
     @State private var choosingEmoji = false
@@ -110,7 +111,15 @@ struct HabitEditor: View {
                 }
             }
             .alert("Delete this Habit permanently?", isPresented: $deleting) {
-                Button("Delete", role: .destructive) { model.delete(habit.id); if model.error == nil { dismiss() } }
+                Button("Delete", role: .destructive) {
+                    if let onDelete {
+                        onDelete(habit)
+                        dismiss()
+                    } else {
+                        model.delete(habit.id)
+                        if model.error == nil { dismiss() }
+                    }
+                }
                 Button("Cancel", role: .cancel) {}
             } message: { Text("Its Completions and Day Notes will be removed from all synchronized devices.") }
             .sheet(isPresented: $choosingEmoji) { HabitEmojiPicker(selection: $habit.emoji) }

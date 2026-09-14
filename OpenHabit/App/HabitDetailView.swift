@@ -4,9 +4,11 @@ import OpenHabitCore
 struct HabitDetailView: View {
     @Environment(AppModel.self) private var model
     let habitID: UUID
+    var onDelete: ((Habit) -> Void)?
     @State private var selected = LocalDay.string()
     @State private var month = Date()
     @State private var sheet: AppSheet?
+    @State private var pendingDeletion: Habit?
     @State private var noteDraft = ""
     @FocusState private var noteFocused: Bool
     var body: some View {
@@ -77,15 +79,21 @@ struct HabitDetailView: View {
             if !noteFocused && noteDraft == oldValue { noteDraft = newValue }
         }
         .navigationTitle("Habit Detail").navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $sheet) { destination in
+        .sheet(item: $sheet, onDismiss: finishDeletion) { destination in
             switch destination {
-            case .edit(let habit): HabitEditor(habit: habit, isNew: false)
+            case .edit(let habit):
+                HabitEditor(habit: habit, isNew: false) { pendingDeletion = $0 }
             case .day(let day): DayEditor(selection: day, data: model.data)
             case .create: HabitEditor(habit: Habit(), isNew: true)
             case .settings: SettingsView()
             case .share(let habit): SharedHabitSetupView(habit: habit)
             }
         }
+    }
+    private func finishDeletion() {
+        guard let habit = pendingDeletion else { return }
+        pendingDeletion = nil
+        onDelete?(habit)
     }
     private func selectedDay(_ habit: Habit) -> some View {
         let day = model.data.day(habitID, selected)
