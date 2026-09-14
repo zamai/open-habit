@@ -322,7 +322,7 @@ actor SharedCloudSync {
         _ = try await database.deleteRecord(withID: shareID)
     }
 
-    func deleteSharedHabit(_ state: SharedHabitState) async throws {
+    func stopSharing(_ state: SharedHabitState) async throws {
         guard state.membership.role == .owner else { throw SharedHabitCloudError.unavailable }
         let container = try await availableContainer()
         let zoneID = CKRecordZone.ID(zoneName: state.membership.zoneName, ownerName: state.membership.zoneOwnerName)

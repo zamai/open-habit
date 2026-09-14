@@ -31,7 +31,7 @@ final class AppModel {
     func importData(_ data: Dataset, replacing: Bool) {
         error = nil
         guard !replacing || sharedHabits.isEmpty else {
-            error = "Leave or delete every Shared Habit before replacing all data."
+            error = "Leave or stop sharing every Shared Habit before replacing all data."
             return
         }
         do {
@@ -45,7 +45,7 @@ final class AppModel {
     func eraseData() {
         error = nil
         guard sharedHabits.isEmpty else {
-            error = "Leave Shared Habits and delete the Shared Habits you own before deleting all data."
+            error = "Leave Shared Habits and stop sharing the Shared Habits you own before deleting all data."
             return
         }
         do {
@@ -205,13 +205,12 @@ final class AppModel {
         } catch { self.error = error.localizedDescription; return false }
     }
 
-    func deleteSharedHabit(_ habitID: UUID) async -> Bool {
+    func stopSharing(_ habitID: UUID) async -> Bool {
         error = nil
         guard let state = sharedHabits[habitID] else { return false }
         do {
-            try await SharedCloudSync.shared.deleteSharedHabit(state)
+            try await SharedCloudSync.shared.stopSharing(state)
             try? await SharedCloudSync.shared.deletePrivateState(state.membership.sharedHabitID)
-            try performLocalEdit { $0.append(.delete(habitID)) }
             sharedHabits.removeValue(forKey: habitID)
             try sharingStore().write(Array(sharedHabits.values))
             reload()

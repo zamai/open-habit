@@ -23,7 +23,7 @@ The first implementation targets Apple platforms only. Android has no native Clo
 - The Owner cannot transfer ownership or leave while the Shared Habit continues.
 - The Owner controls the name, emoji, color, Habit Description, Daily Target, and Streak Goal. Owner changes apply to every Member.
 - Categories and overview ordering remain personal to each Member.
-- A Shared Habit cannot be archived. A Member leaves instead; the Owner may delete the Shared Habit.
+- A Shared Habit cannot be archived. A Member leaves instead; the Owner may stop sharing it.
 
 ## What is shared
 
@@ -126,12 +126,12 @@ Tapping another Member opens a read-only version of their shared history using t
 
 There is no separate Sharing tab. Management lives behind the Members section:
 
-- Owners see Invite, pending Invitations, Remove Member, and Delete Shared Habit.
+- Owners see Invite, pending Invitations, Remove Member, and Stop Sharing.
 - Other Members see Leave Shared Habit.
 
 The first version has no leaderboard, group score, podium, competition mode, feed, events, chat, comments, reactions, or Completion notifications.
 
-## Leaving, removal, and deletion
+## Leaving, removal, and stopping sharing
 
 When a Member leaves or the Owner removes them:
 
@@ -140,16 +140,18 @@ When a Member leaves or the Owner removes them:
 - The Habit keeps the latest common definition; Open Habit does not restore an earlier definition.
 - Other Members stop seeing that Member after synchronization.
 
-The Owner cannot leave. `Delete Shared Habit` requires an explicit destructive confirmation and then:
+The Owner cannot leave. `Stop Sharing` requires an explicit confirmation and then:
 
-- Deletes the Owner's Habit and personal history.
 - Ends the CloudKit share.
 - Removes shared visibility for everyone.
+- Preserves the Owner's Habit and personal history locally as a Private Habit.
 - Preserves every other Member's Habit and history locally as a Private Habit after their next synchronization.
+
+If the Owner later wants to delete the Habit, they use the ordinary `Delete Habit` action in Habit Settings after sharing has stopped.
 
 There is no ownership migration. A former Member may create a new Shared Habit and invite the others again.
 
-`Delete All Data` first requires an Owner to separately confirm deletion of every Shared Habit they own. A non-owner leaves Shared Habits before their now-private data is deleted.
+`Delete All Data` first requires an Owner to stop sharing every Shared Habit they own. A non-owner leaves Shared Habits before their now-private data is deleted.
 
 ## Time and derived progress
 
@@ -185,5 +187,5 @@ The small-group limit and one compact progress projection per Member keep the re
 - Neither Member can see the other's Day Notes.
 - Owner definition changes converge for every Member; non-owners have no definition controls.
 - Member Name, Member Color, ordering, the ten-person cap, and pending Invitation reservations behave as specified.
-- Leaving/removal preserves the departing person's local Habit; Owner deletion removes only the Owner's data.
+- Leaving, removal, and stopping sharing preserve each person's local Habit and personal history.
 - Existing private Habit sync, widgets, App Intents, import, backup, and restore continue to work.

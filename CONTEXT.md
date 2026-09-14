@@ -36,12 +36,12 @@ _Avoid_: Public history, copied history
 A private, single-use offer that reserves one Member place until it is accepted or cancelled and does not expire automatically. The first person to accept becomes a Member immediately, without further Owner approval.
 _Avoid_: Public link, reusable invitation, membership request
 
-**Shared Habit Deletion**:
-The Owner's permanent deletion of a Shared Habit and their own history. It ends shared visibility while preserving every other Member's Habit and history as a Private Habit.
-_Avoid_: Archive, group-wide data deletion, ownership transfer
+**Stop Sharing**:
+The Owner's action that ends a Shared Habit for everyone while preserving every Member's Habit and personal history as a Private Habit. If the Owner later wants to delete their Habit, they use the ordinary Habit deletion flow.
+_Avoid_: Shared Habit deletion, archive, ownership transfer
 
 **Private Habit**:
-A Habit practised by one person and not visible to other people. A Member who leaves or is removed from a Shared Habit keeps their Habit and personal history as a Private Habit.
+A Habit practised by one person and not visible to other people. A Member who leaves or is removed, or an Owner who stops sharing, keeps their Habit and personal history as a Private Habit.
 _Avoid_: Local Habit, unshared copy
 
 **Habit Description**:

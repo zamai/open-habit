@@ -208,7 +208,7 @@ struct SharedHabitMembersSection: View {
     @State private var inviting = false
     @State private var editingIdentity = false
     @State private var removing: SharedMember?
-    @State private var endingShare = false
+    @State private var stoppingShare = false
     @State private var leaving = false
 
     private var invitations: [SharedInvitation] {
@@ -298,7 +298,7 @@ struct SharedHabitMembersSection: View {
             Button("Edit My Member Identity", systemImage: "person.crop.circle") { editingIdentity = true }
                 .buttonStyle(.bordered)
             if state.membership.role == .owner {
-                Button("Delete Shared Habit", systemImage: "trash", role: .destructive) { endingShare = true }
+                Button("Stop Sharing", systemImage: "person.2.slash", role: .destructive) { stoppingShare = true }
                     .buttonStyle(.bordered)
             } else {
                 Button("Leave Shared Habit", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) { leaving = true }
@@ -321,11 +321,11 @@ struct SharedHabitMembersSection: View {
         } message: {
             Text("They will stop seeing shared progress. Their Habit and personal history will remain private on their devices.")
         }
-        .alert("Delete this Shared Habit?", isPresented: $endingShare) {
-            Button("Delete Shared Habit", role: .destructive) { Task { _ = await model.deleteSharedHabit(state.membership.localHabitID) } }
+        .alert("Stop sharing this Habit?", isPresented: $stoppingShare) {
+            Button("Stop Sharing", role: .destructive) { Task { _ = await model.stopSharing(state.membership.localHabitID) } }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Your Habit, Completions, and Day Notes will be deleted. Other Members keep their Habits and personal history, but shared visibility ends.")
+            Text("Shared visibility will end for everyone. Your Habit, Completions, and Day Notes remain local, and other Members keep their Habits and personal history.")
         }
         .alert("Leave this Shared Habit?", isPresented: $leaving) {
             Button("Leave Shared Habit", role: .destructive) { Task { _ = await model.leaveSharedHabit(state.membership.localHabitID) } }
