@@ -39,9 +39,6 @@ actor SharedCloudSync {
     }
 
     func privateStates() async throws -> [SharedHabitState] {
-        #if targetEnvironment(simulator)
-        return []
-        #else
         let container = try await availableContainer()
         let zoneID = CKRecordZone.ID(zoneName: "OpenHabit", ownerName: CKCurrentUserDefaultName)
         let records = try await fetchAll(in: zoneID, database: container.privateCloudDatabase)
@@ -50,11 +47,9 @@ actor SharedCloudSync {
             try state.validate()
             return state
         }
-        #endif
     }
 
     func savePrivateState(_ state: SharedHabitState) async throws {
-        #if !targetEnvironment(simulator)
         try state.validate()
         let container = try await availableContainer()
         let zoneID = CKRecordZone.ID(zoneName: "OpenHabit", ownerName: CKCurrentUserDefaultName)
@@ -62,16 +57,13 @@ actor SharedCloudSync {
         defer { try? FileManager.default.removeItem(at: file) }
         let result = try await container.privateCloudDatabase.modifyRecords(saving: [record], deleting: [], savePolicy: .changedKeys, atomically: true)
         for value in result.saveResults.values { _ = try value.get() }
-        #endif
     }
 
     func deletePrivateState(_ sharedHabitID: UUID) async throws {
-        #if !targetEnvironment(simulator)
         let container = try await availableContainer()
         let zoneID = CKRecordZone.ID(zoneName: "OpenHabit", ownerName: CKCurrentUserDefaultName)
         do { _ = try await container.privateCloudDatabase.deleteRecord(withID: privateStateRecordID(sharedHabitID, zoneID: zoneID)) }
         catch let error as CKError where error.code == .unknownItem {}
-        #endif
     }
 
     func create(
@@ -80,9 +72,6 @@ actor SharedCloudSync {
         memberName: String,
         history: SharedHistoryChoice
     ) async throws -> SharedHabitState {
-        #if targetEnvironment(simulator)
-        throw SharedHabitCloudError.requiresDevice
-        #else
         let container = try await availableContainer()
         let database = container.privateCloudDatabase
         let zoneID = CKRecordZone.ID(zoneName: "OpenHabit", ownerName: CKCurrentUserDefaultName)
@@ -127,13 +116,9 @@ actor SharedCloudSync {
         var memberWithCounts = member
         memberWithCounts.counts = counts
         return SharedHabitState(membership: membership, snapshot: SharedHabitSnapshot(definition: definition, members: [memberWithCounts]))
-        #endif
     }
 
     func synchronize(_ state: SharedHabitState, dataset: Dataset) async throws -> SharedHabitState {
-        #if targetEnvironment(simulator)
-        return state
-        #else
         let container = try await availableContainer()
         let membership = state.membership
         let zoneID = CKRecordZone.ID(zoneName: membership.zoneName, ownerName: membership.zoneOwnerName)
@@ -207,14 +192,10 @@ actor SharedCloudSync {
         let snapshot = SharedHabitSnapshot(definition: definition, members: members, invitations: invitations)
         try snapshot.validate()
         return SharedHabitState(membership: membership, snapshot: snapshot)
-        #endif
     }
 
     @available(iOS 18.0, *)
     func createInvitation(for state: SharedHabitState) async throws -> (SharedHabitState, URL) {
-        #if targetEnvironment(simulator)
-        throw SharedHabitCloudError.requiresDevice
-        #else
         guard state.membership.role == .owner else { throw SharedHabitCloudError.unavailable }
         guard state.snapshot.members.count + state.snapshot.invitations.count < 10 else { throw SharedHabitCloudError.full }
         let container = try await availableContainer()
@@ -224,6 +205,7 @@ actor SharedCloudSync {
         guard let share = try await database.record(for: shareID) as? CKShare else { throw SharedHabitCloudError.unavailable }
         guard share.participants.count < 10 else { throw SharedHabitCloudError.full }
         let participant = CKShare.Participant.oneTimeURLParticipant()
+        participant.role = .privateUser
         participant.permission = .readWrite
         share.addParticipant(participant)
         guard let saved = try await database.save(share) as? CKShare,
@@ -233,13 +215,9 @@ actor SharedCloudSync {
         var result = state
         result.snapshot.invitations.append(SharedInvitation(id: participant.participantID))
         return (result, url)
-        #endif
     }
 
     func accept(_ metadata: CKShare.Metadata) async throws -> SharedHabitJoinOffer {
-        #if targetEnvironment(simulator)
-        throw SharedHabitCloudError.requiresDevice
-        #else
         let container = try await availableContainer()
         let accepted = try await container.accept([metadata])
         guard let share = try accepted[metadata]?.get() else { throw SharedHabitCloudError.invalidResponse }
@@ -274,7 +252,6 @@ actor SharedCloudSync {
             zoneOwnerName: zoneID.ownerName,
             shareRecordName: share.recordID.recordName
         )
-        #endif
     }
 
     func join(
@@ -284,9 +261,6 @@ actor SharedCloudSync {
         counts: [String: Int],
         visibleFromDay: String?
     ) async throws -> SharedHabitState {
-        #if targetEnvironment(simulator)
-        throw SharedHabitCloudError.requiresDevice
-        #else
         let container = try await availableContainer()
         guard let colorIndex = SharedMember.nextColorIndex(usedBy: offer.snapshot.members) else { throw SharedHabitCloudError.full }
         let zoneID = CKRecordZone.ID(zoneName: offer.zoneName, ownerName: offer.zoneOwnerName)
@@ -322,20 +296,16 @@ actor SharedCloudSync {
         snapshot.updatedAt = Date()
         try snapshot.validate()
         return SharedHabitState(membership: membership, snapshot: snapshot)
-        #endif
     }
 
     func decline(_ offer: SharedHabitJoinOffer) async throws {
-        #if !targetEnvironment(simulator)
         let container = try await availableContainer()
         let zoneID = CKRecordZone.ID(zoneName: offer.zoneName, ownerName: offer.zoneOwnerName)
         let shareID = CKRecord.ID(recordName: offer.shareRecordName, zoneID: zoneID)
         _ = try await container.sharedCloudDatabase.deleteRecord(withID: shareID)
-        #endif
     }
 
     func leave(_ state: SharedHabitState) async throws {
-        #if !targetEnvironment(simulator)
         guard state.membership.role == .member else { throw SharedHabitCloudError.unavailable }
         let container = try await availableContainer()
         let zoneID = CKRecordZone.ID(zoneName: state.membership.zoneName, ownerName: state.membership.zoneOwnerName)
@@ -350,27 +320,25 @@ actor SharedCloudSync {
         for value in result.deleteResults.values { _ = try value.get() }
         let shareID = CKRecord.ID(recordName: state.membership.shareRecordName, zoneID: zoneID)
         _ = try await database.deleteRecord(withID: shareID)
-        #endif
     }
 
     func deleteSharedHabit(_ state: SharedHabitState) async throws {
-        #if !targetEnvironment(simulator)
         guard state.membership.role == .owner else { throw SharedHabitCloudError.unavailable }
         let container = try await availableContainer()
         let zoneID = CKRecordZone.ID(zoneName: state.membership.zoneName, ownerName: state.membership.zoneOwnerName)
+        let database = container.privateCloudDatabase
         let rootID = CKRecord.ID(recordName: "\(RecordName.habit)\(state.membership.sharedHabitID.uuidString)", zoneID: zoneID)
         let shareID = CKRecord.ID(recordName: state.membership.shareRecordName, zoneID: zoneID)
-        let result = try await container.privateCloudDatabase.modifyRecords(
-            saving: [], deleting: [rootID, shareID], savePolicy: .allKeys, atomically: true
+        let childIDs = try await fetchAll(in: zoneID, database: database)
+            .filter { $0.parent?.recordID == rootID }
+            .map(\.recordID)
+        let result = try await database.modifyRecords(
+            saving: [], deleting: childIDs + [shareID, rootID], savePolicy: .allKeys, atomically: true
         )
         for value in result.deleteResults.values { _ = try value.get() }
-        #endif
     }
 
     func cancelInvitation(_ invitationID: String, in state: SharedHabitState) async throws -> SharedHabitState {
-        #if targetEnvironment(simulator)
-        throw SharedHabitCloudError.requiresDevice
-        #else
         guard state.membership.role == .owner else { throw SharedHabitCloudError.unavailable }
         let container = try await availableContainer()
         let zoneID = CKRecordZone.ID(zoneName: state.membership.zoneName, ownerName: state.membership.zoneOwnerName)
@@ -384,13 +352,9 @@ actor SharedCloudSync {
         var result = state
         result.snapshot.invitations.removeAll { $0.id == invitationID }
         return result
-        #endif
     }
 
     func remove(_ member: SharedMember, from state: SharedHabitState) async throws -> SharedHabitState {
-        #if targetEnvironment(simulator)
-        throw SharedHabitCloudError.requiresDevice
-        #else
         guard state.membership.role == .owner, member.role != .owner,
               let cloudUserRecordName = member.cloudUserRecordName else { throw SharedHabitCloudError.unavailable }
         let container = try await availableContainer()
@@ -413,7 +377,6 @@ actor SharedCloudSync {
         var updated = state
         updated.snapshot.members.removeAll { $0.id == member.id }
         return updated
-        #endif
     }
 
     private func availableContainer() async throws -> CKContainer {
@@ -436,7 +399,8 @@ actor SharedCloudSync {
         try JSONEncoder().encode(value).write(to: file, options: .atomic)
         let record = CKRecord(recordType: "HabitEdit", recordID: recordID)
         record["payload"] = CKAsset(fileURL: file)
-        if let parent { record.parent = CKRecord.Reference(recordID: parent, action: .deleteSelf) }
+        // CloudKit requires its special parent reference to use `.none`; `.deleteSelf` raises an exception.
+        if let parent { record.parent = CKRecord.Reference(recordID: parent, action: .none) }
         return (record, file)
     }
 

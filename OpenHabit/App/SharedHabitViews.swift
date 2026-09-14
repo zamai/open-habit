@@ -1,5 +1,6 @@
 import SwiftUI
 import OpenHabitCore
+import UIKit
 
 struct SharedHabitJoinView: View {
     @Environment(AppModel.self) private var model
@@ -121,8 +122,11 @@ struct SharedHabitSetupView: View {
     @Environment(\.dismiss) private var dismiss
     let habit: Habit
     @State private var memberName = ""
-    @State private var history = SharedHistoryChoice.startFresh
+    @State private var history = SharedHistoryChoice.fullHistory
     @State private var creating = false
+    @State private var shared = false
+    @State private var invitation: InvitationLink?
+    @FocusState private var memberNameFocused: Bool
 
     private var validName: Bool {
         let trimmed = memberName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -133,20 +137,9 @@ struct SharedHabitSetupView: View {
         NavigationStack {
             Form {
                 Section {
-                    LabeledContent("Habit") { Text("\(habit.emoji) \(habit.name)") }
-                    LabeledContent("Daily Target", value: "\(habit.target)")
-                    if let goal = habit.streakGoal {
-                        LabeledContent("Streak Goal", value: goal.period == .daily ? "Daily" : "\(goal.target) days each week")
-                    }
-                } header: {
-                    Text("Shared Habit")
-                } footer: {
-                    Text("You remain the Owner. Changes you make to this definition apply to every Member.")
-                }
-
-                Section {
                     TextField("Name shown to Members", text: $memberName)
                         .textContentType(.name)
+                        .focused($memberNameFocused)
                         .onChange(of: memberName) { _, value in memberName = String(value.prefix(40)) }
                 } header: {
                     Text("Your Member Name")
@@ -156,8 +149,8 @@ struct SharedHabitSetupView: View {
 
                 Section {
                     Picker("History", selection: $history) {
-                        Text("Start Fresh").tag(SharedHistoryChoice.startFresh)
                         Text("Full History").tag(SharedHistoryChoice.fullHistory)
+                        Text("Start Fresh").tag(SharedHistoryChoice.startFresh)
                     }
                     .pickerStyle(.segmented)
                 } header: {
@@ -169,7 +162,6 @@ struct SharedHabitSetupView: View {
                 }
 
                 Section {
-                    Label("Every person who joins participates and shares their own progress. There are no read-only observers.", systemImage: "person.2")
                     Label("Open Habit uses iCloud Sharing. It does not operate an account or synchronization server.", systemImage: "icloud")
                 }
             }
@@ -177,17 +169,33 @@ struct SharedHabitSetupView: View {
             .navigationTitle("Share Habit")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(creating) }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(creating ? "Sharing…" : "Share") {
+                        memberNameFocused = false
                         creating = true
                         Task {
-                            if await model.share(habit, memberName: memberName, history: history) { dismiss() }
+                            if await model.share(habit, memberName: memberName, history: history) {
+                                shared = true
+                                if #available(iOS 18.0, *) {
+                                    if let url = await model.createInvitation(for: habit.id) {
+                                        invitation = InvitationLink(url: url)
+                                    } else {
+                                        dismiss()
+                                    }
+                                } else {
+                                    dismiss()
+                                }
+                            }
                             creating = false
                         }
                     }
                     .disabled(!validName || creating)
                 }
+            }
+            .onAppear { memberNameFocused = true }
+            .sheet(item: $invitation, onDismiss: { if shared { dismiss() } }) { invitation in
+                InvitationReadyView(invitation: invitation)
             }
         }
     }
@@ -208,11 +216,7 @@ struct SharedHabitMembersSection: View {
             HStack {
                 Text("Members").font(.title2.bold())
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(state.snapshot.members.count) of 10")
-                    Text("Updated \(state.snapshot.updatedAt, style: .relative) ago").font(.caption2)
-                }
-                .font(.subheadline).foregroundStyle(.secondary)
+                Text("\(state.snapshot.members.count) of 10").font(.subheadline).foregroundStyle(.secondary)
             }
             VStack(spacing: 0) {
                 ForEach(Array(state.snapshot.orderedMembers(currentMemberID: state.membership.memberID).enumerated()), id: \.element.id) { index, member in
@@ -270,24 +274,7 @@ struct SharedHabitMembersSection: View {
             }
         }
         .sheet(item: $invitation) { invitation in
-            NavigationStack {
-                VStack(spacing: 24) {
-                    Image(systemName: "person.2.badge.plus").font(.system(size: 56)).foregroundStyle(.green)
-                    Text("Invitation Ready").font(.title.bold())
-                    Text("Send this private, single-use Invitation directly to one person. It does not expire automatically.")
-                        .multilineTextAlignment(.center).foregroundStyle(.secondary)
-                    ShareLink(item: invitation.url, subject: Text("Join my Shared Habit")) {
-                        Label("Send Invitation", systemImage: "square.and.arrow.up")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding(28)
-                .navigationTitle("Invite Member")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { self.invitation = nil } } }
-            }
-            .presentationDetents([.medium])
+            InvitationReadyView(invitation: invitation)
         }
         .sheet(isPresented: $editingIdentity) {
             if let member = state.snapshot.members.first(where: { $0.id == state.membership.memberID }) {
@@ -378,6 +365,38 @@ private struct MemberIdentityEditor: View {
 private struct InvitationLink: Identifiable {
     let id = UUID()
     let url: URL
+}
+
+private struct InvitationReadyView: View {
+    @Environment(\.dismiss) private var dismiss
+    let invitation: InvitationLink
+    @State private var copied = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 18) {
+                Image(systemName: "person.2.badge.plus").font(.system(size: 56)).foregroundStyle(.green)
+                Text("Invitation Ready").font(.title.bold())
+                Text("Send this private, single-use Invitation directly to one person. It does not expire automatically.")
+                    .multilineTextAlignment(.center).foregroundStyle(.secondary)
+                ShareLink(item: invitation.url, subject: Text("Join my Shared Habit")) {
+                    Label("Send Invitation", systemImage: "square.and.arrow.up")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                Button(copied ? "Invitation Link Copied" : "Copy Invitation Link", systemImage: copied ? "checkmark" : "doc.on.doc") {
+                    UIPasteboard.general.url = invitation.url
+                    copied = true
+                }
+                .buttonStyle(.bordered)
+            }
+            .padding(28)
+            .navigationTitle("Invite Member")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+        .presentationDetents([.medium])
+    }
 }
 
 struct SharedMemberRow: View {

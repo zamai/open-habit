@@ -55,6 +55,7 @@ targets:
         com.apple.security.application-groups: [group.com.alex.openhabit]
         com.apple.developer.icloud-container-identifiers: [iCloud.com.alex.openhabit]
         com.apple.developer.icloud-services: [CloudKit]
+        com.apple.developer.icloud-extended-share-access: [InProcessOneTimeLinks]
         aps-environment: development
   OpenHabitWidgets:
     type: app-extension

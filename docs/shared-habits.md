@@ -43,12 +43,11 @@ This is a cooperative, trusted-small-group feature. The app prevents ordinary mi
 
 `Habit Detail → Share Habit` opens setup. The Owner:
 
-1. Confirms the common Habit definition.
-2. Chooses and confirms a Member Name.
-3. Chooses whether their Shared History includes all existing Habit Days or starts today. `Start Fresh` is the default.
-4. Creates the Shared Habit.
+1. Chooses and confirms a Member Name.
+2. Chooses whether their Shared History includes all existing Habit Days or starts today. `Full History` is the default.
+3. Creates the Shared Habit and its first Invitation.
 
-The existing Habit becomes shared in place. Open Habit does not duplicate it. After creation, Habit Detail shows the Members section and its Invite action.
+The existing Habit becomes shared in place. Open Habit does not duplicate it. After creation, Open Habit immediately presents the first Invitation with actions to send or copy its link. Habit Detail then shows the Members section and its Invite action for additional people.
 
 Starting fresh affects only what the Owner shares. Their local earlier history remains intact and private.
 
@@ -57,7 +56,7 @@ Starting fresh affects only what the Owner shares. Their local earlier history r
 - Invite creates a single-use CloudKit participant URL for one person.
 - An outstanding Invitation reserves one of the ten Member places.
 - Invitations do not expire automatically.
-- The system share sheet sends the URL through Messages, AirDrop, or another direct channel.
+- The Invitation screen can copy the URL or open the system share sheet to send it through Messages, AirDrop, or another direct channel.
 - The first person to accept the URL becomes a Member immediately; Owner approval is not required.
 - Before acceptance, the Owner sees a generic `Pending Invitation`, because no Member Name exists yet.
 - The Owner may cancel a pending Invitation or remove a Member who accepted an incorrectly forwarded URL.
