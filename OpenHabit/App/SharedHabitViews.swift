@@ -211,12 +211,26 @@ struct SharedHabitMembersSection: View {
     @State private var endingShare = false
     @State private var leaving = false
 
+    private var invitations: [SharedInvitation] {
+        state.snapshot.invitations.sorted {
+            if $0.createdAt != $1.createdAt { return $0.createdAt < $1.createdAt }
+            return $0.id < $1.id
+        }
+    }
+
+    private var membershipSummary: String {
+        let memberCount = state.snapshot.members.count
+        let members = memberCount == 1 ? "Member" : "Members"
+        guard !invitations.isEmpty else { return "\(memberCount) \(members)" }
+        return "\(memberCount) \(members) · \(invitations.count) Pending"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Members").font(.title2.bold())
                 Spacer()
-                Text("\(state.snapshot.members.count) of 10").font(.subheadline).foregroundStyle(.secondary)
+                Text(membershipSummary).font(.subheadline).foregroundStyle(.secondary)
             }
             VStack(spacing: 0) {
                 ForEach(Array(state.snapshot.orderedMembers(currentMemberID: state.membership.memberID).enumerated()), id: \.element.id) { index, member in
@@ -233,20 +247,38 @@ struct SharedHabitMembersSection: View {
                     }
                     if index < state.snapshot.members.count - 1 { Divider().padding(.leading, 54) }
                 }
-                ForEach(state.snapshot.invitations) { invitation in
-                    Divider().padding(.leading, 54)
-                    HStack {
-                        Label("Pending Invitation", systemImage: "envelope.badge").foregroundStyle(.secondary)
-                        Spacer()
-                        Button("Cancel Invitation", systemImage: "xmark", role: .destructive) {
-                            Task { await model.cancelInvitation(invitation.id, habitID: state.membership.localHabitID) }
-                        }
-                        .labelStyle(.iconOnly)
-                    }
-                    .padding(14)
-                }
             }
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+
+            if !invitations.isEmpty {
+                Text("Invitations")
+                    .font(.headline)
+                    .padding(.top, 4)
+                VStack(spacing: 0) {
+                    ForEach(Array(invitations.enumerated()), id: \.element.id) { index, invitation in
+                        if index > 0 { Divider().padding(.leading, 54) }
+                        HStack(spacing: 12) {
+                            Image(systemName: "envelope.badge")
+                                .frame(width: 30)
+                                .foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Pending Invitation \(index + 1)")
+                                Text(invitation.createdAt, format: .dateTime.month(.abbreviated).day().hour().minute())
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button("Cancel Invitation", systemImage: "xmark", role: .destructive) {
+                                Task { await model.cancelInvitation(invitation.id, habitID: state.membership.localHabitID) }
+                            }
+                            .labelStyle(.iconOnly)
+                            .accessibilityLabel("Cancel Pending Invitation \(index + 1)")
+                        }
+                        .padding(14)
+                    }
+                }
+                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+            }
 
             if state.membership.role == .owner {
                 if #available(iOS 18.0, *) {
