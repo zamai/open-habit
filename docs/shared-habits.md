@@ -66,18 +66,13 @@ Single-use participant URLs require iOS 18 or later. Tracking remains available 
 
 ## Joining
 
-Acceptance presents a preview containing:
+Acceptance shows an `Opening invitation…` spinner while iCloud loads the Shared Habit, then presents three steps:
 
-- The common Habit definition.
-- The Owner's Member Name.
-- The current Member count.
-- A clear statement that Completion counts and derived progress are visible to all Members.
-- A clear statement that Day Notes remain private.
+1. **Your Name**: enter a Member Name for this Shared Habit. Continue requires a nonblank name of at most 40 characters.
+2. **Review Habit**: review the common Habit definition, Owner's Member Name, Member count, and what is shared. Completion counts and derived progress are visible to all Members; Day Notes stay private.
+3. **Choose Your Habit**: choose `Start New` (default) to create a new local Habit whose Shared History begins today, or `Use Existing Habit` to select a Private Habit, review the definition differences, and share its full Completion history. The existing-Habit option is unavailable when there are no eligible Private Habits.
 
-The joining person confirms a Member Name and chooses:
-
-- `Start New` (default): create a new local Habit from the common definition. Shared History begins today.
-- `Use Existing Habit`: select one existing Private Habit, review the definition differences, adopt the Shared Habit's definition, and share the existing Habit’s full history.
+Each step shows progress. Continue advances to the next step; native Back navigation preserves the name and tracking choice. Only the final `Join Shared Habit` action completes joining and connects the local Habit. It shows a spinner while joining; a failure keeps the entered choices available for retry.
 
 Connecting an existing Habit is the explicit approval to share its full Completion history. There is no later history visibility toggle. To stop sharing, the Member leaves.
 

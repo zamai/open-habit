@@ -3,95 +3,250 @@ import OpenHabitCore
 import UIKit
 
 struct SharedHabitJoinView: View {
+    private enum Step: Int, Hashable {
+        case name, review, tracking
+
+        var title: String {
+            switch self {
+            case .name: "Your Name"
+            case .review: "Review Habit"
+            case .tracking: "Choose Your Habit"
+            }
+        }
+    }
+
+    private enum Action { case join, decline }
+
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let offer: SharedHabitJoinOffer
+    @State private var path: [Step] = []
     @State private var memberName = ""
     @State private var useExisting = false
     @State private var existingHabitID: UUID?
-    @State private var joining = false
+    @State private var action: Action?
+    @FocusState private var memberNameFocused: Bool
 
     private var privateHabits: [Habit] {
         model.data.active.filter { model.sharedHabit(for: $0.id) == nil }
     }
 
-    private var selectedHabit: Habit? { existingHabitID.flatMap(model.data.habit) }
+    private var selectedHabit: Habit? { privateHabits.first { $0.id == existingHabitID } }
+    private var trimmedName: String { memberName.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var validName: Bool {
-        let trimmed = memberName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmed.isEmpty && trimmed.count <= 40
+        !trimmedName.isEmpty && trimmedName.count <= 40
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Invitation") {
-                    LabeledContent("Habit") { Text("\(offer.snapshot.definition.emoji) \(offer.snapshot.definition.name)") }
-                    if let owner = offer.snapshot.members.first(where: { $0.role == .owner }) {
-                        LabeledContent("Owner", value: owner.name)
-                    }
-                    LabeledContent("Members", value: "\(offer.snapshot.members.count) of 10")
-                    LabeledContent("Daily Target", value: "\(offer.snapshot.definition.target)")
-                    if let goal = offer.snapshot.definition.streakGoal {
-                        LabeledContent("Streak Goal", value: goal.period == .daily ? "Daily" : "\(goal.target) days each week")
+        NavigationStack(path: $path) {
+            page(.name)
+                .navigationDestination(for: Step.self) { page($0) }
+        }
+    }
+
+    private func page(_ step: Step) -> some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Step \(step.rawValue + 1) of 3")
+                        .font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+                    ProgressView(value: Double(step.rawValue + 1), total: 3)
+                        .accessibilityHidden(true)
+                }
+                .padding(.vertical, 4)
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+
+            switch step {
+            case .name: nameStep
+            case .review: reviewStep
+            case .tracking: trackingStep
+            }
+        }
+        .disabled(action != nil)
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle(step.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(action != nil)
+        .safeAreaInset(edge: .bottom, spacing: 0) { primaryAction(for: step) }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    memberNameFocused = false
+                    action = .decline
+                    Task { await model.decline(offer); action = nil }
+                } label: {
+                    if action == .decline {
+                        ProgressView().accessibilityLabel("Declining invitation")
+                    } else {
+                        Text("Decline")
                     }
                 }
+                .disabled(action != nil)
+            }
+        }
+        .onAppear { if step == .name { memberNameFocused = true } }
+    }
 
-                Section {
-                    Label("Every Member sees your Completion counts and progress.", systemImage: "chart.bar")
-                    Label("Your Day Notes always remain private.", systemImage: "lock.fill")
-                }
+    private var nameStep: some View {
+        Section {
+            TextField("Your Member Name", text: $memberName)
+                .textContentType(.name)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+                .focused($memberNameFocused)
+                .submitLabel(.continue)
+                .onSubmit { advance(from: .name) }
+                .onChange(of: memberName) { _, value in memberName = String(value.prefix(40)) }
+                .accessibilityIdentifier("join-member-name")
+        } header: {
+            Text("What should Members call you?")
+        } footer: {
+            Text("This name is only for this Shared Habit. You can change it later.")
+        }
+    }
 
-                Section("Your Member Name") {
-                    TextField("Name shown to Members", text: $memberName)
-                        .textContentType(.name)
-                        .onChange(of: memberName) { _, value in memberName = String(value.prefix(40)) }
-                }
-
-                Section {
-                    Picker("Local Habit", selection: $useExisting) {
-                        Text("Start New").tag(false)
-                        Text("Use Existing").tag(true)
-                    }
-                    .pickerStyle(.segmented)
-
-                    if useExisting {
-                        if privateHabits.isEmpty {
-                            ContentUnavailableView("No Private Habits", systemImage: "leaf", description: Text("Start a new Habit instead."))
-                        } else {
-                            Picker("Habit", selection: $existingHabitID) {
-                                Text("Choose a Habit").tag(nil as UUID?)
-                                ForEach(privateHabits) { habit in Text("\(habit.emoji) \(habit.name)").tag(habit.id as UUID?) }
-                            }
-                            if let selectedHabit { definitionChanges(from: selectedHabit) }
-                        }
-                    }
-                } header: {
-                    Text("Connect to Your Tracking")
-                } footer: {
-                    Text(useExisting
-                         ? "The selected Habit adopts the shared definition and shares its complete Completion history. Categories, ordering, and Day Notes remain private."
-                         : "A new Habit starts today. Nothing from your other Habits is shared.")
+    @ViewBuilder private var reviewStep: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(offer.snapshot.definition.emoji)
+                    .font(.largeTitle).accessibilityHidden(true)
+                Text(offer.snapshot.definition.name).font(.title2.bold())
+                if !offer.snapshot.definition.detail.isEmpty {
+                    Text(offer.snapshot.definition.detail).foregroundStyle(.secondary)
                 }
             }
-            .disabled(joining)
-            .navigationTitle("Join Shared Habit")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Decline") {
-                        joining = true
-                        Task { await model.decline(offer); joining = false }
+            .padding(.vertical, 8)
+            if let owner = offer.snapshot.members.first(where: { $0.role == .owner }) {
+                LabeledContent("Invited by", value: owner.name)
+            }
+            LabeledContent("Members", value: "\(offer.snapshot.members.count) of 10")
+            LabeledContent("Daily Target", value: "\(offer.snapshot.definition.target)")
+            if let goal = offer.snapshot.definition.streakGoal {
+                LabeledContent("Streak Goal", value: goal.period == .daily ? "Daily" : "\(goal.target) days each week")
+            }
+        }
+
+        Section("What you share") {
+            Label("Members see your Completion counts and progress.", systemImage: "person.2")
+            Label("Your Day Notes always stay private.", systemImage: "lock.fill")
+        }
+    }
+
+    @ViewBuilder private var trackingStep: some View {
+        Section {
+            trackingOption(existing: false, title: "Start New", detail: "Create a new Habit. Your Shared History starts today.", symbol: "plus.circle")
+            trackingOption(existing: true, title: "Use Existing Habit", detail: "Connect a Private Habit and share its full Completion history.", symbol: "link")
+                .disabled(privateHabits.isEmpty)
+        } header: {
+            Text("How would you like to track this Habit?")
+        } footer: {
+            if privateHabits.isEmpty {
+                Text("You have no Private Habits to connect. Start a new Habit to join.")
+            }
+        }
+
+        if useExisting {
+            Section {
+                Picker("Habit", selection: $existingHabitID) {
+                    Text("Choose a Habit").tag(nil as UUID?)
+                    ForEach(privateHabits) { habit in
+                        Text("\(habit.emoji) \(habit.name)").tag(habit.id as UUID?)
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(joining ? "Joining…" : "Join") {
-                        joining = true
-                        Task {
-                            _ = await model.join(offer, memberName: memberName, existingHabitID: useExisting ? existingHabitID : nil)
-                            joining = false
+                .accessibilityIdentifier("join-existing-habit")
+                if let selectedHabit { definitionChanges(from: selectedHabit) }
+            } header: {
+                Text("Connect a Private Habit")
+            } footer: {
+                Text("Its definition will match the Shared Habit. Its full Completion history will be visible to all Members. Day Notes, Categories, and ordering stay private.")
+            }
+        }
+    }
+
+    private func trackingOption(existing: Bool, title: String, detail: String, symbol: String) -> some View {
+        Button { useExisting = existing } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                if dynamicTypeSize.isAccessibilitySize {
+                    HStack {
+                        Image(systemName: symbol).foregroundStyle(.tint).accessibilityHidden(true)
+                        Spacer()
+                        selectionMark(existing: existing)
+                    }
+                }
+                HStack(alignment: .top, spacing: 12) {
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        Image(systemName: symbol).font(.title3).foregroundStyle(.tint)
+                            .frame(width: 28).accessibilityHidden(true)
+                    }
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(title).font(.headline).foregroundStyle(.primary)
+                        Text(detail).font(.subheadline).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if !dynamicTypeSize.isAccessibilitySize {
+                        Spacer(minLength: 0)
+                        selectionMark(existing: existing)
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(useExisting == existing ? .isSelected : [])
+        .accessibilityIdentifier(existing ? "join-use-existing" : "join-start-new")
+    }
+
+    private func selectionMark(existing: Bool) -> some View {
+        Image(systemName: useExisting == existing ? "checkmark.circle.fill" : "circle")
+            .foregroundStyle(useExisting == existing ? Color.accentColor : Color.secondary)
+            .accessibilityHidden(true)
+    }
+
+    private func primaryAction(for step: Step) -> some View {
+        VStack {
+            Button { advance(from: step) } label: {
+                HStack(spacing: 8) {
+                    if action == .join { ProgressView().tint(.white) }
+                    if action == .join {
+                        Text("Joining…")
+                    } else if step == .tracking {
+                        ViewThatFits(in: .horizontal) {
+                            Text("Join Shared Habit").fixedSize()
+                            Text("Join")
                         }
+                    } else {
+                        Text("Continue")
                     }
-                    .disabled(!validName || (useExisting && existingHabitID == nil) || joining)
                 }
+                .font(.headline)
+                .frame(maxWidth: .infinity).padding(.vertical, 4)
+            }
+            .buttonStyle(.borderedProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(.large)
+            .disabled(action != nil || !validName || (step == .tracking && useExisting && selectedHabit == nil))
+            .accessibilityLabel(action == .join ? "Joining Shared Habit" : step == .tracking ? "Join Shared Habit" : "Continue")
+            .accessibilityIdentifier(step == .tracking ? "join-confirm" : "join-continue")
+        }
+        .padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 12)
+        .background(.bar)
+    }
+
+    private func advance(from step: Step) {
+        guard action == nil, validName else { return }
+        memberNameFocused = false
+        switch step {
+        case .name: path.append(.review)
+        case .review: path.append(.tracking)
+        case .tracking:
+            guard !useExisting || selectedHabit != nil else { return }
+            action = .join
+            Task {
+                _ = await model.join(offer, memberName: trimmedName, existingHabitID: useExisting ? existingHabitID : nil)
+                action = nil
             }
         }
     }
@@ -576,3 +731,41 @@ private extension SharedMember {
         )
     }
 }
+
+#if DEBUG && targetEnvironment(simulator)
+@MainActor
+enum SharedHabitJoinPreview {
+    static var isEnabled: Bool { ProcessInfo.processInfo.arguments.contains("--preview-join") }
+
+    static func makeModel(withPrivateHabit: Bool = true) -> AppModel {
+        let model = AppModel()
+        if withPrivateHabit {
+            model.data.habits = [Habit(name: "Reading", emoji: "📖", target: 1)]
+        }
+        let habit = Habit(name: "Read together", emoji: "📖", detail: "Make a little room for a good book each day.", target: 2)
+        let definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
+        let owner = SharedMember(name: "Sam", colorIndex: 0, role: .owner)
+        model.pendingJoin = SharedHabitJoinOffer(
+            snapshot: SharedHabitSnapshot(definition: definition, members: [owner]),
+            zoneName: "preview", zoneOwnerName: "preview", shareRecordName: "preview"
+        )
+        return model
+    }
+}
+
+#Preview("Join invitation") {
+    let model = SharedHabitJoinPreview.makeModel()
+    SharedHabitJoinView(offer: model.pendingJoin!).environment(model).tint(.green)
+}
+
+#Preview("Join without Private Habits") {
+    let model = SharedHabitJoinPreview.makeModel(withPrivateHabit: false)
+    SharedHabitJoinView(offer: model.pendingJoin!).environment(model).tint(.green)
+}
+
+#Preview("Join in Dark Mode") {
+    let model = SharedHabitJoinPreview.makeModel()
+    SharedHabitJoinView(offer: model.pendingJoin!).environment(model).tint(.green)
+        .preferredColorScheme(.dark)
+}
+#endif

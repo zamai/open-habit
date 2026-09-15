@@ -1,5 +1,29 @@
 # Open Habit verification
 
+## Invitation acceptance investigation (15 September 2026)
+
+The dedicated **Open Habit iCloud Test** simulator (iOS 26.5), signed into a separate Apple Account, successfully created a Shared Habit and single-use Invitations against **Production** CloudKit. A physical iPhone on iOS 27 with TestFlight build 29 opened Open Habit after acceptance without presenting the join screen.
+
+The app handled only the application-delegate callback. Scene-based apps receive an Invitation through `UIWindowSceneDelegate.windowScene(_:userDidAcceptCloudKitShareWith:)` when a window is connected, or `UIScene.ConnectionOptions.cloudKitShareMetadata` when a scene connects. Both paths now feed the existing acceptance broker. Diagnostics use subsystem `com.alex.openhabit`, category `ShareAcceptance`, without logging invitation URLs or Member identities.
+
+The signed device build succeeds and all four existing app-hosted tests pass. Alex confirmed that the Production debug build installed in place on the connected iPhone opens the join screen and successfully creates the joined Sharing test Habit. Device logs confirm cold-launch receipt at 09:36:38 and successful Shared Habit loading at 09:36:41 (Europe/Warsaw). The roughly 3.3-second CloudKit wait prompted a loading spinner in the invitation sheet. **Warm-launch acceptance and subsequent Completion synchronization still require device verification.**
+
+The loading-to-join transition and Member Name order were visually checked in the simulator with a temporary in-memory offer. The preview code was removed afterward. Both final simulator and signed device builds compile, and the updated device build is installed. This UI preview does not establish live joining or synchronization.
+
+### Joining in three steps
+
+Joining now uses native push navigation for **Your Name → Review Habit → Choose Your Habit**, with progress, Continue buttons, native Back navigation, and a final Join action. Name and tracking choices persist when going back. The action stays above the keyboard; choice rows adapt at accessibility text sizes. Joining and declining disable duplicate actions and show progress.
+
+`SharedHabitJoinUITests` exercises name validation, review, Back navigation, retained choices, explicit selection before connecting an existing Habit, and the no-Private-Habits case at the largest accessibility text size. These deterministic tests are included in `scripts/ci/test.sh`. They use a simulator-only Debug fixture (`--preview-join`, optionally `--preview-join-empty`) and stop before CloudKit join/decline actions. Ordinary app startup and physical-device builds do not enable the fixture.
+
+For repeatable manual tests:
+
+1. Keep the spare Apple Account signed into Settings in the dedicated simulator. Apple Account verification uses trusted-device or SMS/phone codes, not authenticator-app TOTP.
+2. Build the app and widget with temporary copies of their respective entitlements files, each adding `com.apple.developer.icloud-container-environment = Production`, when testing against TestFlight. Keep these overrides out of ordinary test builds. The simulator's private journal sync still uses its local-storage fallback; the Shared Habit operations can access live CloudKit.
+3. Create a test Habit and use **Invite a Member** for each fresh single-use Invitation. Open it from a message or this task on the receiving iPhone, using a different Apple Account.
+4. In macOS Console, select the iPhone, include Info messages, and filter to subsystem `com.alex.openhabit`. Check receipt, CloudKit acceptance/loading, and join-screen presentation. Test both a running app and an app that has been fully closed.
+5. Join with a new test Habit and verify that each Member's Completions reach the other device. Leave or stop sharing after testing and verify that personal history remains available.
+
 ## Shared Habits implementation (13 September 2026)
 
 The first end-to-end implementation slice is present in the app. It includes the isolated shared data projection, local membership cache, cross-device membership records, Owner setup with fresh/full history, single-use Invitation creation, CloudKit share acceptance, Start New and Use Existing joining, the Members presentation, Member identity editing, Invitation cancellation, Member removal, leaving, and the Owner stopping sharing while preserving their local Habit.

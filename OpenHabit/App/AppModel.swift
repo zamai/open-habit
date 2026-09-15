@@ -8,6 +8,7 @@ final class AppModel {
     var data = Dataset()
     var sharedHabits: [UUID: SharedHabitState] = [:]
     var pendingJoin: SharedHabitJoinOffer?
+    var preparingShare = false
     var syncStatus = "Syncing"
     var error: String?
     var loading = true
@@ -137,9 +138,18 @@ final class AppModel {
 
     func preparePendingShare() async {
         guard let metadata = ShareAcceptanceBroker.shared.take() else { return }
+        preparingShare = true
+        defer { preparingShare = false }
         error = nil
-        do { pendingJoin = try await SharedCloudSync.shared.accept(metadata) }
-        catch { self.error = error.localizedDescription }
+        ShareAcceptanceBroker.logger.info("Accepting invitation and fetching Shared Habit")
+        do {
+            pendingJoin = try await SharedCloudSync.shared.accept(metadata)
+            ShareAcceptanceBroker.logger.info("Shared Habit loaded; presenting join screen")
+        } catch {
+            let failure = error as NSError
+            ShareAcceptanceBroker.logger.error("Invitation failed: \(failure.domain, privacy: .public) code \(failure.code)")
+            self.error = error.localizedDescription
+        }
     }
 
     func join(_ offer: SharedHabitJoinOffer, memberName: String, existingHabitID: UUID?) async -> Bool {

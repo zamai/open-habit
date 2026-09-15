@@ -87,8 +87,19 @@ struct OverviewView: View {
                 case .share(let habit): SharedHabitSetupView(habit: habit)
                 }
             }
-            .sheet(item: Binding(get: { model.pendingJoin }, set: { model.pendingJoin = $0 })) { offer in
-                SharedHabitJoinView(offer: offer).interactiveDismissDisabled()
+            .sheet(isPresented: Binding(
+                get: { model.preparingShare || model.pendingJoin != nil },
+                set: { if !$0 { model.pendingJoin = nil } }
+            )) {
+                Group {
+                    if model.preparingShare {
+                        ProgressView("Opening invitation…")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if let offer = model.pendingJoin {
+                        SharedHabitJoinView(offer: offer)
+                    }
+                }
+                .interactiveDismissDisabled()
             }
             .alert("Permanently delete \(deleting?.name ?? "Habit")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
                 Button("Delete", role: .destructive) { if let habit = deleting { delete(habit) }; deleting = nil }

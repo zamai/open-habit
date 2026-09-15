@@ -23,6 +23,7 @@
 		38789A7DE3B252C61EC252D5 /* OpenHabitWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23415D4CDEA5722AE5FB0FBC /* OpenHabitWidgets.swift */; };
 		3A9F0DAF6A2EB19B71C0618B /* OpenHabitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930C2515644CD54F9ACD9E40 /* OpenHabitApp.swift */; };
 		3E070FBB0EBC0DD82715AFAD /* WidgetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629B9C172642BD503791ECE0 /* WidgetUITests.swift */; };
+		4CBC419B1F076F012192B70B /* SharedHabitJoinUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5747915384329576A5C93E2 /* SharedHabitJoinUITests.swift */; };
 		67668BD896DEB07994BDC41D /* HabitWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */; };
 		6E2A48900630C267F5597326 /* HabitWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */; };
 		7574FB776B7EFEA3EDB3B40C /* HabitVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */; };
@@ -104,6 +105,7 @@
 		92D8B16028A1C167D86F734A /* HabitEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEditor.swift; sourceTree = "<group>"; };
 		930C2515644CD54F9ACD9E40 /* OpenHabitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenHabitApp.swift; sourceTree = "<group>"; };
 		A2CEF39454582E591F63A033 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A5747915384329576A5C93E2 /* SharedHabitJoinUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedHabitJoinUITests.swift; sourceTree = "<group>"; };
 		A79740D55713A0D974950385 /* OpenHabit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = OpenHabit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0662758E894912B6B7DD97D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B5AAC4418FB424D2DB5EBC0F /* IntentIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentIntegrationTests.swift; sourceTree = "<group>"; };
@@ -202,6 +204,7 @@
 			children = (
 				DC317774604784BA1C1D0DC3 /* DeleteConfirmationUITests.swift */,
 				628DF07485DBFC431E79B585 /* ImportUITests.swift */,
+				A5747915384329576A5C93E2 /* SharedHabitJoinUITests.swift */,
 				629B9C172642BD503791ECE0 /* WidgetUITests.swift */,
 			);
 			path = OpenHabitUITests;
@@ -419,6 +422,7 @@
 			files = (
 				83A045439E89FAD829C9A608 /* DeleteConfirmationUITests.swift in Sources */,
 				EDC8C5667542AD1D62AD3F46 /* ImportUITests.swift in Sources */,
+				4CBC419B1F076F012192B70B /* SharedHabitJoinUITests.swift in Sources */,
 				3E070FBB0EBC0DD82715AFAD /* WidgetUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
