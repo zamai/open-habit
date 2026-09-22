@@ -50,13 +50,16 @@ def distribute_to_all_testers(build):
  expected_group_ids = {group['id'] for group in groups}
  external_group_ids = {group['id'] for group in groups if not group['attributes']['isInternalGroup']}
  assigned_group_ids = {group['id'] for group in build['relationships']['betaGroups']['data']}
- missing_group_ids = expected_group_ids - assigned_group_ids
- if missing_group_ids:
-  request('POST', 'builds/' + build_id + '/relationships/betaGroups', {'data': [{'type': 'betaGroups', 'id': group_id} for group_id in sorted(missing_group_ids)]})
+ missing_external_group_ids = external_group_ids - assigned_group_ids
+ if missing_external_group_ids:
+  request('POST', 'builds/' + build_id + '/relationships/betaGroups', {'data': [{'type': 'betaGroups', 'id': group_id} for group_id in sorted(missing_external_group_ids)]})
 
- assigned = get('builds/' + build_id + '?include=betaGroups')['data']
- assigned_group_ids = {group['id'] for group in assigned['relationships']['betaGroups']['data']}
- unassigned_group_ids = expected_group_ids - assigned_group_ids
+ for attempt in range(12):
+  assigned = get('builds/' + build_id + '?include=betaGroups')['data']
+  assigned_group_ids = {group['id'] for group in assigned['relationships']['betaGroups']['data']}
+  unassigned_group_ids = expected_group_ids - assigned_group_ids
+  if not unassigned_group_ids: break
+  time.sleep(5)
  if unassigned_group_ids:
   raise SystemExit('Build ' + build['attributes']['version'] + ' is not assigned to every TestFlight group: ' + ', '.join(sorted(unassigned_group_ids)))
 
