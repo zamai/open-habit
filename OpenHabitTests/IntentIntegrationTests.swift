@@ -4,6 +4,34 @@ import OpenHabitCore
 @testable import OpenHabit
 
 final class IntentIntegrationTests: XCTestCase {
+    private func sharedState(localHabitID: UUID) -> SharedHabitState {
+        let habit = Habit(id: localHabitID, name: "Shared state fixture")
+        let member = SharedMember(name: "Alex", colorIndex: 0, role: .owner)
+        let definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
+        return SharedHabitState(
+            membership: SharedHabitMembership(
+                sharedHabitID: definition.id, localHabitID: localHabitID, memberID: member.id, role: .owner,
+                visibleFromDay: nil, zoneName: "Fixture", zoneOwnerName: "Fixture", shareRecordName: "Fixture"
+            ),
+            snapshot: SharedHabitSnapshot(definition: definition, members: [member])
+        )
+    }
+
+    @MainActor func testOrphanedSharingMetadataDoesNotBlockEmptyDatasetCleanup() {
+        let orphan = sharedState(localHabitID: UUID())
+        let model = AppModel()
+        model.data = Dataset()
+        model.sharedHabits = [orphan.membership.localHabitID: orphan]
+        XCTAssertFalse(model.hasSharedHabitsInDataset)
+        XCTAssertTrue(AppModel.activeSharedHabits(Array(model.sharedHabits.values), in: model.data).isEmpty)
+
+        let habit = Habit(name: "Visible Shared Habit")
+        var data = Dataset(); data.initialized = true; data.habits = [habit]
+        let active = sharedState(localHabitID: habit.id)
+        let filtered = AppModel.activeSharedHabits([orphan, active], in: data)
+        XCTAssertEqual(Set(filtered.keys), [habit.id])
+    }
+
     func testPrivateSyncIgnoresSharedRecordsInItsZone() {
         XCTAssertTrue(CloudSync.isHabitEditRecordName(UUID().uuidString))
         XCTAssertFalse(CloudSync.isHabitEditRecordName("Share-2C0CEC81-AE90-4A4A-8DB9-09C7702B6796"))
