@@ -240,4 +240,25 @@ final class ImportTests: XCTestCase {
             XCTAssertEqual(try store.read().dataset.categories, dataset.categories)
         }
     }
+    func testSeptember22ExportImportsFreshButDoesNotRefreshKnownHabitsWhenProvided() throws {
+        guard let path = ProcessInfo.processInfo.environment["HABITKIT_SEPT22_TEST_FILE"] else {
+            throw XCTSkip("Provide HABITKIT_SEPT22_TEST_FILE to verify the September 22 export.")
+        }
+        let preview = try HabitKitImport.decode(Data(contentsOf: URL(fileURLWithPath: path)))
+        XCTAssertEqual(preview.dataset.habits.count, 5)
+        XCTAssertEqual(preview.dataset.days.count, 544)
+        XCTAssertEqual(preview.conflicts.count, 1)
+        let sport = try XCTUnwrap(preview.dataset.habits.first { $0.name == "Sport" })
+        let choices: [String: DuplicateDayResolution] = [preview.conflicts[0].id: .sum]
+        let dataset = try preview.resolved(choices)
+        XCTAssertEqual(dataset.day(sport.id, "2025-09-30").count, 2)
+        let store = temporaryStore()
+        defer { try? FileManager.default.removeItem(at: store.directory) }
+        try store.importDataset(dataset)
+        XCTAssertEqual(try store.read().dataset.habits.count, 5)
+        XCTAssertEqual(try store.read().dataset.days.count, 544)
+        let before = try store.read().dataset
+        try store.importDataset(dataset)
+        XCTAssertEqual(try store.read().dataset, before)
+    }
 }

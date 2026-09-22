@@ -69,6 +69,11 @@ final class ImportUITests: XCTestCase {
             tap(app.buttons["Add amounts: 2"])
         }
         tap(app.buttons["confirm-import"])
+        XCTAssertTrue(app.buttons["Settings"].waitForExistence(timeout: 5), app.debugDescription)
+        openSettings()
+        chooseFile(file, habitKit: true)
+        XCTAssertTrue(app.staticTexts["no-new-habits"].waitForExistence(timeout: 5), app.debugDescription)
+        tap(app.buttons["Cancel"])
         tap(app.buttons["Done"])
         tap(app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", " + name)).firstMatch)
         let note = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ AND (elementType == %d OR elementType == %d)", "Day Note", XCUIElement.ElementType.textField.rawValue, XCUIElement.ElementType.textView.rawValue)).firstMatch
@@ -92,7 +97,7 @@ final class ImportUITests: XCTestCase {
         chooseFile(exportName, habitKit: false)
         tap(app.buttons["Replace all data"])
         tap(app.buttons["confirm-import"])
-        tap(app.buttons["Done"])
+        XCTAssertTrue(app.buttons["Settings"].waitForExistence(timeout: 5), app.debugDescription)
         tap(app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", " + name)).firstMatch)
         tap(note)
         XCTAssertEqual(note.value as? String, "UI round-trip note")

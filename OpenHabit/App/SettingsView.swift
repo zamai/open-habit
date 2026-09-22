@@ -23,6 +23,7 @@ struct SettingsView: View {
     @State private var choosingImport = false
     @State private var document = BackupDocument(data: Data())
     @State private var pending: PendingBackup?
+    @State private var returnToOverview = false
     @State private var deleting = false
     @State private var problem: String?
     var body: some View {
@@ -109,7 +110,13 @@ struct SettingsView: View {
                     problem = selectedFileName.map { "\($0): \(error.localizedDescription)" } ?? error.localizedDescription
                 }
             }
-            .sheet(item: $pending) { item in ImportConfirmation(preview: item.preview, native: item.native) }
+            .sheet(item: $pending, onDismiss: {
+                if returnToOverview { returnToOverview = false; dismiss() }
+            }) { item in
+                ImportConfirmation(preview: item.preview, native: item.native) {
+                    returnToOverview = true
+                }
+            }
             .alert("Delete all data from every synchronized device?", isPresented: $deleting) {
                 Button("Yes, erase all", role: .destructive) {
                     model.eraseData()
@@ -126,11 +133,18 @@ private struct ImportConfirmation: View {
     @Environment(\.dismiss) private var dismiss
     let preview: ImportPreview
     let native: Bool
+    var onImported: () -> Void = {}
     @State var replacing = false
     @State private var choices: [String: DuplicateDayResolution] = [:]
     @State private var unavailable: Set<UUID> = []
     @State private var problem: String?
-    private var newHabits: [Habit] { preview.dataset.habits.filter { !unavailable.contains($0.id) } }
+    private var unavailableIDs: Set<UUID> { unavailable.union(model.data.habits.map(\.id)) }
+    private var newHabits: [Habit] { preview.dataset.habits.filter { !unavailableIDs.contains($0.id) } }
+    private var newCategories: [HabitCategory] {
+        let existing = Set((model.data.categories ?? []).map(\.id))
+        return (preview.dataset.categories ?? []).filter { !existing.contains($0.id) }
+    }
+    private var hasNewData: Bool { !newHabits.isEmpty || !newCategories.isEmpty }
     var body: some View {
         NavigationStack {
             Form {
@@ -151,7 +165,11 @@ private struct ImportConfirmation: View {
                     LabeledContent("Categories", value: "\((preview.dataset.categories ?? []).count)")
                     if !replacing {
                         LabeledContent("Habits to add", value: "\(newHabits.count)")
-                        LabeledContent("Already known — skipped", value: "\(preview.dataset.habits.count - newHabits.count)")
+                        LabeledContent("Existing or deleted — skipped", value: "\(preview.dataset.habits.count - newHabits.count)")
+                        if newHabits.isEmpty {
+                            Text("No new Habits in this file. Importing again does not update history for Habits already imported or previously deleted.")
+                                .accessibilityIdentifier("no-new-habits")
+                        }
                     }
                 }
                 Section("Habits") {
@@ -160,7 +178,7 @@ private struct ImportConfirmation: View {
                             Text("\(habit.emoji) \(habit.name)")
                             Text("Daily Target: \(habit.target)" + (habit.streakGoal?.period == .weekly ? " · Weekly goal: \(habit.streakGoal!.target) days" : ""))
                                 .font(.caption).foregroundStyle(.secondary)
-                            if !replacing && unavailable.contains(habit.id) { Text("Already known; existing data will stay unchanged.").font(.caption) }
+                            if !replacing && unavailableIDs.contains(habit.id) { Text("Existing or previously deleted; this Habit will not be imported again.").font(.caption) }
                             let categories = (preview.dataset.categories ?? []).filter { (habit.categoryIDs ?? []).contains($0.id) }
                             if !categories.isEmpty { Text(categories.map(\.name).joined(separator: ", ")).font(.caption) }
                         }
@@ -198,10 +216,10 @@ private struct ImportConfirmation: View {
                         do {
                             let data = try preview.resolved(choices)
                             model.importData(data, replacing: replacing)
-                            if model.error == nil { dismiss() }
+                            if model.error == nil { onImported(); dismiss() }
                         } catch { problem = error.localizedDescription }
                     }
-                    .disabled(preview.conflicts.contains { choices[$0.id] == nil })
+                    .disabled((!replacing && !hasNewData) || preview.conflicts.contains { choices[$0.id] == nil })
                     .accessibilityIdentifier("confirm-import")
                 }
             }
