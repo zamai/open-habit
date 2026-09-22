@@ -93,8 +93,10 @@ struct SettingsView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: "Open-Habit-\(LocalDay.string())") { result in if case .failure(let error) = result { problem = error.localizedDescription } }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
+                var selectedFileName: String?
                 do {
                     let url = try result.get(); let access = url.startAccessingSecurityScopedResource()
+                    selectedFileName = url.lastPathComponent
                     defer { if access { url.stopAccessingSecurityScopedResource() } }
                     let data = try Data(contentsOf: url)
                     let preview: ImportPreview
@@ -103,7 +105,9 @@ struct SettingsView: View {
                         preview = ImportPreview(dataset: backup.dataset, exportedAt: backup.exportedAt)
                     } else { preview = try HabitKitImport.decode(data) }
                     pending = PendingBackup(preview: preview, native: nativeImport)
-                } catch { problem = error.localizedDescription }
+                } catch {
+                    problem = selectedFileName.map { "\($0): \(error.localizedDescription)" } ?? error.localizedDescription
+                }
             }
             .sheet(item: $pending) { item in ImportConfirmation(preview: item.preview, native: item.native) }
             .alert("Delete all data from every synchronized device?", isPresented: $deleting) {

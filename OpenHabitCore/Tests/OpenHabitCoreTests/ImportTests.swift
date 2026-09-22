@@ -126,6 +126,20 @@ final class ImportTests: XCTestCase {
         XCTAssertThrowsError(try Backup.decode(JSONSerialization.data(withJSONObject: json)))
         XCTAssertThrowsError(try HabitKitImport.decode(current))
     }
+    func testMissingHabitErrorIdentifiesTheSourceRecord() throws {
+        for (section, recordType) in [("completions", "completion"), ("intervals", "interval"), ("categoryMappings", "category assignment")] {
+            let missingID = UUID()
+            let data = try changedFixture { json in
+                var records = json[section] as! [[String: Any]]
+                records[0]["habitId"] = missingID.uuidString
+                json[section] = records
+            }
+            XCTAssertThrowsError(try HabitKitImport.decode(data)) { error in
+                XCTAssertTrue(error.localizedDescription.contains("HabitKit \(recordType)"))
+                XCTAssertTrue(error.localizedDescription.contains(missingID.uuidString))
+            }
+        }
+    }
     func testVersion2BackupWithoutFormatIdentifierStillDecodes() throws {
         let current = Backup(dataset: try HabitKitImport.decode(fixture()).dataset)
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: current.encoded()) as? [String: Any])

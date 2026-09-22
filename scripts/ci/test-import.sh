@@ -6,7 +6,7 @@ IMPORT_ARTIFACTS=$(mktemp -d /tmp/open-habit-import-tests.XXXXXX)
 simctl() {
   if [[ -n "${IMPORT_SIMCTL:-}" ]]; then "$IMPORT_SIMCTL" "$@"; else xcrun simctl "$@"; fi
 }
-IMPORT_RUNTIME=$(simctl list runtimes -j | python3 -c 'import json,sys; print(max((r for r in json.load(sys.stdin)["runtimes"] if r["isAvailable"] and "iOS" in r["identifier"]), key=lambda r: tuple(map(int,r["version"].split("."))))["identifier"])')
+IMPORT_RUNTIME=${IMPORT_RUNTIME:-$(simctl list runtimes -j | python3 -c 'import json,sys; print(max((r for r in json.load(sys.stdin)["runtimes"] if r["isAvailable"] and "iOS" in r["identifier"]), key=lambda r: tuple(map(int,r["version"].split("."))))["identifier"])')}
 IMPORT_DEVICE=$(simctl create 'Open Habit Import Tests' com.apple.CoreSimulator.SimDeviceType.iPhone-17 "$IMPORT_RUNTIME")
 cleanup() { simctl shutdown "$IMPORT_DEVICE" >/dev/null 2>&1 || true; simctl delete "$IMPORT_DEVICE" >/dev/null 2>&1 || true; }
 trap cleanup EXIT

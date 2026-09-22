@@ -2,7 +2,7 @@ import base64, json, os, subprocess, sys, tempfile, time, urllib.error, urllib.r
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 
 APP_ID = '6808947599'
-WHAT_TO_TEST = 'Please test habit tracking, widgets, Shortcuts, and iCloud sync in this build.'
+WHAT_TO_TEST = 'Please retry HabitKit import. If an export fails, the alert now identifies the selected file and the record that refers to a missing Habit.'
 f = {'key_id': os.environ['ASC_KEY_ID'], 'issuer_id': os.environ['ASC_ISSUER_ID'], 'private_key': os.environ['ASC_PRIVATE_KEY']}
 if len(f['private_key']) > 1 and f['private_key'][0] == f['private_key'][-1] and f['private_key'][0] in "'\"":
     f['private_key'] = f['private_key'][1:-1]

@@ -101,10 +101,14 @@ public enum HabitKitImport {
               Set(source.categoryMappings.map(\.id)).count == source.categoryMappings.count else {
             throw HabitError.invalidBackup("Duplicate identifiers in HabitKit export.")
         }
-        guard source.completions.allSatisfy({ ids.contains($0.habitId) }),
-              source.intervals.allSatisfy({ ids.contains($0.habitId) }),
-              source.categoryMappings.allSatisfy({ ids.contains($0.habitId) }) else {
-            throw HabitError.invalidBackup("HabitKit records refer to a missing Habit.")
+        if let record = source.completions.first(where: { !ids.contains($0.habitId) }) {
+            throw HabitError.invalidBackup("HabitKit completion \(record.id) refers to missing Habit \(record.habitId).")
+        }
+        if let record = source.intervals.first(where: { !ids.contains($0.habitId) }) {
+            throw HabitError.invalidBackup("HabitKit interval \(record.id) refers to missing Habit \(record.habitId).")
+        }
+        if let record = source.categoryMappings.first(where: { !ids.contains($0.habitId) }) {
+            throw HabitError.invalidBackup("HabitKit category assignment \(record.id) refers to missing Habit \(record.habitId).")
         }
         var result = Dataset(); result.initialized = true
         var warnings: [String] = []
