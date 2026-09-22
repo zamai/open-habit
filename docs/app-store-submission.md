@@ -10,7 +10,9 @@
 - Keywords: `habit tracker,streaks,widgets,routines,goals,journal,shortcuts,offline,private,icloud`
 - Promotional text: **Build habits with interactive widgets, private iCloud sync, Shortcuts, Day Notes, and portable JSON backups.**
 - Description: [`store-description.txt`](store-description.txt)
-- Privacy policy: [`privacy-policy.md`](privacy-policy.md)
+- Privacy policy source: [`privacy-policy.md`](privacy-policy.md)
+- Public privacy policy: <https://zamai.github.io/open-habit-support/privacy.html>
+- Public support: <https://zamai.github.io/open-habit-support/>
 
 ## App Review notes
 
@@ -28,9 +30,12 @@ Settings contains JSON export and import, recovery backups, iCloud status, and D
 - [x] App and widget identifiers, App Group, CloudKit container, Push Notifications, and Production CloudKit schema are configured.
 - [x] Release analyzer, core tests, app integration tests, widget rendering, deletion UI, Shared Habit join UI, and Files import/export/restore tests pass.
 - [x] App Store copy no longer promises public source access while the repository is private.
-- [ ] Publish the privacy policy and provide its public URL.
-- [ ] Provide a public support URL and support contact details.
-- [ ] Complete the age-rating questionnaire, pricing, and availability in App Store Connect.
+- [x] Publish the privacy policy and support pages and add their public URLs to App Store Connect.
+- [x] Complete the age-rating questionnaire: 4+, with health/wellness and private invited user content declared.
+- [x] Configure the app as free and available in all 175 current territories, including new territories automatically.
+- [x] Set Health & Fitness as the primary category and Productivity as the secondary category.
 - [x] Generate and upload current 6.9-inch iPhone and 13-inch iPad screenshots from [`app-store-assets`](app-store-assets).
 - [x] Upload build 36, assign both TestFlight groups, submit external Beta App Review, and select it for App Store version 1.0.
+- [ ] Complete App Review contact details and save the prepared review notes.
+- [ ] Complete the App Privacy questionnaire as **Data Not Collected**; this setting is not available through the App Store Connect API.
 - [ ] Complete the signed-device checks in [`verification.md`](verification.md), especially two-account Shared Habit synchronization and a terminated-app widget action.
