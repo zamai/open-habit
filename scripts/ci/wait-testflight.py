@@ -2,7 +2,7 @@ import base64, json, os, subprocess, sys, tempfile, time, urllib.error, urllib.r
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 
 APP_ID = '6808947599'
-WHAT_TO_TEST = 'HabitKit exports with category assignments for absent Habits now import with a warning. Please retry the import and review the Habit count and duplicate-day choice.'
+WHAT_TO_TEST = 'Accounts with hidden orphaned sharing metadata can now replace imported data or use Delete All Data. Please retry the HabitKit import with Replace all data and confirm the restored habits appear on the main screen.'
 f = {'key_id': os.environ['ASC_KEY_ID'], 'issuer_id': os.environ['ASC_ISSUER_ID'], 'private_key': os.environ['ASC_PRIVATE_KEY']}
 if len(f['private_key']) > 1 and f['private_key'][0] == f['private_key'][-1] and f['private_key'][0] in "'\"":
     f['private_key'] = f['private_key'][1:-1]
