@@ -46,6 +46,6 @@ There are no third-party SDKs, analytics, ads, purchases, or developer accounts.
 - Shared Habit creation, acceptance, progress synchronization, leaving, and owner cleanup still need a final two-account physical-device pass.
 - A Home Screen widget action with the app terminated still needs a provisioned-device pass.
 - The privacy policy and support information need public URLs before submission.
-- App Store screenshots have been generated at the current required iPhone and iPad sizes but still need upload.
+- App Store screenshots are uploaded at the current required iPhone and iPad sizes.
 
 These are tracked as release gates in [`app-store-submission.md`](app-store-submission.md) and device checks in [`verification.md`](verification.md).

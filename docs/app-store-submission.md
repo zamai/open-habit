@@ -31,7 +31,6 @@ Settings contains JSON export and import, recovery backups, iCloud status, and D
 - [ ] Publish the privacy policy and provide its public URL.
 - [ ] Provide a public support URL and support contact details.
 - [ ] Complete the age-rating questionnaire, pricing, and availability in App Store Connect.
-- [x] Generate current 6.9-inch iPhone and 13-inch iPad screenshots in [`app-store-assets`](app-store-assets).
-- [ ] Upload the screenshots to App Store Connect.
-- [ ] Upload and select the final release build after device acceptance.
+- [x] Generate and upload current 6.9-inch iPhone and 13-inch iPad screenshots from [`app-store-assets`](app-store-assets).
+- [x] Upload build 36, assign both TestFlight groups, submit external Beta App Review, and select it for App Store version 1.0.
 - [ ] Complete the signed-device checks in [`verification.md`](verification.md), especially two-account Shared Habit synchronization and a terminated-app widget action.
