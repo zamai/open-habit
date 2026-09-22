@@ -1,5 +1,15 @@
 # Open Habit verification
 
+## App Store candidate hardening (22 September 2026)
+
+The version 1.0 candidate passes 34 domain tests and five app-hosted integration and widget-rendering tests on a fresh iPhone Simulator. The deletion confirmation test and both three-step Shared Habit join tests also pass. A Release analysis completes without warnings.
+
+All three customer-supplied HabitKit version 2 exports decode in the domain suite. The September 22 export also passes the complete Files flow: initial import, repeated import with automatic replacement, export, Delete All Data, and recovery restore. Its restored dataset contains 13 Habits, 550 Habit Days, 13 categories, and three notes with settings, order, identifiers, dates, goals, colors, and counts preserved.
+
+Sharing metadata is now reconciled against the current dataset at the storage boundary. An orphaned `shared-habits.json` entry is removed automatically and cannot block replacement import or Delete All Data when no corresponding Habit exists. The integration test exercises this against an actual temporary metadata file.
+
+The app and widget now include a privacy manifest declaration for the file-timestamp API used to list recovery backups. The release copy, privacy policy draft, review notes, and remaining submission gates are maintained in [`app-store-submission.md`](app-store-submission.md).
+
 ## Invitation acceptance investigation (15 September 2026)
 
 The dedicated **Open Habit iCloud Test** simulator (iOS 26.5), signed into a separate Apple Account, successfully created a Shared Habit and single-use Invitations against **Production** CloudKit. A physical iPhone on iOS 27 with TestFlight build 29 opened Open Habit after acceptance without presenting the join screen.

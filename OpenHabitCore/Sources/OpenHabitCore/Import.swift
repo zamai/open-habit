@@ -125,7 +125,10 @@ public enum HabitKitImport {
         }) {
             guard !item.isInverse else { throw HabitError.invalidBackup("\(item.name) is an inverse Habit, which Open Habit cannot represent.") }
             let intervals = source.intervals.filter { $0.habitId == item.id }
-            let current = try intervals.filter { try date($0.startDate) <= now && ($0.endDate == nil || date($0.endDate!) > now) }
+            let current = try intervals.filter { interval in
+                guard try date(interval.startDate) <= now else { return false }
+                return try interval.endDate.map { try date($0) > now } ?? true
+            }
             guard current.count == 1, let interval = current.first else {
                 throw HabitError.invalidBackup("\(item.name) must have exactly one current goal interval.")
             }

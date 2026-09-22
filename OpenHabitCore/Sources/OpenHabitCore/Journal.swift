@@ -149,7 +149,7 @@ public struct Journal: Codable, Sendable {
         var data = Dataset(); data.initialized = true; data.settings = dataset.settings
         data.habits = [
             Habit(id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!, name: "Exercise", emoji: "🏃", detail: "Move your body for at least twenty minutes.", color: .orange, createdAt: now),
-            Habit(id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!, name: "Drink the f★cking water", emoji: "💧", detail: "Why do I need habit tracking for drinking water?", color: .blue, target: 3, createdAt: now),
+            Habit(id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!, name: "Drink water", emoji: "💧", detail: "Stay hydrated throughout the day.", color: .blue, target: 3, createdAt: now),
             Habit(id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!, name: "Read five pages", emoji: "📖", detail: "Five pages is enough to keep the story moving.", color: .green, createdAt: now)
         ]
         data.days[Dataset.key(data.habits[1].id, LocalDay.string(now))] = HabitDay(count: 1)

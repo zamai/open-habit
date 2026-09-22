@@ -14,7 +14,21 @@ struct SharingStore {
     func write(_ states: [SharedHabitState]) throws {
         try states.forEach { try $0.validate() }
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try JSONEncoder().encode(states).write(to: url, options: [.atomic, .completeFileProtection])
+        let ordered = states.sorted {
+            $0.membership.localHabitID.uuidString < $1.membership.localHabitID.uuidString
+        }
+        try JSONEncoder().encode(ordered).write(to: url, options: [.atomic, .completeFileProtection])
+    }
+
+    /// Sharing metadata is a cache for Habits in the current Dataset. Remove entries whose
+    /// Habit was deleted or replaced so invisible cache state cannot block data recovery.
+    func read(reconciling data: Dataset) throws -> [UUID: SharedHabitState] {
+        let stored = try read()
+        let habitIDs = Set(data.habits.map(\.id))
+        let active = stored.filter { habitIDs.contains($0.membership.localHabitID) }
+        if active.count != stored.count { try write(active) }
+        return Dictionary(active.map { ($0.membership.localHabitID, $0) },
+                          uniquingKeysWith: { _, latest in latest })
     }
 }
 

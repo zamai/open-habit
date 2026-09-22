@@ -86,7 +86,7 @@ A genuinely new, empty dataset starts with three real, editable Habits:
 | Habit | Emoji | Color | Daily Target | Description | Initial progress |
 | --- | --- | --- | ---: | --- | --- |
 | Exercise | 🏃 | Orange | 1 | Move your body for at least twenty minutes. | 0 |
-| Drink the f★cking water | 💧 | Blue | 3 | Why do I need habit tracking for drinking water? | 1 Completion today |
+| Drink water | 💧 | Blue | 3 | Stay hydrated throughout the day. | 1 Completion today |
 | Read five pages | 📖 | Green | 1 | Five pages is enough to keep the story moving. | 0 |
 
 A dismissible message explains that these are examples and may be edited, reordered, archived, or deleted. They are created only after determining that neither local storage nor iCloud contains an existing dataset. They are never recreated after deletion or restoration.

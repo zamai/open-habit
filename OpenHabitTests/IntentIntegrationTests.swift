@@ -17,19 +17,18 @@ final class IntentIntegrationTests: XCTestCase {
         )
     }
 
-    @MainActor func testOrphanedSharingMetadataDoesNotBlockEmptyDatasetCleanup() {
+    func testSharingStoreRemovesMetadataWithoutAMatchingHabit() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = SharingStore(url: directory.appendingPathComponent("shared-habits.json"))
         let orphan = sharedState(localHabitID: UUID())
-        let model = AppModel()
-        model.data = Dataset()
-        model.sharedHabits = [orphan.membership.localHabitID: orphan]
-        XCTAssertFalse(model.hasSharedHabitsInDataset)
-        XCTAssertTrue(AppModel.activeSharedHabits(Array(model.sharedHabits.values), in: model.data).isEmpty)
-
         let habit = Habit(name: "Visible Shared Habit")
         var data = Dataset(); data.initialized = true; data.habits = [habit]
         let active = sharedState(localHabitID: habit.id)
-        let filtered = AppModel.activeSharedHabits([orphan, active], in: data)
-        XCTAssertEqual(Set(filtered.keys), [habit.id])
+        try store.write([orphan, active])
+
+        XCTAssertEqual(Set(try store.read(reconciling: data).keys), [habit.id])
+        XCTAssertEqual(try store.read(), [active])
     }
 
     func testPrivateSyncIgnoresSharedRecordsInItsZone() {

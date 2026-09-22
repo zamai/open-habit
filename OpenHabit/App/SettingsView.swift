@@ -83,7 +83,7 @@ struct SettingsView: View {
                             Text("Open Habit").font(.largeTitle.bold())
                             Text("A little, every day.").font(.title3)
                             Text("Private habits. Small steps. Your data.\nBuilt for iPhone and iPad, with no Open Habit account and no hosted user-data service.").multilineTextAlignment(.center).foregroundStyle(.secondary)
-                            Text("Version 1.0").font(.caption).foregroundStyle(.secondary)
+                            Text(appVersion).font(.caption).foregroundStyle(.secondary)
                         }.padding(30).navigationTitle("About")
                     }
                     Button("Delete All Data", role: .destructive) { deleting = true }
@@ -121,6 +121,12 @@ struct SettingsView: View {
             } message: { Text("This removes all Habits, Completions, Day Notes, and categories from synchronized devices. A recovery backup is kept on this device under Recovery Backups. Example Habits will not return.") }
             .alert("Backup problem", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) { Button("OK") { problem = nil } } message: { Text(problem ?? "") }
         }
+    }
+
+    private var appVersion: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+        return build.map { "Version \(version) (\($0))" } ?? "Version \(version)"
     }
 }
 private struct ImportConfirmation: View {
@@ -169,7 +175,7 @@ private struct ImportConfirmation: View {
                     ForEach(preview.dataset.habits) { habit in
                         VStack(alignment: .leading) {
                             Text("\(habit.emoji) \(habit.name)")
-                            Text("Daily Target: \(habit.target)" + (habit.streakGoal?.period == .weekly ? " · Weekly goal: \(habit.streakGoal!.target) days" : ""))
+                            Text(habitSummary(habit))
                                 .font(.caption).foregroundStyle(.secondary)
                             if !replacing && unavailableIDs.contains(habit.id) { Text("Existing or previously deleted; this Habit will not be imported again.").font(.caption) }
                             let categories = (preview.dataset.categories ?? []).filter { (habit.categoryIDs ?? []).contains($0.id) }
@@ -231,6 +237,13 @@ private struct ImportConfirmation: View {
                 Button("OK") { problem = nil }
             } message: { Text(problem ?? "") }
         }
+    }
+
+    private func habitSummary(_ habit: Habit) -> String {
+        guard let goal = habit.streakGoal, goal.period == .weekly else {
+            return "Daily Target: \(habit.target)"
+        }
+        return "Daily Target: \(habit.target) · Weekly goal: \(goal.target) days"
     }
 }
 private struct RecoveryBackupsView: View {

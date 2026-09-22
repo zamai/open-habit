@@ -20,6 +20,7 @@
 		329940063A7AD3F6038CF55C /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3760EEFF129A82CA87576726 /* OpenHabitCore */; };
 		331371D1E296A3B956903543 /* HabitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */; };
 		3592F417ACF2FE6EB8EA6DA5 /* SharedCloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADB9C3783F74670F327D0E7 /* SharedCloudSync.swift */; };
+		35EAB4D04567C506A6223782 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0F6881D13A3A75264CAC9AF7 /* PrivacyInfo.xcprivacy */; };
 		38789A7DE3B252C61EC252D5 /* OpenHabitWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23415D4CDEA5722AE5FB0FBC /* OpenHabitWidgets.swift */; };
 		3A9F0DAF6A2EB19B71C0618B /* OpenHabitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930C2515644CD54F9ACD9E40 /* OpenHabitApp.swift */; };
 		3E070FBB0EBC0DD82715AFAD /* WidgetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629B9C172642BD503791ECE0 /* WidgetUITests.swift */; };
@@ -85,6 +86,7 @@
 /* Begin PBXFileReference section */
 		08CE54FF173592E32D6B5418 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitWidgetContent.swift; sourceTree = "<group>"; };
+		0F6881D13A3A75264CAC9AF7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		23415D4CDEA5722AE5FB0FBC /* OpenHabitWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenHabitWidgets.swift; sourceTree = "<group>"; };
 		366C96F85D6309FA8CDA9DA1 /* OpenHabitCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OpenHabitCore; path = OpenHabitCore; sourceTree = SOURCE_ROOT; };
 		369B2205DF7BED0C3A469B66 /* OpenHabitUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OpenHabitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -166,6 +168,7 @@
 				585229E5D111A46C575777E8 /* Info.plist */,
 				7430E705935DB2F9A634CC00 /* OpenHabitWidgets.entitlements */,
 				23415D4CDEA5722AE5FB0FBC /* OpenHabitWidgets.swift */,
+				0F6881D13A3A75264CAC9AF7 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Widgets;
 			path = OpenHabit/Widgets;
@@ -261,6 +264,7 @@
 			buildConfigurationList = B865548D3FB0E2239F007A15 /* Build configuration list for PBXNativeTarget "OpenHabitWidgets" */;
 			buildPhases = (
 				54A9B1EBF045837E173A512D /* Sources */,
+				F13C2661C85F8600E78CD1E3 /* Resources */,
 				47F034090D0A3E6DFDBA0B37 /* Frameworks */,
 			);
 			buildRules = (
@@ -395,6 +399,14 @@
 			files = (
 				0634E4F5AF2B1FD69F488A54 /* Assets.xcassets in Resources */,
 				19E250EACF64644EA639232E /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F13C2661C85F8600E78CD1E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				35EAB4D04567C506A6223782 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -602,7 +614,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 36;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 539QCPHM7F;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -672,7 +684,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 36;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 539QCPHM7F;
 				ENABLE_NS_ASSERTIONS = NO;

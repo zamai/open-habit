@@ -14,20 +14,10 @@ final class AppModel {
     var loading = true
     var syncing = false
 
-    static func activeSharedHabits(_ states: [SharedHabitState], in data: Dataset) -> [UUID: SharedHabitState] {
-        let habitIDs = Set(data.habits.map(\.id))
-        return Dictionary(states.filter { habitIDs.contains($0.membership.localHabitID) }.map { ($0.membership.localHabitID, $0) },
-                          uniquingKeysWith: { _, latest in latest })
-    }
-    var hasSharedHabitsInDataset: Bool { sharedHabits.keys.contains { data.habit($0) != nil } }
-
     func reload() {
         do {
             data = try sharedStore().read().dataset
-            let store = try sharingStore()
-            let stored = try store.read()
-            sharedHabits = Self.activeSharedHabits(stored, in: data)
-            if sharedHabits.count != stored.count { try? store.write(Array(sharedHabits.values)) }
+            sharedHabits = try sharingStore().read(reconciling: data)
         }
         catch { self.error = error.localizedDescription }
     }
@@ -41,7 +31,7 @@ final class AppModel {
     }
     func importData(_ data: Dataset, replacing: Bool) {
         error = nil
-        guard !replacing || !hasSharedHabitsInDataset else {
+        guard !replacing || sharedHabits.isEmpty else {
             error = "Leave or stop sharing every Shared Habit before replacing all data."
             return
         }
@@ -55,7 +45,7 @@ final class AppModel {
     }
     func eraseData() {
         error = nil
-        guard !hasSharedHabitsInDataset else {
+        guard sharedHabits.isEmpty else {
             error = "Leave Shared Habits and stop sharing the Shared Habits you own before deleting all data."
             return
         }
@@ -78,7 +68,7 @@ final class AppModel {
                 WidgetCenter.shared.reloadAllTimelines()
                 return
             }
-            var next = Self.activeSharedHabits(Array(sharedHabits.values), in: data)
+            var next = try sharingStore().read(reconciling: data)
             for state in try await SharedCloudSync.shared.privateStates()
             where data.habit(state.membership.localHabitID) != nil && next[state.membership.localHabitID] == nil {
                 next[state.membership.localHabitID] = state

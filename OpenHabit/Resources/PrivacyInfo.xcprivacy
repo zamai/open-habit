@@ -3,5 +3,15 @@
 <plist version="1.0"><dict>
 <key>NSPrivacyTracking</key><false/>
 <key>NSPrivacyCollectedDataTypes</key><array/>
-<key>NSPrivacyAccessedAPITypes</key><array/>
+<key>NSPrivacyAccessedAPITypes</key>
+<array>
+    <dict>
+        <key>NSPrivacyAccessedAPIType</key>
+        <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+        <key>NSPrivacyAccessedAPITypeReasons</key>
+        <array>
+            <string>DDA9.1</string>
+        </array>
+    </dict>
+</array>
 </dict></plist>

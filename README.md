@@ -6,6 +6,7 @@ Open Habit is an offline-first iPhone and iPad habit tracker designed around int
 - [Shared Habits design](./docs/shared-habits.md)
 - [Domain language](./CONTEXT.md)
 - [Architecture decisions](./docs/adr/)
+- [Version 1.0 architecture review](./docs/architecture-review.md)
 
 Open Habit is free to use and will be released as open source under the [MIT license](LICENSE). Everyone is welcome to contribute code, ideas, bug reports, documentation, and translations. The repository remains private during initial development; public source access will follow with the open-source release.
 
@@ -39,9 +40,9 @@ Simulator intentionally uses local storage and reports that live iCloud is unava
 
 ## TestFlight
 
-The App Store Connect listing is [Open Habit: Daily Tracker](https://appstoreconnect.apple.com/apps/6808947599/testflight), with the subtitle **Free & open-source**. The installed app displays **Open Habit**.
+The App Store Connect listing is [Open Habit: Daily Tracker](https://appstoreconnect.apple.com/apps/6808947599/testflight), with the subtitle **Private habits. Small steps.** The installed app displays **Open Habit**.
 
-Increase `CURRENT_PROJECT_VERSION` in `project.yml` for each upload, then regenerate the project. Follow the 1Password API authentication instructions in [AGENTS.md](AGENTS.md#testflight-releases) and add the three authentication flags to the commands below:
+Regenerate the project after changing `project.yml`. The publishing script queries App Store Connect and overrides `CURRENT_PROJECT_VERSION` with the next available build number. Follow the 1Password API authentication instructions in [AGENTS.md](AGENTS.md#testflight-releases) and add the three authentication flags to the commands below:
 
 ```sh
 xcodegen generate
@@ -54,15 +55,15 @@ xcodebuild -exportArchive -archivePath /tmp/OpenHabit.xcarchive \
   -allowProvisioningUpdates
 ```
 
-The export command uploads to App Store Connect and uses automatic distribution signing. The Internal Testers group automatically receives processed builds. External testing requires a separate Beta App Review submission.
+The export command uploads to App Store Connect. Release verification assigns the processed build to every configured TestFlight tester group and submits it for Beta App Review when Apple requires it.
 
-GitHub Actions runs the core, intent, and widget-rendering tests for pull requests. Every successful push to `main` receives a unique CI build number, is signed with the `testflight` environment credentials, uploaded, and verified as available to Internal Testers. External distribution is opt-in through the `distribute_external` workflow input; only that path adds the build to the public external group and submits it for Beta App Review. If Apple is already reviewing another opted-in build, an hourly reconciliation job retries the newest external build when the review slot becomes available. A matching release tag (for example, `v1.0.0` when `MARKETING_VERSION` is `1.0`) creates another TestFlight build and a draft GitHub Release after processing. The SpringBoard widget-install smoke test stays local because it depends on the Home Screen state of a persistent Simulator.
+GitHub Actions runs the core, app, widget-rendering, deletion, and Shared Habit join tests for pull requests. Every successful push to `main` receives a unique build number, is signed with the `testflight` environment credentials, uploaded, assigned to every internal and external tester group, and submitted for Beta App Review when needed. An hourly reconciliation job retries external review if Apple already has another build in review. A matching release tag (for example, `v1.0.0` when `MARKETING_VERSION` is `1.0`) creates another TestFlight build and a draft GitHub Release after processing. The Files round-trip and SpringBoard widget-install tests stay local because they depend on a disposable Files container or persistent Home Screen state.
 
 The App Store Connect API key must have the **App Manager** or **Admin** role so CI can add builds to the external group and submit them for Beta App Review.
 
 The CI distribution certificate and profiles expire on September 5, 2027. Renew them before that date and replace the `SIGNING_P12`, `SIGNING_PASSWORD`, `APP_PROFILE`, and `WIDGET_PROFILE` environment secrets.
 
-If the CLI reports “Failed to Use Accounts” despite the account being signed into Xcode, open the prepared archive in Xcode Organizer and choose Distribute App → App Store Connect. This worked for build 2. Check the archive's actual version before uploading; both target Info.plists now expand the version build settings from `project.yml`.
+Before App Store submission, follow the remaining release gates in [App Store submission](docs/app-store-submission.md).
 
 ## Implementation
 
