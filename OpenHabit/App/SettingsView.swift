@@ -23,7 +23,6 @@ struct SettingsView: View {
     @State private var choosingImport = false
     @State private var document = BackupDocument(data: Data())
     @State private var pending: PendingBackup?
-    @State private var returnToOverview = false
     @State private var deleting = false
     @State private var problem: String?
     var body: some View {
@@ -110,12 +109,8 @@ struct SettingsView: View {
                     problem = selectedFileName.map { "\($0): \(error.localizedDescription)" } ?? error.localizedDescription
                 }
             }
-            .sheet(item: $pending, onDismiss: {
-                if returnToOverview { returnToOverview = false; dismiss() }
-            }) { item in
-                ImportConfirmation(preview: item.preview, native: item.native) {
-                    returnToOverview = true
-                }
+            .sheet(item: $pending) { item in
+                ImportConfirmation(preview: item.preview, native: item.native) { dismiss() }
             }
             .alert("Delete all data from every synchronized device?", isPresented: $deleting) {
                 Button("Yes, erase all", role: .destructive) {
@@ -148,13 +143,11 @@ private struct ImportConfirmation: View {
     var body: some View {
         NavigationStack {
             Form {
-                if native {
-                    Section("How to import") {
-                        Picker("Import mode", selection: $replacing) {
-                            Text("Add new habits").tag(false)
-                            Text("Replace all data").tag(true)
-                        }.pickerStyle(.segmented)
-                    }
+                Section("How to import") {
+                    Picker("Import mode", selection: $replacing) {
+                        Text("Add new habits").tag(false)
+                        Text("Replace all data").tag(true)
+                    }.pickerStyle(.segmented)
                 }
                 Section("File contents") {
                     if let date = preview.exportedAt { LabeledContent("Exported", value: date.formatted(date: .abbreviated, time: .shortened)) }
@@ -167,7 +160,7 @@ private struct ImportConfirmation: View {
                         LabeledContent("Habits to add", value: "\(newHabits.count)")
                         LabeledContent("Existing or deleted — skipped", value: "\(preview.dataset.habits.count - newHabits.count)")
                         if newHabits.isEmpty {
-                            Text("No new Habits in this file. Importing again does not update history for Habits already imported or previously deleted.")
+                            Text("No new Habits in this file. Add mode does not update Habits already imported or previously deleted. Choose Replace all data to restore this file instead.")
                                 .accessibilityIdentifier("no-new-habits")
                         }
                     }
@@ -216,7 +209,7 @@ private struct ImportConfirmation: View {
                         do {
                             let data = try preview.resolved(choices)
                             model.importData(data, replacing: replacing)
-                            if model.error == nil { onImported(); dismiss() }
+                            if model.error == nil { onImported() }
                         } catch { problem = error.localizedDescription }
                     }
                     .disabled((!replacing && !hasNewData) || preview.conflicts.contains { choices[$0.id] == nil })
@@ -226,7 +219,14 @@ private struct ImportConfirmation: View {
             .navigationTitle(native ? "Open Habit import" : "HabitKit data import")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
-            .onAppear { unavailable = (try? sharedStore().read().unavailableImportIDs) ?? Set(model.data.habits.map(\.id)) }
+            .onAppear {
+                let unavailable = (try? sharedStore().read().unavailableImportIDs) ?? Set(model.data.habits.map(\.id))
+                self.unavailable = unavailable
+                let unavailableIDs = unavailable.union(model.data.habits.map(\.id))
+                if !preview.dataset.habits.isEmpty && preview.dataset.habits.allSatisfy({ unavailableIDs.contains($0.id) }) {
+                    replacing = true
+                }
+            }
             .alert("Import problem", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
                 Button("OK") { problem = nil }
             } message: { Text(problem ?? "") }

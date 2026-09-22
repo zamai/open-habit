@@ -260,5 +260,14 @@ final class ImportTests: XCTestCase {
         let before = try store.read().dataset
         try store.importDataset(dataset)
         XCTAssertEqual(try store.read().dataset, before)
+        try store.transaction { journal in
+            for habit in dataset.habits { journal.append(.delete(habit.id)) }
+        }
+        XCTAssertTrue(try store.read().dataset.habits.isEmpty)
+        try store.importDataset(dataset)
+        XCTAssertTrue(try store.read().dataset.habits.isEmpty, "Add mode must not resurrect explicitly deleted Habit IDs")
+        try store.restoreBackup(Backup(dataset: dataset))
+        XCTAssertEqual(try store.read().dataset.habits, dataset.habits)
+        XCTAssertEqual(try store.read().dataset.days, dataset.days)
     }
 }
