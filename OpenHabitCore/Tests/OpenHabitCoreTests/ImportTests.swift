@@ -127,7 +127,7 @@ final class ImportTests: XCTestCase {
         XCTAssertThrowsError(try HabitKitImport.decode(current))
     }
     func testMissingHabitErrorIdentifiesTheSourceRecord() throws {
-        for (section, recordType) in [("completions", "completion"), ("intervals", "interval"), ("categoryMappings", "category assignment")] {
+        for (section, recordType) in [("completions", "completion"), ("intervals", "interval")] {
             let missingID = UUID()
             let data = try changedFixture { json in
                 var records = json[section] as! [[String: Any]]
@@ -139,6 +139,23 @@ final class ImportTests: XCTestCase {
                 XCTAssertTrue(error.localizedDescription.contains(missingID.uuidString))
             }
         }
+    }
+    func testCategoryAssignmentsForAbsentHabitsAreDisclosedAndSkipped() throws {
+        let data = try changedFixture { json in
+            for section in ["habits", "completions", "intervals"] {
+                var records = json[section] as! [[String: Any]]
+                records.removeLast()
+                json[section] = records
+            }
+        }
+        let preview = try HabitKitImport.decode(data)
+        XCTAssertEqual(preview.dataset.habits.count, 2)
+        XCTAssertEqual(preview.dataset.days.count, 2)
+        XCTAssertEqual(preview.dataset.categories?.count, 1)
+        XCTAssertEqual(preview.warnings.filter { $0.contains("Category assignments for Habits absent") },
+                       ["Category assignments for Habits absent from this export will be skipped (count: 1)."])
+        XCTAssertEqual(preview.dataset.habits.map(\.categoryIDs), [preview.dataset.categories?.map(\.id), preview.dataset.categories?.map(\.id)])
+        try preview.resolved([:]).validate()
     }
     func testVersion2BackupWithoutFormatIdentifierStillDecodes() throws {
         let current = Backup(dataset: try HabitKitImport.decode(fixture()).dataset)
@@ -185,6 +202,31 @@ final class ImportTests: XCTestCase {
         XCTAssertEqual(preview.conflicts.count, 2)
         XCTAssertEqual(preview.dataset.habits.filter { $0.streakGoal?.period == .weekly }.count, 5)
         // Exercise every offered interpretation; the actual choice remains the user's in the preview.
+        for resolution in DuplicateDayResolution.allCases {
+            let dataset = try preview.resolved(Dictionary(uniqueKeysWithValues: preview.conflicts.map { ($0.id, resolution) }))
+            let store = temporaryStore()
+            defer { try? FileManager.default.removeItem(at: store.directory) }
+            try store.importDataset(dataset)
+            let exported = try Backup(dataset: store.read().dataset).encoded()
+            try store.deleteAllData()
+            try store.restoreBackup(Backup.decode(exported))
+            XCTAssertEqual(try store.read().dataset.habits, dataset.habits)
+            XCTAssertEqual(try store.read().dataset.days, dataset.days)
+            XCTAssertEqual(try store.read().dataset.categories, dataset.categories)
+        }
+    }
+    func testUserHabitKitExportWithStaleAssignmentsWhenProvided() throws {
+        guard let path = ProcessInfo.processInfo.environment["HABITKIT_ORPHAN_TEST_FILE"] else {
+            throw XCTSkip("Provide HABITKIT_ORPHAN_TEST_FILE to verify the user's export with stale category assignments.")
+        }
+        let preview = try HabitKitImport.decode(Data(contentsOf: URL(fileURLWithPath: path)))
+        XCTAssertEqual(preview.dataset.habits.count, 5)
+        XCTAssertEqual(preview.dataset.active.count, 5)
+        XCTAssertEqual(preview.dataset.days.count, 540)
+        XCTAssertEqual(preview.dataset.categories?.count, 12)
+        XCTAssertEqual(preview.dataset.habits.reduce(0) { $0 + ($1.categoryIDs?.count ?? 0) }, 2)
+        XCTAssertEqual(preview.conflicts.count, 1)
+        XCTAssertTrue(preview.warnings.contains("Category assignments for Habits absent from this export will be skipped (count: 3)."))
         for resolution in DuplicateDayResolution.allCases {
             let dataset = try preview.resolved(Dictionary(uniqueKeysWithValues: preview.conflicts.map { ($0.id, resolution) }))
             let store = temporaryStore()

@@ -60,8 +60,11 @@ final class ImportUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Categories"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
         if personal {
             // These choices exercise the UI; they do not assert HabitKit's unknown aggregation semantics.
-            tap(app.buttons["duplicate-69FE2FDB-63AE-4192-AC06-115A26FCF800/2025-01-27"])
-            tap(app.buttons["Add amounts: 3"])
+            let archivedDay = app.buttons["duplicate-69FE2FDB-63AE-4192-AC06-115A26FCF800/2025-01-27"]
+            if archivedDay.exists {
+                tap(archivedDay)
+                tap(app.buttons["Add amounts: 3"])
+            }
             tap(app.buttons["duplicate-F54D5BE4-B171-4932-B257-4882E7E8B01E/2025-09-30"])
             tap(app.buttons["Add amounts: 2"])
         }

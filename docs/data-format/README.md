@@ -23,7 +23,7 @@ A local recovery backup is written under the same store lock before an import ch
 
 The importer accepts positive incremental habits with a single current interval of type `none`, `day`, or `week`. Daily targets and daily/weekly streak goals transfer separately. Categories and assignments transfer, including categories without members. Habit order uses `orderIndex` with original file order to break ties.
 
-Completion dates are derived from each timestamp using its recorded `timezoneOffsetInMinutes`, independent of the current device zone. Zero counts and history before habit creation are valid. Unknown references, duplicate record IDs, invalid dates/counts, unsupported goal modes, and invalid field lengths reject the file without partial writes.
+Completion dates are derived from each timestamp using its recorded `timezoneOffsetInMinutes`, independent of the current device zone. Zero counts and history before habit creation are valid. Category assignments for Habits absent from the export are skipped with a preview warning. Missing Habit references in completions or intervals, invalid category assignments for included Habits, duplicate record IDs, invalid dates/counts, unsupported goal modes, and invalid field lengths reject the file without partial writes.
 
 Multiple records for the same Habit Day require an explicit choice in the preview: latest record, largest amount, or sum. None is assumed to be HabitKit's authoritative behavior. Distinct notes for the same day are joined with blank lines and disclosed; notes that would exceed 500 characters reject the file rather than truncating text.
 
@@ -40,6 +40,8 @@ HABITKIT_TEST_FILE=/absolute/path/habitkit_export.json swift test --package-path
 ```
 
 The private-file test explicitly skips when that environment variable is absent. It checks the supplied export's known 9 habits, 591 Habit Days, 12 categories, 5 weekly goals, and 2 ambiguous days, then round-trips all supported duplicate resolutions.
+
+Set `HABITKIT_ORPHAN_TEST_FILE` to the later export with 5 Habits and 3 stale category assignments to verify that the importer warns about those assignments, preserves 540 Habit Days, and round-trips its one ambiguous day.
 
 `OpenHabitUITests/ImportUITests` exercises the actual file picker and create/import/note/export/delete/reimport UI. Run only on a disposable, English-language Simulator. Before the run, install the test app and copy `OpenHabitCore/Tests/OpenHabitCoreTests/Fixtures/habitkit-synthetic.json` into its Documents directory. Simulator tests do not establish physical-device iCloud synchronization.
 

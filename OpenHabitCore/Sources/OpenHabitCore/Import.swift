@@ -107,11 +107,12 @@ public enum HabitKitImport {
         if let record = source.intervals.first(where: { !ids.contains($0.habitId) }) {
             throw HabitError.invalidBackup("HabitKit interval \(record.id) refers to missing Habit \(record.habitId).")
         }
-        if let record = source.categoryMappings.first(where: { !ids.contains($0.habitId) }) {
-            throw HabitError.invalidBackup("HabitKit category assignment \(record.id) refers to missing Habit \(record.habitId).")
-        }
         var result = Dataset(); result.initialized = true
         var warnings: [String] = []
+        let orphanAssignments = source.categoryMappings.filter { !ids.contains($0.habitId) }
+        if !orphanAssignments.isEmpty {
+            warnings.append("Category assignments for Habits absent from this export will be skipped (count: \(orphanAssignments.count)).")
+        }
         if !source.reminders.isEmpty { warnings.append("\(source.reminders.count) reminders will not transfer; Open Habit does not support reminders.") }
         let categories = try source.categories.enumerated().sorted {
             $0.element.orderIndex == $1.element.orderIndex ? $0.offset < $1.offset : $0.element.orderIndex < $1.element.orderIndex
