@@ -65,7 +65,7 @@ xcodebuild -exportArchive -archivePath /tmp/OpenHabit.xcarchive \
 
 The export command uploads to App Store Connect. Release verification assigns the processed build to every configured TestFlight tester group and submits it for Beta App Review when Apple requires it.
 
-GitHub Actions runs the core, app, widget-rendering, deletion, and Shared Habit join tests for pull requests. Maintainer pushes to `main` and matching release tags can publish through the protected `testflight` environment. The Files round-trip and SpringBoard widget-install tests stay local because they depend on a disposable Files container or persistent Home Screen state.
+GitHub Actions runs the core, app, widget-rendering, deletion, and Shared Habit join tests for pull requests and pushes to `main`. Main does not publish automatically: a manual workflow run publishes a development build, RC tags publish to TestFlight, and stable tags submit the matching version for App Review. See the [release policy](docs/releases.md). The Files round-trip and SpringBoard widget-install tests stay local because they depend on a disposable Files container or persistent Home Screen state.
 
 The App Store Connect API key must have the **App Manager** or **Admin** role so CI can add builds to the external group and submit them for Beta App Review.
 

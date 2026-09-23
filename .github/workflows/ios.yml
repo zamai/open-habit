@@ -8,11 +8,14 @@ on:
     - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
-      local_testflight:
-        description: Build and upload TestFlight from the maintainer Mac
-        required: false
-        default: false
-        type: boolean
+      testflight_runner:
+        description: Runner used for this manually triggered TestFlight build
+        required: true
+        default: github
+        type: choice
+        options:
+          - github
+          - maintainer-mac
 permissions:
   contents: read
 concurrency:
@@ -20,11 +23,15 @@ concurrency:
   cancel-in-progress: false
 jobs:
   test:
-    if: github.event_name != 'schedule' && !(github.event_name == 'workflow_dispatch' && inputs.local_testflight)
+    if: github.event_name != 'schedule' && !(github.event_name == 'workflow_dispatch' && inputs.testflight_runner == 'maintainer-mac')
     runs-on: macos-26
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+      - name: Validate release automation
+        run: |
+          bash -n scripts/ci/publish.sh
+          python3 -m py_compile scripts/ci/wait-testflight.py scripts/ci/submit-app-store.py
       - name: Test core, app, and widgets
         run: bash scripts/ci/test.sh
       - name: Upload test result
@@ -34,7 +41,7 @@ jobs:
           name: ios-test-results
           path: ${{ runner.temp }}/tests.xcresult
   testflight:
-    if: github.event_name != 'pull_request' && github.event_name != 'schedule' && !(github.event_name == 'workflow_dispatch' && inputs.local_testflight) && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.testflight_runner == 'github') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-rc.'))
     needs: test
     concurrency:
       group: testflight-publish
@@ -54,8 +61,29 @@ jobs:
           APP_PROFILE: ${{ secrets.APP_PROFILE }}
           WIDGET_PROFILE: ${{ secrets.WIDGET_PROFILE }}
         run: bash scripts/ci/publish.sh
+  app-store:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-rc.')
+    needs: test
+    concurrency:
+      group: app-store-publish
+      cancel-in-progress: false
+    runs-on: macos-26
+    timeout-minutes: 40
+    environment: app-store
+    steps:
+      - uses: actions/checkout@v5
+      - name: Archive, upload, and submit for App Review
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          SIGNING_P12: ${{ secrets.SIGNING_P12 }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          APP_PROFILE: ${{ secrets.APP_PROFILE }}
+          WIDGET_PROFILE: ${{ secrets.WIDGET_PROFILE }}
+        run: bash scripts/ci/publish.sh app-store
   local-testflight:
-    if: github.event_name == 'workflow_dispatch' && inputs.local_testflight && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && inputs.testflight_runner == 'maintainer-mac' && github.ref == 'refs/heads/main'
     concurrency:
       group: testflight-publish
       cancel-in-progress: false
@@ -87,18 +115,33 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
         run: python3 scripts/ci/wait-testflight.py --retry-external-review
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
+  rc-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-rc.')
     needs: testflight
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v5
-      - name: Prepare GitHub release
+      - name: Publish GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --draft --generate-notes --title "$RELEASE_TAG"
-          echo 'Test this build in TestFlight, then select it in App Store Connect for App Review.' >> "$GITHUB_STEP_SUMMARY"
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --prerelease --generate-notes --title "$RELEASE_TAG"
+          echo 'This release candidate is available to every configured TestFlight group.' >> "$GITHUB_STEP_SUMMARY"
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-rc.')
+    needs: app-store
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --generate-notes --title "$RELEASE_TAG"
+          echo 'The matching build was submitted for App Review. Storefront timing follows the release mode configured in App Store Connect.' >> "$GITHUB_STEP_SUMMARY"

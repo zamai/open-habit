@@ -123,6 +123,7 @@ if sys.argv[1] == '--retry-external-review':
     print('No valid build is assigned to the external group.')
     raise SystemExit(0)
 
+processing_only = '--processing-only' in sys.argv[2:]
 for attempt in range(60):
     builds = get('builds?filter[app]=' + APP_ID + '&filter[version]=' + sys.argv[1] + '&include=betaGroups')
     for build in builds['data']:
@@ -131,6 +132,12 @@ for attempt in range(60):
         if state in ('FAILED', 'INVALID'):
             raise SystemExit('Apple rejected processing; inspect App Store Connect.')
         if state == 'VALID':
+            if processing_only:
+                message = 'Build ' + build['attributes']['version'] + ' is processed and valid for App Store submission.'
+                print(message)
+                with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+                    summary.write(message + '\n')
+                raise SystemExit(0)
             distribute_to_all_testers(build)
             detail = get('builds/' + build['id'] + '/buildBetaDetail')['data']['attributes']
             if detail['internalBuildState'] == 'IN_BETA_TESTING':
