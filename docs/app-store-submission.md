@@ -42,8 +42,9 @@ Settings contains JSON export and import, recovery backups, iCloud status, and D
 - [x] Configure the app as free and available in all 175 current territories, including new territories automatically.
 - [x] Set Health & Fitness as the primary category and Productivity as the secondary category.
 - [x] Generate and upload current 6.9-inch iPhone and 13-inch iPad screenshots from [`app-store-assets`](app-store-assets).
-- [x] Upload build 36, assign both TestFlight groups, submit external Beta App Review, and select it for App Store version 1.0.
+- [x] Upload build 38, verify it is assigned to both TestFlight groups and in external beta testing, and select it for App Store version 1.0.
 - [x] Complete App Review contact details and save the prepared review notes.
 - [x] Declare the individual seller as a **non-trader** for EU Digital Services Act compliance.
 - [x] Complete and publish the App Privacy questionnaire as **Data Not Collected**.
+- [x] Submit version 1.0 with build 38 for App Review on September 23, 2026; release automatically after approval.
 - [ ] Complete the signed-device checks in [`verification.md`](verification.md), especially two-account Shared Habit synchronization and a terminated-app widget action.
