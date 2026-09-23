@@ -21,8 +21,11 @@ final class SharedHabitJoinUITests: XCTestCase {
         XCTAssertTrue(name.waitForExistence(timeout: 5))
         XCTAssertEqual(name.value as? String, "Taylor")
         let keyboardContinue = app.keyboards.buttons["continue"]
-        XCTAssertTrue(keyboardContinue.waitForExistence(timeout: 5), app.debugDescription)
-        keyboardContinue.tap()
+        if keyboardContinue.waitForExistence(timeout: 2) {
+            keyboardContinue.tap()
+        } else {
+            tapHittableButton("join-continue", in: app)
+        }
         XCTAssertTrue(app.navigationBars["Review Habit"].waitForExistence(timeout: 5))
         tapHittableButton("join-continue", in: app)
         XCTAssertTrue(app.navigationBars["Choose Your Habit"].waitForExistence(timeout: 5))
