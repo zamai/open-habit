@@ -21,8 +21,12 @@ final class ImportUITests: XCTestCase {
     @discardableResult private func chooseFile(_ name: String, habitKit: Bool, optional: Bool = false) -> Bool {
         tap(app.buttons["Import"])
         tap(app.buttons[habitKit ? "HabitKit data import" : "Open Habit import"])
-        if app.buttons["Browse"].firstMatch.waitForExistence(timeout: 3) { app.buttons["Browse"].firstMatch.tap() }
-        if app.staticTexts["On My iPhone"].firstMatch.waitForExistence(timeout: 3) { app.staticTexts["On My iPhone"].firstMatch.tap() }
+        let browse = app.tabBars.buttons["Browse"].firstMatch
+        XCTAssertTrue(browse.waitForExistence(timeout: 10), app.debugDescription)
+        browse.tap()
+        let onMyIPhone = app.staticTexts["On My iPhone"].firstMatch
+        XCTAssertTrue(onMyIPhone.waitForExistence(timeout: 10), app.debugDescription)
+        onMyIPhone.tap()
         if app.cells["Open Habit, Container"].waitForExistence(timeout: 3) { app.cells["Open Habit, Container"].tap() }
         let file = app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", name + ".json")).firstMatch
         if !file.waitForExistence(timeout: 10) {

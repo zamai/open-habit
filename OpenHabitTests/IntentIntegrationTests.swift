@@ -6,7 +6,7 @@ import OpenHabitCore
 final class IntentIntegrationTests: XCTestCase {
     private func sharedState(localHabitID: UUID) -> SharedHabitState {
         let habit = Habit(id: localHabitID, name: "Shared state fixture")
-        let member = SharedMember(name: "Alex", colorIndex: 0, role: .owner)
+        let member = SharedMember(name: "Taylor", colorIndex: 0, role: .owner)
         let definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
         return SharedHabitState(
             membership: SharedHabitMembership(

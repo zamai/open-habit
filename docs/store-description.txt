@@ -12,4 +12,4 @@ Tracking works offline. There is no Open Habit account, advertising, analytics, 
 Your data remains portable
 Export a complete JSON backup, restore it later, or import supported HabitKit version 2 exports. Open Habit also saves a local recovery backup before replacement, import, and deletion.
 
-Open Habit is free, with no ads or in-app purchases.
+Open Habit is free and open source, with no ads or in-app purchases. View the source, report issues, and contribute at https://github.com/zamai/open-habit.

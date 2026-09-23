@@ -9,14 +9,14 @@ on:
   workflow_dispatch:
     inputs:
       local_testflight:
-        description: Build and upload TestFlight from the Open Habit Mac runner
+        description: Build and upload TestFlight from the maintainer Mac
         required: false
         default: false
         type: boolean
 permissions:
   contents: read
 concurrency:
-  group: ios-${{ github.ref }}-${{ inputs.local_testflight && 'local' || 'hosted' }}
+  group: ios-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   test:
@@ -64,7 +64,7 @@ jobs:
     environment: testflight
     steps:
       - uses: actions/checkout@v5
-      - name: Archive and upload from local Mac
+      - name: Archive and upload from maintainer Mac
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}

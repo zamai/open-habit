@@ -1,6 +1,27 @@
 import XCTest
 
 final class DeleteConfirmationUITests: XCTestCase {
+    func testCustomEmojiPickerIsVisibleAndOpensFullScreen() {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.buttons["add-habit"].waitForExistence(timeout: 10))
+        app.buttons["add-habit"].tap()
+        app.buttons["habit-emoji"].tap()
+
+        let custom = app.buttons["Choose a custom emoji"]
+        XCTAssertTrue(custom.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(custom.isHittable, "Custom should be available without scrolling")
+        attach(app, "Emoji shelf")
+        custom.tap()
+
+        let navigation = app.navigationBars["Custom Emoji"]
+        XCTAssertTrue(navigation.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertLessThan(navigation.frame.minY, app.frame.height / 4, "Custom Emoji should cover the full screen")
+        XCTAssertTrue(app.textFields["custom-emoji"].exists)
+        attach(app, "Custom emoji full screen")
+    }
+
     func testHabitDeletionUsesDestructiveAlertWithCancel() {
         let app = XCUIApplication()
         app.launch()
@@ -41,11 +62,18 @@ final class DeleteConfirmationUITests: XCTestCase {
         app.alerts.buttons["Delete"].tap()
 
         XCTAssertTrue(app.navigationBars["Open Habit"].waitForExistence(timeout: 5), app.debugDescription)
-        XCTAssertFalse(app.staticTexts["Habit unavailable"].exists)
+        XCTAssertTrue(app.staticTexts["Habit unavailable"].waitForNonExistence(timeout: 5))
         XCTAssertTrue(habit.waitForNonExistence(timeout: 5))
         let result = XCTAttachment(screenshot: app.screenshot())
         result.name = "Main habits screen after deletion"
         result.lifetime = .keepAlways
         add(result)
+    }
+
+    private func attach(_ app: XCUIApplication, _ name: String) {
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = name
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
     }
 }

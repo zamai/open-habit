@@ -16,7 +16,7 @@ import OpenHabitCore
     var definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
     let ownerID = UUID()
     let friendID = UUID()
-    var owner = SharedMember(id: ownerID, name: "Alex", colorIndex: 0, role: .owner)
+    var owner = SharedMember(id: ownerID, name: "Taylor", colorIndex: 0, role: .owner)
     var friend = SharedMember(id: friendID, name: "Marta", colorIndex: 1, role: .member, joinedAt: Date().addingTimeInterval(1))
     for offset in 0..<7 {
         let day = LocalDay.string(Calendar.current.date(byAdding: .day, value: -offset, to: Date())!)

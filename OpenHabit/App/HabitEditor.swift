@@ -166,14 +166,17 @@ private struct HabitEmojiPicker: View {
     @Binding var selection: String
     @State private var choosingCustomEmoji = false
     private let choices = [
-        "🌱", "🌿", "🌳", "🌻", "✨", "⭐️", "🔥", "💪",
-        "🏃", "🚶", "🚴", "🏊", "🧘", "🏋️", "⚽️", "🏀",
-        "💧", "🥤", "🍎", "🥗", "🥕", "🍳", "☕️", "🫖",
-        "📖", "✍️", "📝", "🎓", "🧠", "💻", "🎨", "🎸",
-        "🎹", "🎧", "📷", "🧹", "🧺", "🛏️", "🚿", "🪥",
-        "💊", "🩺", "😴", "⏰", "📵", "💰", "📅", "✅",
-        "🙏", "❤️", "😊", "🫶", "👨‍👩‍👧‍👦", "🐕", "🐈", "🌍",
-        "☀️", "🌙", "🏠", "🚗", "✈️", "🎯", "🏆", "🔁"
+        // Everyday health
+        "💧", "🏃", "📖", "🧘", "😴",
+        // Movement and nutrition
+        "🥗", "💪", "🚶", "🏋️", "🚴",
+        "🏊", "🪥", "💊", "☀️", "📵",
+        // Focus and consistency
+        "✍️", "🧠", "✅", "🎯", "🔥",
+        // Home, money, and wellbeing
+        "🧹", "💰", "❤️", "🙏", "😊",
+        // Growth and creativity
+        "🌱", "🎨", "🎸", "☕️"
     ]
 
     var body: some View {
@@ -219,7 +222,7 @@ private struct HabitEmojiPicker: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         }
         .presentationDetents([.medium, .large])
-        .sheet(isPresented: $choosingCustomEmoji) {
+        .fullScreenCover(isPresented: $choosingCustomEmoji) {
             CustomEmojiPicker(selection: $selection) { dismiss() }
         }
     }
@@ -263,7 +266,6 @@ private struct CustomEmojiPicker: View {
                 }
             }
         }
-        .presentationDetents([.medium])
     }
 
     private var validEmoji: Bool {

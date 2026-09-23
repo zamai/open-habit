@@ -8,20 +8,23 @@ final class SharedHabitJoinUITests: XCTestCase {
         XCTAssertFalse(app.buttons["join-continue"].isEnabled)
         XCTAssertFalse(app.buttons["join-confirm"].exists)
         name.tap()
-        name.typeText("Alex")
+        name.typeText("Taylor")
         attach(app, "01 Member Name")
 
-        app.buttons["join-continue"].tap()
+        tapHittableButton("join-continue", in: app)
         XCTAssertTrue(app.navigationBars["Review Habit"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Read together"].exists)
         XCTAssertFalse(name.isHittable)
         attach(app, "02 Review Invitation")
 
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.navigationBars["Review Habit"].buttons.firstMatch.tap()
         XCTAssertTrue(name.waitForExistence(timeout: 5))
-        XCTAssertEqual(name.value as? String, "Alex")
-        app.buttons["join-continue"].tap()
-        app.buttons["join-continue"].tap()
+        XCTAssertEqual(name.value as? String, "Taylor")
+        let keyboardContinue = app.keyboards.buttons["continue"]
+        XCTAssertTrue(keyboardContinue.waitForExistence(timeout: 5), app.debugDescription)
+        keyboardContinue.tap()
+        XCTAssertTrue(app.navigationBars["Review Habit"].waitForExistence(timeout: 5))
+        tapHittableButton("join-continue", in: app)
         XCTAssertTrue(app.navigationBars["Choose Your Habit"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["join-confirm"].isEnabled)
         attach(app, "03 Start New Habit")
@@ -33,9 +36,9 @@ final class SharedHabitJoinUITests: XCTestCase {
         XCTAssertTrue(app.buttons["join-confirm"].isEnabled)
         attach(app, "04 Connect Existing Habit")
 
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.navigationBars["Choose Your Habit"].buttons.firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Review Habit"].waitForExistence(timeout: 5))
-        app.buttons["join-continue"].tap()
+        tapHittableButton("join-continue", in: app)
         XCTAssertTrue(app.buttons["join-existing-habit"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["join-confirm"].isEnabled)
     }
@@ -45,10 +48,10 @@ final class SharedHabitJoinUITests: XCTestCase {
         let name = app.textFields["join-member-name"]
         XCTAssertTrue(name.waitForExistence(timeout: 10))
         name.tap()
-        name.typeText("Alex")
-        app.buttons["join-continue"].tap()
+        name.typeText("Taylor")
+        tapHittableButton("join-continue", in: app)
         XCTAssertTrue(app.navigationBars["Review Habit"].waitForExistence(timeout: 5))
-        app.buttons["join-continue"].tap()
+        tapHittableButton("join-continue", in: app)
         XCTAssertTrue(app.navigationBars["Choose Your Habit"].waitForExistence(timeout: 5))
         let existing = app.buttons["join-use-existing"]
         for _ in 0..<5 where !existing.isHittable { app.swipeUp() }
@@ -64,6 +67,18 @@ final class SharedHabitJoinUITests: XCTestCase {
         app.launchArguments = ["--preview-join"] + extraArguments
         app.launch()
         return app
+    }
+
+    private func tapHittableButton(_ identifier: String, in app: XCUIApplication) {
+        let deadline = Date().addingTimeInterval(5)
+        repeat {
+            if let button = app.buttons.matching(identifier: identifier).allElementsBoundByIndex.first(where: \.isHittable) {
+                button.tap()
+                return
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+        XCTFail("No hittable \(identifier) button was found.\n\(app.debugDescription)")
     }
 
     private func attach(_ app: XCUIApplication, _ name: String) {

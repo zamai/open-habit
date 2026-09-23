@@ -82,10 +82,13 @@ struct SettingsView: View {
                             Image(systemName: "leaf.circle.fill").font(.system(size: 72)).foregroundStyle(.green)
                             Text("Open Habit").font(.largeTitle.bold())
                             Text("A little, every day.").font(.title3)
-                            Text("Private habits. Small steps. Your data.\nBuilt for iPhone and iPad, with no Open Habit account and no hosted user-data service.").multilineTextAlignment(.center).foregroundStyle(.secondary)
+                            Text("Private habits. Small steps. Your data.\nFree and open source, with no Open Habit account or hosted user-data service.").multilineTextAlignment(.center).foregroundStyle(.secondary)
                             Text(appVersion).font(.caption).foregroundStyle(.secondary)
                         }.padding(30).navigationTitle("About")
                     }
+                    Link("Privacy Policy", destination: URL(string: "https://getopenhabit.com/privacy")!)
+                    Link("Support", destination: URL(string: "https://getopenhabit.com/support")!)
+                    Link("Source Code", destination: URL(string: "https://github.com/zamai/open-habit")!)
                     Button("Delete All Data", role: .destructive) { deleting = true }
                 }
             }

@@ -1,115 +1,47 @@
 # Open Habit verification
 
-## App Store candidate hardening (22 September 2026)
-
-The version 1.0 candidate passes 34 domain tests and five app-hosted integration and widget-rendering tests on a fresh iPhone Simulator. The deletion confirmation test and both three-step Shared Habit join tests also pass. A Release analysis completes without warnings.
-
-All three customer-supplied HabitKit version 2 exports decode in the domain suite. The September 22 export also passes the complete Files flow: initial import, repeated import with automatic replacement, export, Delete All Data, and recovery restore. Its restored dataset contains 13 Habits, 550 Habit Days, 13 categories, and three notes with settings, order, identifiers, dates, goals, colors, and counts preserved.
-
-Sharing metadata is now reconciled against the current dataset at the storage boundary. An orphaned `shared-habits.json` entry is removed automatically and cannot block replacement import or Delete All Data when no corresponding Habit exists. The integration test exercises this against an actual temporary metadata file.
-
-The app and widget now include a privacy manifest declaration for the file-timestamp API used to list recovery backups. The release copy, privacy policy draft, review notes, and remaining submission gates are maintained in [`app-store-submission.md`](app-store-submission.md).
-
-## Invitation acceptance investigation (15 September 2026)
-
-The dedicated **Open Habit iCloud Test** simulator (iOS 26.5), signed into a separate Apple Account, successfully created a Shared Habit and single-use Invitations against **Production** CloudKit. A physical iPhone on iOS 27 with TestFlight build 29 opened Open Habit after acceptance without presenting the join screen.
-
-The app handled only the application-delegate callback. Scene-based apps receive an Invitation through `UIWindowSceneDelegate.windowScene(_:userDidAcceptCloudKitShareWith:)` when a window is connected, or `UIScene.ConnectionOptions.cloudKitShareMetadata` when a scene connects. Both paths now feed the existing acceptance broker. Diagnostics use subsystem `com.alex.openhabit`, category `ShareAcceptance`, without logging invitation URLs or Member identities.
-
-The signed device build succeeds and all four existing app-hosted tests pass. Alex confirmed that the Production debug build installed in place on the connected iPhone opens the join screen and successfully creates the joined Sharing test Habit. Device logs confirm cold-launch receipt at 09:36:38 and successful Shared Habit loading at 09:36:41 (Europe/Warsaw). The roughly 3.3-second CloudKit wait prompted a loading spinner in the invitation sheet. **Warm-launch acceptance and subsequent Completion synchronization still require device verification.**
-
-The loading-to-join transition and Member Name order were visually checked in the simulator with a temporary in-memory offer. The preview code was removed afterward. Both final simulator and signed device builds compile, and the updated device build is installed. This UI preview does not establish live joining or synchronization.
-
-### Joining in three steps
-
-Joining now uses native push navigation for **Your Name → Review Habit → Choose Your Habit**, with progress, Continue buttons, native Back navigation, and a final Join action. Name and tracking choices persist when going back. The action stays above the keyboard; choice rows adapt at accessibility text sizes. Joining and declining disable duplicate actions and show progress.
-
-`SharedHabitJoinUITests` exercises name validation, review, Back navigation, retained choices, explicit selection before connecting an existing Habit, and the no-Private-Habits case at the largest accessibility text size. These deterministic tests are included in `scripts/ci/test.sh`. They use a simulator-only Debug fixture (`--preview-join`, optionally `--preview-join-empty`) and stop before CloudKit join/decline actions. Ordinary app startup and physical-device builds do not enable the fixture.
-
-For repeatable manual tests:
-
-1. Keep the spare Apple Account signed into Settings in the dedicated simulator. Apple Account verification uses trusted-device or SMS/phone codes, not authenticator-app TOTP.
-2. Build the app and widget with temporary copies of their respective entitlements files, each adding `com.apple.developer.icloud-container-environment = Production`, when testing against TestFlight. Keep these overrides out of ordinary test builds. The simulator's private journal sync still uses its local-storage fallback; the Shared Habit operations can access live CloudKit.
-3. Create a test Habit and use **Invite a Member** for each fresh single-use Invitation. Open it from a message or this task on the receiving iPhone, using a different Apple Account.
-4. In macOS Console, select the iPhone, include Info messages, and filter to subsystem `com.alex.openhabit`. Check receipt, CloudKit acceptance/loading, and join-screen presentation. Test both a running app and an app that has been fully closed.
-5. Join with a new test Habit and verify that each Member's Completions reach the other device. Leave or stop sharing after testing and verify that personal history remains available.
-
-## Shared Habits implementation (13 September 2026)
-
-The first end-to-end implementation slice is present in the app. It includes the isolated shared data projection, local membership cache, cross-device membership records, Owner setup with fresh/full history, single-use Invitation creation, CloudKit share acceptance, Start New and Use Existing joining, the Members presentation, Member identity editing, Invitation cancellation, Member removal, leaving, and the Owner stopping sharing while preserving their local Habit.
-
-The core suite verifies that the shared projection excludes Day Notes and note-only Habit Days, preserves local identity and organization when adopting a shared definition, assigns all ten palette colors, and orders the current Member before the Owner and join order. The app-hosted suite verifies that private Habit synchronization ignores CloudKit share and Shared Habit records that coexist in its record zone, and covers the ten-Member phone layout. Core, application, and widget tests pass, and both Simulator and unsigned generic-device builds compile with Xcode 26.3. The generic-device build compiles the live CloudKit code path; the Simulator intentionally does not execute it. Shared records reuse the deployed `HabitEdit.payload` asset envelope, so this slice requires no Production schema change.
-
-The following remain release blockers rather than inferred successes:
-
-1. Exercise creation, Invitation delivery, acceptance, synchronization, leaving, removal, and stopping sharing on signed iOS 18-or-later devices using two different iCloud accounts.
-2. Confirm the one-time URL behavior on iOS 18 through iOS 26. Xcode 26 currently imports the public iOS 18 URL accessor with iOS 26 availability, so the iOS 18–25 compatibility path calls that public Objective-C selector dynamically.
-3. Inspect the Shared Habit, join, ten-Member, Dynamic Type, Dark Mode, and VoiceOver UI on devices. Automated rendering proves allocation, not usability.
-4. Add provisioned-device regression checks showing private Habit sync, widgets, App Intents, backup, import, and restore remain unaffected by the shared record-name prefixes.
+This document separates reproducible automated checks from behavior that requires provisioned Apple devices or accounts.
 
 ## Automated checks
 
-Validated with Xcode 26.3 and the iOS 26.3 Simulator on 5 September 2026: 13 domain tests, two app-hosted integration/rendering tests, and one Home Screen UI test passed. Both final Simulator and unsigned device builds passed.
+The domain suite covers storage, synchronization semantics, streak and calendar calculations, import and export validation, deletion, concurrency, and shared-data projection:
 
-- The pure Swift domain suite covers starter seeding exactly once, target-1 and multi-target toggling, capped additions, concurrent merge and retry idempotency, nonnegative removals, current-target history presentation, daily and weekly Current Streak derivation, visible-month Completion totals, archive versus property edits, permanent-deletion visibility, restore generation isolation, fixed date keys, note/date validation, full-fidelity JSON round trips, unsupported versions, failed-transaction rollback, and 40 concurrent store writers.
-- The widget rendering test produces native images at small and medium widget dimensions. Both images were inspected for row allocation and clipping.
-- The application-hosted integration suite exercises the four Shortcut intents and the widget toggle against the App Group store. These tests create and tombstone only their own fixture Habit.
-- Both Simulator and unsigned generic-device builds compile the application and widget extension. The latter includes the live CloudKit implementation.
+```sh
+swift test --package-path OpenHabitCore
+```
 
-## Live Simulator checks
+The CI test entry point also exercises the app integration, widget rendering, deletion confirmation, and deterministic Shared Habit join flows on an iOS Simulator:
 
-- Fresh local setup loads exactly the three specified starter Habits, with one Water Completion.
-- The Water control increments to three and then clears to zero.
-- Habit creation, Habit Detail deep linking, count correction, and Day Note persistence work in the running app.
-- Browser mirroring displays an actual live Simulator frame.
-- A configured small widget updates Water from 0 to 1 without opening the app; its active-Habit configuration query resolves the shared app dataset.
-- The iPad overview renders two columns at normal text sizes and switches to one column at accessibility sizes. Light, Dark, and largest accessibility text rendering were inspected.
+```sh
+bash scripts/ci/test.sh
+```
 
-## Remaining device acceptance
+The import runner stages synthetic fixtures in a disposable Simulator and verifies the exported and restored data exactly:
 
-The Apple Developer team, App Group, and CloudKit container are now provisioned. These checks still require signed devices; a successful archive or TestFlight upload does not establish them:
+```sh
+bash scripts/ci/test-import.sh
+```
 
-1. Install on two devices on the same iCloud account. Verify first install versus reinstall seeding and recovery.
-2. Disconnect both devices, add distinct Completions, reconnect, and verify counts and manual order converge. Repeat with concurrent notes, archive, deletion, and backup restore.
-3. Verify widget configuration and button execution from Home Screen with the app terminated and networking disabled. Confirm a missing assignment becomes a placeholder.
-4. Run all four actions from the Shortcuts app, including historical dates, future rejection, and progress result properties.
-5. Check iOS 17 fallback appearance, actual-device emoji rendering, Dynamic Type, VoiceOver, iPad multitasking, and midnight/time-zone transitions.
-6. Verify iCloud quota and account-unavailable messaging and silent push delivery.
+`HABITKIT_TEST_FILE` and `HABITKIT_ORPHAN_TEST_FILE` may be used locally for additional compatibility checks. Those files can contain private user data and must never be committed, attached to issues, or included in test artifacts shared publicly.
 
-## Distribution verification
+## Simulator limits
 
-On September 5, 2026, the Release archive for version 1.0 (1) passed and Xcode's CLI uploaded it successfully to App Store Connect app `6808947599`. Both archived provisioning profiles include the shared App Group and iCloud container under team `539QCPHM7F`. Xcode's distribution signing log confirms the uploaded app and widget use the Production CloudKit environment, and the app uses production APNs.
+Simulator builds intentionally use local storage instead of live private-database synchronization. The deterministic Shared Habit join fixture validates navigation and local choices but stops before CloudKit acceptance. A successful Simulator build therefore does not establish production iCloud, push-notification, invitation, or signing behavior.
 
-App Store Connect finished processing the build. The Internal Testers group shows **Testing**, one build, and one accepted tester (Alex's account). External Beta App Review was not submitted. Installation and runtime behavior on a physical device remain unverified.
+## Signed-device acceptance
 
-CloudKit Console confirmed deployment of `HabitEdit` with a `payload` Asset field, and the type and field were read back in the Production environment. This establishes schema availability, not two-device synchronization behavior.
+Before a release, verify the following with maintainer-controlled test accounts and synthetic data:
 
-The available iOS 26.3 Simulator renders emoji as missing-glyph boxes even though their Unicode text is intact. This visual limitation remains to be checked on a device.
+1. Install and reinstall on two devices using the same Apple Account; confirm initial seeding and private iCloud recovery.
+2. Make offline changes on both devices, reconnect, and confirm Completions, notes, ordering, archive, deletion, and restore converge.
+3. Create and accept fresh Shared Habit invitations between two different Apple Accounts. Verify progress synchronization, leaving, removal, and stopping sharing.
+4. Exercise widget configuration and actions with the app terminated and networking unavailable.
+5. Run every Shortcut action, including historical dates and future-date rejection.
+6. Inspect iOS 17 fallback appearance, Dynamic Type, VoiceOver, Dark Mode, iPad multitasking, emoji rendering, and date changes around midnight and time-zone transitions.
+7. Confirm unavailable-account, quota, and synchronization error messages without recording invitation URLs, member identities, or user data in logs.
 
-Deletion removes Habits and their days from the dataset, views, exports, and edit payloads after convergence. Redacted edit IDs and deletion tombstones remain solely to prevent old offline edits from resurrecting data. The domain suite verifies the removed Habit name and Day Note are absent from serialized journal payloads.
+## Release verification
 
-## Widget revision (build 2)
+A successful archive or upload is not the same as a working release. Confirm that the processed build is assigned to every configured internal and external TestFlight group, complete Beta App Review when required, and record any remaining external-testing state. The release checklist is maintained in [App Store submission](app-store-submission.md).
 
-The small widget now shows 10 weeks with 4-point gaps, a top-right completion button, and a black background. The medium widget uses three explicitly bounded rows. Widget histories use a Canvas drawing instead of the app's hundreds of tile views and gestures, reducing the view tree sent to WidgetKit.
-
-Both widget sizes passed app-hosted rendering and intent tests. Rendering checks require visible colored content in every row and a black outer margin. The real Simulator widget gallery rendered the medium preview; a Home Screen medium widget was configured with all three starter habits and its Exercise button changed the count from 0 to 1 without opening the app, then back to 0. The live browser mirror was inspected. The original physical-device blank state did not reproduce in Simulator, so build 2 still needs confirmation on the affected phone.
-
-The signed Release archive is `/tmp/OpenHabit-2-final.xcarchive`, with app and widget version 1.0 (2). Xcode Organizer confirmed upload of 1.0 (2), and App Store Connect subsequently showed **Testing** for build 2 in the Internal Testers group. The CLI failed with “Failed to Use Accounts” while Organizer could use the signed-in account. Widget retest notes and the free/open-source MIT release description are saved in App Store Connect.
-
-Build 1.0 (3) includes custom habit colors, the title beside its emoji, and removal of the Today panel from Habit Detail. The Release archive `/tmp/OpenHabit-3.xcarchive` passed with build number 3 in both app and widget. Organizer uploaded it on September 5, 2026. The 1Password App Store Connect key was then verified against Open Habit through the API: build `c4a3695e-2724-4d86-82bb-de62ca997eeb` is `VALID`, assigned to Internal Testers, and `IN_BETA_TESTING`, with automatic notification enabled. External state remains `READY_FOR_BETA_SUBMISSION`. Future releases should follow the API-first instructions in `AGENTS.md`.
-
-GitHub Actions run [33990168840](https://github.com/zamai/open-habit/actions/runs/33990168840) completed the first end-to-end CI release on September 5, 2026. It passed 14 core tests and 2 signed Simulator integration/rendering tests, archived with the dedicated distribution certificate and profiles, uploaded build 1.0 (6.1), and waited until App Store Connect reported build `01831879-7409-4290-a450-6a51a9209caf` as `VALID`, assigned to Internal Testers, and `IN_BETA_TESTING`. The SpringBoard widget-install UI test remains local because its result depends on persistent Home Screen state.
-
-## Captured UI
-
-- [iPhone overview](screenshots/iphone-overview.png)
-- [iPad Dark overview](screenshots/ipad-dark.png)
-- [Small widget rendering](screenshots/small-widget.png)
-- [Medium widget rendering](screenshots/medium-widget.png)
-- [Configured widgets on Home Screen](screenshots/widgets-home-screen.png)
-
-The widget images are native rendering-test captures at WidgetKit dimensions. Both sizes also have verified Home Screen interactions. The Home Screen UI smoke test requires an English-language Simulator and may add a small widget and enter Home Screen editing.
-
-## Import/export verification
-
-See [Data format verification](data-format/README.md#verification) for core and Files-based UI round-trip coverage, the reproducible disposable-Simulator command, and verification of the original HabitKit export.
+For import/export coverage and fixture details, see [Data format verification](data-format/README.md#verification).

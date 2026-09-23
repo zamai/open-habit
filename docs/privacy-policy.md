@@ -20,6 +20,8 @@ When you create or join a Shared Habit, its common definition, Member Names, Mem
 
 Information you choose to send when requesting support is used only to respond to that request.
 
+Support information and contact options are available at <https://getopenhabit.com/support>. You can also email <contact@getopenhabit.com>.
+
 ## Changes
 
 This policy may be updated when Open Habit’s data practices change. The effective date above will be updated with the policy.

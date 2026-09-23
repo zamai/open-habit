@@ -11,8 +11,11 @@
 - Promotional text: **Build habits with interactive widgets, private iCloud sync, Shortcuts, Day Notes, and portable JSON backups.**
 - Description: [`store-description.txt`](store-description.txt)
 - Privacy policy source: [`privacy-policy.md`](privacy-policy.md)
-- Public privacy policy: <https://zamai.github.io/open-habit-support/privacy.html>
-- Public support: <https://zamai.github.io/open-habit-support/>
+- Marketing website: <https://getopenhabit.com/>
+- Public privacy policy: <https://getopenhabit.com/privacy>
+- Public support: <https://getopenhabit.com/support>
+- Contact email: `contact@getopenhabit.com`
+- Source code: <https://github.com/zamai/open-habit>
 
 ## App Review notes
 
@@ -28,14 +31,19 @@ Settings contains JSON export and import, recovery backups, iCloud status, and D
 - [x] Privacy manifest declares the file-timestamp API used to display local recovery-backup dates.
 - [x] Encryption exemption is declared; the app only uses Apple platform encryption.
 - [x] App and widget identifiers, App Group, CloudKit container, Push Notifications, and Production CloudKit schema are configured.
-- [x] Release analyzer, core tests, app integration tests, widget rendering, deletion UI, Shared Habit join UI, and Files import/export/restore tests pass.
-- [x] App Store copy no longer promises public source access while the repository is private.
-- [x] Publish the privacy policy and support pages and add their public URLs to App Store Connect.
-- [x] Complete the age-rating questionnaire: 4+, with health/wellness and private invited user content declared.
+- [x] Release checks pass: 40 core tests (with 3 expected private-fixture skips), 7 app integration/widget tests, and the UI automation suite, including deletion confirmation and Shared Habit joining.
+- [x] Make the source repository public before publishing copy that describes Open Habit as open source.
+- [x] Publish and verify the marketing, privacy, and support pages at the `getopenhabit.com` URLs above.
+- [x] Add the `getopenhabit.com` marketing, privacy, and support URLs to App Store Connect.
+- [x] Route `contact@getopenhabit.com` to the verified private inbox and use it for production and TestFlight review contacts.
+- [x] Add Privacy Policy, Support, and Source Code links in Settings.
+- [x] Complete the age-rating questionnaire: 9+ in 172 countries or regions, 12+ in Vietnam, with regional ratings shown separately; operating systems earlier than version 26 retain a global 4+ rating with regional exceptions.
+- [x] Declare that Open Habit is **not** a regulated medical device in any country or region.
 - [x] Configure the app as free and available in all 175 current territories, including new territories automatically.
 - [x] Set Health & Fitness as the primary category and Productivity as the secondary category.
 - [x] Generate and upload current 6.9-inch iPhone and 13-inch iPad screenshots from [`app-store-assets`](app-store-assets).
 - [x] Upload build 36, assign both TestFlight groups, submit external Beta App Review, and select it for App Store version 1.0.
-- [ ] Complete App Review contact details and save the prepared review notes.
-- [ ] Complete the App Privacy questionnaire as **Data Not Collected**; this setting is not available through the App Store Connect API.
+- [x] Complete App Review contact details and save the prepared review notes.
+- [x] Declare the individual seller as a **non-trader** for EU Digital Services Act compliance.
+- [x] Complete and publish the App Privacy questionnaire as **Data Not Collected**.
 - [ ] Complete the signed-device checks in [`verification.md`](verification.md), especially two-account Shared Habit synchronization and a terminated-app widget action.

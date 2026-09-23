@@ -54,7 +54,7 @@ final class WidgetLayoutTests: XCTestCase {
         let habit = Habit(name: "Exercise", emoji: "🏃", target: 3, streakGoal: StreakGoal(period: .weekly, target: 3))
         let definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
         let members = (0..<10).map { index in
-            SharedMember(name: index == 0 ? "Alexandra Montgomery" : "Member \(index + 1)", colorIndex: index, role: index == 0 ? .owner : .member)
+            SharedMember(name: index == 0 ? "Taylor Montgomery" : "Member \(index + 1)", colorIndex: index, role: index == 0 ? .owner : .member)
         }
         let view = VStack(spacing: 0) {
             ForEach(Array(members.enumerated()), id: \.element.id) { index, member in

@@ -6,7 +6,7 @@ Status: agreed product design.
 
 Open Habit is a private, offline-first iPhone and iPad habit tracker for people who want to record progress with almost no friction and retain ownership of their data. Its defining interaction is completing a Habit directly from the Home Screen.
 
-Open Habit will be free to use and released as open source under the MIT license, with contributions welcome from everyone. The repository remains private during development; publishing the source is a later release step, not an MVP dependency.
+Open Habit is free to use and open source under the MIT license, with contributions welcome from everyone.
 
 ## Observable MVP outcome
 

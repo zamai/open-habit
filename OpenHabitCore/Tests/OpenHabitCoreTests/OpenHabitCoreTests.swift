@@ -282,7 +282,7 @@ final class OpenHabitCoreTests: XCTestCase {
     }
 
     func testSharedMembersUseOneColorEachAndCurrentMemberSortsFirst() throws {
-        let owner = SharedMember(id: UUID(), name: "Alex", colorIndex: 0, role: .owner, joinedAt: now)
+        let owner = SharedMember(id: UUID(), name: "Taylor", colorIndex: 0, role: .owner, joinedAt: now)
         let first = SharedMember(id: UUID(), name: "Marta", colorIndex: 1, role: .member, joinedAt: now.addingTimeInterval(1))
         let current = SharedMember(id: UUID(), name: "Jan", colorIndex: 2, role: .member, joinedAt: now.addingTimeInterval(2))
         let definition = SharedHabitDefinition(habit: Habit(name: "Exercise", emoji: "🏃"), weekStart: .monday)
