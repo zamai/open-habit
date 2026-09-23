@@ -4,7 +4,7 @@ Open Habit is a free, open-source habit tracker for iPhone and iPad. Record prog
 
 <img src="site/assets/widget-three-habits.png" alt="Open Habit interactive widget showing three habits and recent progress" width="600">
 
-There is no Open Habit account, advertising, analytics, or subscription. Optional synchronization uses your private iCloud database; the developer does not operate a habit-data server. Open Habit is built with Swift and SwiftUI under the MIT license.
+There is no Open Habit account, advertising, analytics, or subscription. Personal habit data syncs through your private iCloud database when enabled. Shared Habits use CloudKit Sharing: invited members can see the common Habit definition, Member Names, Member Colors, and Completion counts. Day Notes, categories, app settings, and unrelated Habits stay private. The developer does not operate a habit-data server. Open Habit is built with Swift and SwiftUI under the MIT license.
 
 - [MVP product design](./docs/mvp.md)
 - [Shared Habits design](./docs/shared-habits.md)
