@@ -44,7 +44,7 @@ jobs:
     if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.testflight_runner == 'github') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-rc.'))
     needs: test
     concurrency:
-      group: testflight-publish
+      group: app-store-connect-publish
       cancel-in-progress: false
     runs-on: macos-26
     timeout-minutes: 40
@@ -65,7 +65,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-rc.')
     needs: test
     concurrency:
-      group: app-store-publish
+      group: app-store-connect-publish
       cancel-in-progress: false
     runs-on: macos-26
     timeout-minutes: 40
@@ -85,7 +85,7 @@ jobs:
   local-testflight:
     if: github.event_name == 'workflow_dispatch' && inputs.testflight_runner == 'maintainer-mac' && github.ref == 'refs/heads/main'
     concurrency:
-      group: testflight-publish
+      group: app-store-connect-publish
       cancel-in-progress: false
     runs-on: [self-hosted, macOS, ARM64, open-habit-local]
     timeout-minutes: 40
