@@ -1,6 +1,10 @@
 # Open Habit
 
-Open Habit is an offline-first iPhone and iPad habit tracker designed around interactive Home Screen widgets, Shortcuts, iCloud sync, and portable user-owned data.
+Open Habit is a free, open-source habit tracker for iPhone and iPad. Record progress from interactive Home Screen widgets, Apple Shortcuts, or the app. Tracking works offline, and your data can be exported as JSON.
+
+<img src="site/assets/widget-three-habits.png" alt="Open Habit interactive widget showing three habits and recent progress" width="600">
+
+There is no Open Habit account, advertising, analytics, or subscription. Optional synchronization uses your private iCloud database; the developer does not operate a habit-data server. Open Habit is built with Swift and SwiftUI under the MIT license.
 
 - [MVP product design](./docs/mvp.md)
 - [Shared Habits design](./docs/shared-habits.md)

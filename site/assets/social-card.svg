@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Open Habit</title>
+  <desc id="description">A free, open-source habit tracker for iPhone and iPad, with widgets and Shortcuts.</desc>
+  <rect width="1200" height="630" fill="#f7f8f3"/>
+  <circle cx="1050" cy="110" r="300" fill="#dff0de"/>
+  <circle cx="1200" cy="580" r="250" fill="#cce6d1"/>
+
+  <rect x="76" y="62" width="58" height="58" rx="16" fill="#27bd63"/>
+  <path d="M91 92l12 12 22-27" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="150" y="103" fill="#183023" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="28" font-weight="700">Open Habit</text>
+
+  <text x="76" y="235" fill="#183023" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="68" font-weight="750" letter-spacing="-3">A little, every day.</text>
+  <text x="79" y="300" fill="#5f7066" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="29">The open-source habit tracker</text>
+  <text x="79" y="339" fill="#5f7066" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="29">for iPhone and iPad.</text>
+
+  <rect x="76" y="407" width="206" height="46" rx="23" fill="#e7f2e6"/>
+  <text x="102" y="437" fill="#28814b" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="700">Interactive widgets</text>
+  <rect x="293" y="407" width="168" height="46" rx="23" fill="#e7f2e6"/>
+  <text x="318" y="437" fill="#28814b" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="700">Apple Shortcuts</text>
+  <text x="78" y="557" fill="#5f7066" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="23">Free · Private · Offline first</text>
+
+  <rect x="685" y="138" width="438" height="352" rx="38" fill="#a8d3b1" opacity=".35"/>
+  <rect x="669" y="122" width="438" height="352" rx="38" fill="#ffffff" stroke="#dce5dc" stroke-width="2"/>
+  <text x="706" y="171" fill="#183023" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="25" font-weight="700">Today’s habits</text>
+
+  <rect x="704" y="198" width="44" height="44" rx="14" fill="#fff0e9"/>
+  <circle cx="726" cy="220" r="9" fill="#ef8c61"/>
+  <text x="763" y="227" fill="#183023" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="650">Exercise</text>
+  <rect x="945" y="204" width="34" height="34" rx="10" fill="#ecaa82"/>
+  <path d="M953 221l6 6 12-14" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="986" y="204" width="34" height="34" rx="10" fill="#fff0e9"/>
+  <rect x="1027" y="204" width="34" height="34" rx="10" fill="#ecaa82"/>
+  <path d="M1035 221l6 6 12-14" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="704" y="284" width="44" height="44" rx="14" fill="#eaf2ff"/>
+  <circle cx="726" cy="306" r="9" fill="#3d82e4"/>
+  <text x="763" y="313" fill="#183023" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="650">Drink water</text>
+  <rect x="945" y="290" width="34" height="34" rx="10" fill="#eaf2ff"/>
+  <rect x="986" y="290" width="34" height="34" rx="10" fill="#3d82e4"/>
+  <path d="M994 307l6 6 12-14" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1027" y="290" width="34" height="34" rx="10" fill="#eaf2ff"/>
+
+  <rect x="704" y="370" width="44" height="44" rx="14" fill="#e8f6ec"/>
+  <circle cx="726" cy="392" r="9" fill="#39ae6b"/>
+  <text x="763" y="399" fill="#183023" font-family="-apple-system, BlinkMacSystemFont, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="650">Read five pages</text>
+  <rect x="945" y="376" width="34" height="34" rx="10" fill="#39ae6b"/>
+  <path d="M953 393l6 6 12-14" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="986" y="376" width="34" height="34" rx="10" fill="#e8f6ec"/>
+  <rect x="1027" y="376" width="34" height="34" rx="10" fill="#39ae6b"/>
+  <path d="M1035 393l6 6 12-14" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
