@@ -32,6 +32,24 @@ final class WidgetLayoutTests: XCTestCase {
         }
     }
 
+    @MainActor func testSingleHabitWidgetDrawsEmptyCellsThroughTheEndOfTheCurrentWeek() throws {
+        let habit = Habit(name: "Exercise", emoji: "🏃", color: .yellow)
+        var data = Dataset()
+        data.habits = [habit]
+        data.settings.weekStart = .monday
+        let end = try XCTUnwrap(LocalDay.date("2026-09-23")) // Wednesday
+        let view = WidgetHistory(habit: habit, data: data, weeks: 10, spacing: 0, end: end)
+            .frame(width: 100, height: 70)
+            .background(Color.black)
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 1
+        let image = try XCTUnwrap(renderer.uiImage)
+        let pixels = try rgbaPixels(image)
+
+        // Thursday is in the final/current-week column and must remain visibly empty, not absent.
+        XCTAssertTrue(isColored(pixels, image: image, x: 95, y: 35))
+    }
+
     @MainActor func testTenMemberSharedHabitSectionRendersAtPhoneWidth() throws {
         let habit = Habit(name: "Exercise", emoji: "🏃", target: 3, streakGoal: StreakGoal(period: .weekly, target: 3))
         let definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
@@ -59,6 +77,14 @@ final class WidgetLayoutTests: XCTestCase {
     }
 
     private func coloredPixelCount(_ image: UIImage) throws -> Int {
+        let pixels = try rgbaPixels(image)
+        return stride(from: 0, to: pixels.count, by: 4).reduce(into: 0) { total, offset in
+            let channels = pixels[offset..<(offset + 3)]
+            if Int(channels.max()!) - Int(channels.min()!) > 20 { total += 1 }
+        }
+    }
+
+    private func rgbaPixels(_ image: UIImage) throws -> [UInt8] {
         let cgImage = try XCTUnwrap(image.cgImage)
         let width = cgImage.width, height = cgImage.height
         var pixels = [UInt8](repeating: 0, count: width * height * 4)
@@ -67,10 +93,14 @@ final class WidgetLayoutTests: XCTestCase {
                                             space: CGColorSpaceCreateDeviceRGB(),
                                             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-        return stride(from: 0, to: pixels.count, by: 4).reduce(into: 0) { total, offset in
-            let channels = pixels[offset..<(offset + 3)]
-            if Int(channels.max()!) - Int(channels.min()!) > 20 { total += 1 }
-        }
+        return pixels
+    }
+
+    private func isColored(_ pixels: [UInt8], image: UIImage, x: Int, y: Int) -> Bool {
+        let width = image.cgImage!.width
+        let offset = (y * width + x) * 4
+        let channels = pixels[offset..<(offset + 3)]
+        return Int(channels.max()!) - Int(channels.min()!) > 20
     }
 
     // A successfully allocated image can still contain an entirely blank widget.

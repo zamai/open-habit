@@ -177,7 +177,7 @@ private struct RecentDayTile: View {
 
 // WidgetKit archives this drawing once instead of hundreds of interactive DayTile views.
 // History taps belong to the enclosing Link; only completion buttons run an intent.
-private struct WidgetHistory: View {
+struct WidgetHistory: View {
     let habit: Habit
     let data: Dataset
     let weeks: Int
@@ -191,7 +191,7 @@ private struct WidgetHistory: View {
                                   (size.height - 6 * spacing) / 7))
             let gridHeight = 7 * side + 6 * spacing
             let top = max(0, (size.height - gridHeight) / 2)
-            for (index, cell) in cells.enumerated() where !cell.future {
+            for (index, cell) in cells.enumerated() {
                 let rect = CGRect(x: CGFloat(index / 7) * (side + spacing),
                                   y: top + CGFloat(index % 7) * (side + spacing), width: side, height: side)
                 let path = Path(roundedRect: rect, cornerRadius: side * 0.25)
@@ -207,7 +207,7 @@ private struct WidgetHistory: View {
         .accessibilityHidden(true)
     }
 
-    private var cells: [(day: HabitDay, today: Bool, future: Bool)] {
+    private var cells: [(day: HabitDay, today: Bool)] {
         var calendar = Calendar(identifier: .gregorian)
         switch data.settings.weekStart {
         case .system: calendar.firstWeekday = Calendar.current.firstWeekday
@@ -220,7 +220,7 @@ private struct WidgetHistory: View {
         return (0..<(weeks * 7)).map { offset in
             let date = calendar.date(byAdding: .day, value: offset - weeks * 7 + 1, to: last)!
             let key = LocalDay.string(date)
-            return (data.day(habit.id, key), key == today, key > today)
+            return (key > today ? HabitDay() : data.day(habit.id, key), key == today)
         }
     }
 }
