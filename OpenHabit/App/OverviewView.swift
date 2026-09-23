@@ -115,7 +115,7 @@ struct OverviewView: View {
         Button("Undo latest Completion today", systemImage: "arrow.uturn.backward") { model.update { try $0.remove(habit.id, day: LocalDay.string()) } }
         Button("Mark today complete", systemImage: "checkmark.circle") { model.update { try $0.setCount(habit.id, day: LocalDay.string(), count: habit.target) } }
         Button("Mark yesterday complete", systemImage: "clock.arrow.circlepath") { model.update { try $0.setCount(habit.id, day: LocalDay.string(Calendar.current.date(byAdding: .day, value: -1, to: Date())!), count: habit.target) } }
-        Button("Edit today’s Habit Day", systemImage: "calendar") { sheet = .day(DaySelection(habitID: habit.id, date: LocalDay.string())) }
+        Button("Edit today’s note", systemImage: "note.text") { sheet = .day(DaySelection(habitID: habit.id, date: LocalDay.string())) }
         if model.sharedHabit(for: habit.id)?.membership.role != .member {
             Button("Edit Habit", systemImage: "pencil") { sheet = .edit(habit) }
         }

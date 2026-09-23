@@ -50,6 +50,24 @@ final class WidgetLayoutTests: XCTestCase {
         XCTAssertTrue(isColored(pixels, image: image, x: 95, y: 35))
     }
 
+    @MainActor func testHabitDetailGridDrawsEmptyCellsThroughTheEndOfTheCurrentWeek() throws {
+        let habit = Habit(name: "Exercise", emoji: "🏃", color: .yellow)
+        var data = Dataset()
+        data.habits = [habit]
+        data.settings.weekStart = .monday
+        let end = try XCTUnwrap(LocalDay.date("2026-09-23")) // Wednesday
+        let view = HistoryGrid(habit: habit, data: data, weeks: 10, spacing: 0, maxTileSide: 10, end: end)
+            .frame(width: 100, height: 70)
+            .background(Color.black)
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 1
+        let image = try XCTUnwrap(renderer.uiImage)
+        let pixels = try rgbaPixels(image)
+
+        // Thursday is in the final/current-week column and must remain visibly empty, not absent.
+        XCTAssertTrue(isVisible(pixels, image: image, x: 95, y: 35))
+    }
+
     @MainActor func testTenMemberSharedHabitSectionRendersAtPhoneWidth() throws {
         let habit = Habit(name: "Exercise", emoji: "🏃", target: 3, streakGoal: StreakGoal(period: .weekly, target: 3))
         let definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
@@ -122,6 +140,12 @@ final class WidgetLayoutTests: XCTestCase {
         let offset = (y * width + x) * 4
         let channels = pixels[offset..<(offset + 3)]
         return Int(channels.max()!) - Int(channels.min()!) > 20
+    }
+
+    private func isVisible(_ pixels: [UInt8], image: UIImage, x: Int, y: Int) -> Bool {
+        let width = image.cgImage!.width
+        let offset = (y * width + x) * 4
+        return pixels[offset..<(offset + 3)].max()! > 5
     }
 
     private func nonBlackRowBounds(_ pixels: [UInt8], image: UIImage, xRange: Range<Int>) -> ClosedRange<Int>? {

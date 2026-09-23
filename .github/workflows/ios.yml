@@ -2,7 +2,7 @@ name: iOS
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, testflight-dev]
     tags: ['v*']
   schedule:
     - cron: '17 * * * *'
@@ -34,7 +34,7 @@ jobs:
           name: ios-test-results
           path: ${{ runner.temp }}/tests.xcresult
   testflight:
-    if: github.event_name != 'pull_request' && github.event_name != 'schedule' && !(github.event_name == 'workflow_dispatch' && inputs.local_testflight) && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: github.event_name != 'pull_request' && github.event_name != 'schedule' && !(github.event_name == 'workflow_dispatch' && inputs.local_testflight) && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testflight-dev' || startsWith(github.ref, 'refs/tags/v'))
     needs: test
     concurrency:
       group: testflight-publish

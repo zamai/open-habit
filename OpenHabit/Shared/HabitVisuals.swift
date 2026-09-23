@@ -203,15 +203,15 @@ struct HistoryGrid: View {
                     ForEach(0..<7, id: \.self) { row in
                         let date = dates[week * 7 + row]
                         let key = LocalDay.string(date)
-                        let day = data.day(habit.id, key)
+                        let isFuture = key > LocalDay.string(end)
+                        let day = isFuture ? HabitDay() : data.day(habit.id, key)
                         DayTile(day: day, target: habit.target, color: habit.tint, today: key == LocalDay.string(end))
                             .frame(maxWidth: maxTileSide, maxHeight: maxTileSide)
-                            .opacity(key > LocalDay.string(end) ? 0 : 1)
                             .contentShape(Rectangle())
-                            .onTapGesture { onSelect?(key) }
-                            .onLongPressGesture { if key <= LocalDay.string() { onEdit?(key) } }
+                            .onTapGesture { if !isFuture { onSelect?(key) } }
+                            .onLongPressGesture { if !isFuture && key <= LocalDay.string() { onEdit?(key) } }
                             .accessibilityLabel("\(key), \(day.count) of \(habit.target) Completions\(day.note.isEmpty ? "" : ", has Day Note")")
-                            .accessibilityHidden(onSelect == nil || key > LocalDay.string(end))
+                            .accessibilityHidden(onSelect == nil || isFuture)
                     }
                 }
             }
