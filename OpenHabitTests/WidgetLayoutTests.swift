@@ -76,6 +76,27 @@ final class WidgetLayoutTests: XCTestCase {
         add(attachment)
     }
 
+    @MainActor func testHabitMetricCardsHaveEqualBackgroundHeights() throws {
+        let view = HStack(spacing: 10) {
+            HabitMetric(value: "1", label: "Daily Target", color: .green)
+            HabitMetric(value: "4", label: "Sep Total", color: .green)
+            HabitMetric(value: "0", label: "Week Streak\n0 / 3 this week", color: .green)
+        }
+        .frame(width: 600, height: 180)
+        .background(Color.black)
+        .environment(\.colorScheme, .dark)
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 1
+        let image = try XCTUnwrap(renderer.uiImage)
+        let pixels = try rgbaPixels(image)
+        let cardWidth = (image.cgImage!.width - 20) / 3
+        let heights = (0..<3).map { card in
+            nonBlackRowBounds(pixels, image: image, xRange: (card * (cardWidth + 10))..<(card * (cardWidth + 10) + cardWidth))
+        }
+        XCTAssertEqual(heights[0], heights[1])
+        XCTAssertEqual(heights[1], heights[2])
+    }
+
     private func coloredPixelCount(_ image: UIImage) throws -> Int {
         let pixels = try rgbaPixels(image)
         return stride(from: 0, to: pixels.count, by: 4).reduce(into: 0) { total, offset in
@@ -101,6 +122,19 @@ final class WidgetLayoutTests: XCTestCase {
         let offset = (y * width + x) * 4
         let channels = pixels[offset..<(offset + 3)]
         return Int(channels.max()!) - Int(channels.min()!) > 20
+    }
+
+    private func nonBlackRowBounds(_ pixels: [UInt8], image: UIImage, xRange: Range<Int>) -> ClosedRange<Int>? {
+        let width = image.cgImage!.width
+        let height = image.cgImage!.height
+        let rows = (0..<height).filter { y in
+            xRange.contains { x in
+                let offset = (y * width + x) * 4
+                return pixels[offset] > 10 || pixels[offset + 1] > 10 || pixels[offset + 2] > 10
+            }
+        }
+        guard let first = rows.first, let last = rows.last else { return nil }
+        return first...last
     }
 
     // A successfully allocated image can still contain an entirely blank widget.

@@ -145,7 +145,7 @@ struct HabitDetailView: View {
     }
 }
 
-private struct HabitMetric: View {
+struct HabitMetric: View {
     let value: String
     let label: String
     let color: Color
@@ -155,7 +155,7 @@ private struct HabitMetric: View {
             Text(value).font(.title2.monospacedDigit().weight(.bold)).foregroundStyle(color)
             Text(label).font(.caption).foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
         .padding(12)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)
