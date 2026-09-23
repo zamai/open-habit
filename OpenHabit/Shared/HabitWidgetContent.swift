@@ -39,7 +39,7 @@ struct HabitWidgetContent: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 6) {
                             Text(habit.emoji).font(.system(size: 18)).frame(width: 20)
-                            Text(habit.name).font(.system(size: 12, weight: .semibold)).lineLimit(2).minimumScaleFactor(0.85)
+                            Text(habit.name).font(.system(size: 18, weight: .semibold)).lineLimit(2).minimumScaleFactor(0.85)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             widgetButton(habit, size: 36)
                         }.frame(height: 44)
