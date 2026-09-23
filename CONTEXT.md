@@ -87,3 +87,7 @@ _Avoid_: Deleted habit, inactive habit
 **Category**:
 A person's private named grouping of Habits. A Habit may belong to multiple Categories, each Member organizes a Shared Habit independently, and a Category may have no Habits.
 _Avoid_: Habit, schedule
+
+**Data Import**:
+Bringing Habits and their related data into Open Habit from a selected Open Habit backup or supported third-party export. Add New Habits preserves current data and adds only previously unseen Habit identifiers; Replace All Data restores the selected data in place of the current data.
+_Avoid_: Merge existing Habits, refresh existing Habits

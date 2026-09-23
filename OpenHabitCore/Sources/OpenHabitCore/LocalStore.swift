@@ -48,27 +48,30 @@ extension LocalStore {
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
     }
 
-    public func importDataset(_ data: Dataset) throws {
+    func applyDataImport(_ data: Dataset, mode: DataImportMode) throws -> DataImportOutcome {
         try data.validate()
-        try transaction { journal in
+        return try transaction { journal in
+            let before = journal.dataset
             var next = journal
-            try next.importDataset(data)
-            guard next.dataset != journal.dataset else { return }
-            try saveRecovery(journal.dataset)
+            switch mode {
+            case .addNewHabits: try next.importDataset(data)
+            case .replaceAllData: try next.restore(Backup(dataset: data))
+            }
+            let after = next.dataset
+            guard mode == .replaceAllData || after != before else {
+                return DataImportOutcome(changed: false, dataset: before)
+            }
+            try saveRecovery(before)
             journal = next
-        }
-    }
-
-    public func restoreBackup(_ backup: Backup) throws {
-        try backup.dataset.validate()
-        try transaction { journal in
-            try saveRecovery(journal.dataset)
-            try journal.restore(backup)
+            return DataImportOutcome(changed: true, dataset: after)
         }
     }
 
     public func deleteAllData() throws {
         var empty = Dataset(); empty.initialized = true; empty.settings.examplesDismissed = true
-        try restoreBackup(Backup(dataset: empty))
+        try transaction { journal in
+            try saveRecovery(journal.dataset)
+            try journal.restore(Backup(dataset: empty))
+        }
     }
 }

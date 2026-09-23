@@ -187,7 +187,7 @@ public struct Journal: Codable, Sendable {
         if dataset.day(id, day).count >= habit.target { try setCount(id, day: day, count: 0, now: now) }
         else { try add(id, day: day, now: now) }
     }
-    public var unavailableImportIDs: Set<UUID> {
+    var unavailableImportIDs: Set<UUID> {
         let current = generation
         return Set(dataset.habits.map(\.id)).union(edits.compactMap { edit in
             guard edit.generation == current else { return nil }
@@ -195,11 +195,11 @@ public struct Journal: Codable, Sendable {
             return nil
         })
     }
-    public mutating func importDataset(_ data: Dataset) throws {
+    mutating func importDataset(_ data: Dataset) throws {
         try data.validate()
         append(.importData(data))
     }
-    public mutating func restore(_ backup: Backup) throws {
+    mutating func restore(_ backup: Backup) throws {
         try backup.dataset.validate()
         var data = backup.dataset; data.initialized = true
         append(.replace(data))

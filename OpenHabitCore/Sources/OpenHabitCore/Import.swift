@@ -1,5 +1,104 @@
 import Foundation
 
+public enum DataImportSource: Hashable, Sendable {
+    case openHabit
+    case habitKit
+}
+
+public enum DataImportMode: Hashable, Sendable {
+    case addNewHabits
+    case replaceAllData
+}
+
+public struct DataImportPlan: Sendable {
+    fileprivate let normalized: NormalizedDataImport
+    public let unavailableHabitIDs: Set<UUID>
+    public let newHabits: [Habit]
+    public let newCategories: [HabitCategory]
+
+    public var dataset: Dataset { normalized.dataset }
+    public var warnings: [String] { normalized.warnings }
+    public var conflicts: [ImportDayConflict] { normalized.conflicts }
+    public var exportedAt: Date? { normalized.exportedAt }
+
+    public var suggestedMode: DataImportMode {
+        !dataset.habits.isEmpty && newHabits.isEmpty ? .replaceAllData : .addNewHabits
+    }
+}
+
+public struct DataImportOutcome: Sendable {
+    public let changed: Bool
+    public let dataset: Dataset
+}
+
+public enum DataImportError: LocalizedError {
+    case sharedHabitsPreventReplacement
+    case invalidConflictChoices(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .sharedHabitsPreventReplacement:
+            "Leave or stop sharing every Shared Habit before replacing all data."
+        case .invalidConflictChoices(let message):
+            message
+        }
+    }
+}
+
+public enum DataImport {
+    public static func plan(
+        _ data: Data,
+        source: DataImportSource,
+        store: LocalStore,
+        now: Date = Date()
+    ) throws -> DataImportPlan {
+        let normalized: NormalizedDataImport
+        switch source {
+        case .openHabit:
+            let backup = try Backup.decode(data)
+            normalized = NormalizedDataImport(dataset: backup.dataset, exportedAt: backup.exportedAt)
+        case .habitKit:
+            normalized = try decodeHabitKit(data, now: now)
+        }
+        return try analyzedPlan(normalized, store: store)
+    }
+
+    public static func refresh(_ plan: DataImportPlan, store: LocalStore) throws -> DataImportPlan {
+        try analyzedPlan(plan.normalized, store: store)
+    }
+
+    private static func analyzedPlan(_ normalized: NormalizedDataImport, store: LocalStore) throws -> DataImportPlan {
+        let current = try store.read()
+        let unavailable = current.unavailableImportIDs
+        let existingCategories = Set((current.dataset.categories ?? []).map(\.id))
+        return DataImportPlan(
+            normalized: normalized,
+            unavailableHabitIDs: unavailable,
+            newHabits: normalized.dataset.habits.filter { !unavailable.contains($0.id) },
+            newCategories: (normalized.dataset.categories ?? []).filter { !existingCategories.contains($0.id) }
+        )
+    }
+
+    public static func apply(
+        _ plan: DataImportPlan,
+        mode: DataImportMode,
+        conflictChoices: [String: DuplicateDayResolution],
+        to store: LocalStore,
+        activeSharedHabitIDs: Set<UUID>
+    ) throws -> DataImportOutcome {
+        if mode == .replaceAllData, !activeSharedHabitIDs.isEmpty {
+            throw DataImportError.sharedHabitsPreventReplacement
+        }
+        let dataset: Dataset
+        do {
+            dataset = try plan.normalized.resolved(conflictChoices)
+        } catch {
+            throw DataImportError.invalidConflictChoices(error.localizedDescription)
+        }
+        return try store.applyDataImport(dataset, mode: mode)
+    }
+}
+
 public enum DuplicateDayResolution: String, CaseIterable, Sendable {
     case latest = "Use latest record", sum = "Add amounts", maximum = "Use largest amount"
 }
@@ -22,15 +121,15 @@ public struct ImportDayConflict: Identifiable, Sendable {
         }
     }
 }
-public struct ImportPreview: Sendable {
-    public var dataset: Dataset
-    public var warnings: [String]
-    public var conflicts: [ImportDayConflict]
-    public var exportedAt: Date?
-    public init(dataset: Dataset, warnings: [String] = [], conflicts: [ImportDayConflict] = [], exportedAt: Date? = nil) {
+fileprivate struct NormalizedDataImport: Sendable {
+    var dataset: Dataset
+    var warnings: [String]
+    var conflicts: [ImportDayConflict]
+    var exportedAt: Date?
+    init(dataset: Dataset, warnings: [String] = [], conflicts: [ImportDayConflict] = [], exportedAt: Date? = nil) {
         self.dataset = dataset; self.warnings = warnings; self.conflicts = conflicts; self.exportedAt = exportedAt
     }
-    public func resolved(_ choices: [String: DuplicateDayResolution]) throws -> Dataset {
+    func resolved(_ choices: [String: DuplicateDayResolution]) throws -> Dataset {
         var result = dataset
         for conflict in conflicts {
             guard let choice = choices[conflict.id] else {
@@ -75,7 +174,7 @@ private struct HabitKitCategoryMapping: Decodable {
     var id: UUID; var habitId: UUID; var categoryId: UUID; var orderIndex: Int
 }
 
-public enum HabitKitImport {
+private extension DataImport {
     private static func date(_ text: String) throws -> Date {
         if let dot = text.firstIndex(of: "."), text.hasSuffix("Z") {
             let digits = text[text.index(after: dot)..<text.index(before: text.endIndex)]
@@ -87,7 +186,7 @@ public enum HabitKitImport {
         } else if let date = ISO8601DateFormatter().date(from: text) { return date }
         throw HabitError.invalidBackup("Invalid HabitKit timestamp: \(text)")
     }
-    public static func decode(_ data: Data, now: Date = Date()) throws -> ImportPreview {
+    static func decodeHabitKit(_ data: Data, now: Date) throws -> NormalizedDataImport {
         struct Header: Decodable { var formatVersion: Int; var format: String? }
         let header = try JSONDecoder().decode(Header.self, from: data)
         guard header.formatVersion == 2, header.format == nil else {
@@ -185,6 +284,6 @@ public enum HabitKitImport {
             }
         }
         try result.validate()
-        return ImportPreview(dataset: result, warnings: warnings, conflicts: conflicts)
+        return NormalizedDataImport(dataset: result, warnings: warnings, conflicts: conflicts)
     }
 }

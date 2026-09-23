@@ -9,10 +9,10 @@ struct BackupDocument: FileDocument {
     init(configuration: ReadConfiguration) throws { data = configuration.file.regularFileContents ?? Data() }
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
 }
-private struct PendingBackup: Identifiable {
+private struct PendingDataImport: Identifiable {
     let id = UUID()
-    let preview: ImportPreview
-    var native: Bool
+    let plan: DataImportPlan
+    let source: DataImportSource
 }
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
@@ -22,7 +22,7 @@ struct SettingsView: View {
     @State private var nativeImport = true
     @State private var choosingImport = false
     @State private var document = BackupDocument(data: Data())
-    @State private var pending: PendingBackup?
+    @State private var pending: PendingDataImport?
     @State private var deleting = false
     @State private var problem: String?
     var body: some View {
@@ -99,18 +99,14 @@ struct SettingsView: View {
                     selectedFileName = url.lastPathComponent
                     defer { if access { url.stopAccessingSecurityScopedResource() } }
                     let data = try Data(contentsOf: url)
-                    let preview: ImportPreview
-                    if nativeImport {
-                        let backup = try Backup.decode(data)
-                        preview = ImportPreview(dataset: backup.dataset, exportedAt: backup.exportedAt)
-                    } else { preview = try HabitKitImport.decode(data) }
-                    pending = PendingBackup(preview: preview, native: nativeImport)
+                    let source: DataImportSource = nativeImport ? .openHabit : .habitKit
+                    pending = PendingDataImport(plan: try model.prepareDataImport(data, source: source), source: source)
                 } catch {
                     problem = selectedFileName.map { "\($0): \(error.localizedDescription)" } ?? error.localizedDescription
                 }
             }
             .sheet(item: $pending) { item in
-                ImportConfirmation(preview: item.preview, native: item.native) { dismiss() }
+                ImportConfirmation(plan: item.plan, source: item.source) { dismiss() }
             }
             .alert("Delete all data from every synchronized device?", isPresented: $deleting) {
                 Button("Yes, erase all", role: .destructive) {
@@ -132,70 +128,76 @@ struct SettingsView: View {
 private struct ImportConfirmation: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    let preview: ImportPreview
-    let native: Bool
+    @State private var plan: DataImportPlan
+    let source: DataImportSource
     var onImported: () -> Void = {}
-    @State var replacing = false
+    @State private var mode: DataImportMode
+    @State private var addWasActionable: Bool
     @State private var choices: [String: DuplicateDayResolution] = [:]
-    @State private var unavailable: Set<UUID> = []
     @State private var problem: String?
-    private var unavailableIDs: Set<UUID> { unavailable.union(model.data.habits.map(\.id)) }
-    private var newHabits: [Habit] { preview.dataset.habits.filter { !unavailableIDs.contains($0.id) } }
-    private var newCategories: [HabitCategory] {
-        let existing = Set((model.data.categories ?? []).map(\.id))
-        return (preview.dataset.categories ?? []).filter { !existing.contains($0.id) }
+    init(
+        plan: DataImportPlan,
+        source: DataImportSource,
+        mode: DataImportMode? = nil,
+        onImported: @escaping () -> Void = {}
+    ) {
+        self.source = source
+        self.onImported = onImported
+        _plan = State(initialValue: plan)
+        _mode = State(initialValue: mode ?? plan.suggestedMode)
+        _addWasActionable = State(initialValue: !plan.newHabits.isEmpty || !plan.newCategories.isEmpty)
     }
-    private var hasNewData: Bool { !newHabits.isEmpty || !newCategories.isEmpty }
+    private var replacing: Bool { mode == .replaceAllData }
     var body: some View {
         NavigationStack {
             Form {
                 Section("How to import") {
-                    Picker("Import mode", selection: $replacing) {
-                        Text("Add new habits").tag(false)
-                        Text("Replace all data").tag(true)
+                    Picker("Import mode", selection: $mode) {
+                        Text("Add new habits").tag(DataImportMode.addNewHabits)
+                        Text("Replace all data").tag(DataImportMode.replaceAllData)
                     }.pickerStyle(.segmented)
                 }
                 Section("File contents") {
-                    if let date = preview.exportedAt { LabeledContent("Exported", value: date.formatted(date: .abbreviated, time: .shortened)) }
-                    LabeledContent("Active Habits", value: "\(preview.dataset.active.count)")
-                    LabeledContent("Archived Habits", value: "\(preview.dataset.habits.filter(\.archived).count)")
-                    LabeledContent("Recorded Habit Days", value: "\(preview.dataset.days.count)")
-                    LabeledContent("Day Notes", value: "\(preview.dataset.days.values.filter { !$0.note.isEmpty }.count)")
-                    LabeledContent("Categories", value: "\((preview.dataset.categories ?? []).count)")
+                    if let date = plan.exportedAt { LabeledContent("Exported", value: date.formatted(date: .abbreviated, time: .shortened)) }
+                    LabeledContent("Active Habits", value: "\(plan.dataset.active.count)")
+                    LabeledContent("Archived Habits", value: "\(plan.dataset.habits.filter(\.archived).count)")
+                    LabeledContent("Recorded Habit Days", value: "\(plan.dataset.days.count)")
+                    LabeledContent("Day Notes", value: "\(plan.dataset.days.values.filter { !$0.note.isEmpty }.count)")
+                    LabeledContent("Categories", value: "\((plan.dataset.categories ?? []).count)")
                     if !replacing {
-                        LabeledContent("Habits to add", value: "\(newHabits.count)")
-                        LabeledContent("Existing or deleted — skipped", value: "\(preview.dataset.habits.count - newHabits.count)")
-                        if newHabits.isEmpty {
+                        LabeledContent("Habits to add", value: "\(plan.newHabits.count)")
+                        LabeledContent("Existing or deleted — skipped", value: "\(plan.dataset.habits.count - plan.newHabits.count)")
+                        if plan.newHabits.isEmpty {
                             Text("No new Habits in this file. Add mode does not update Habits already imported or previously deleted. Choose Replace all data to restore this file instead.")
                                 .accessibilityIdentifier("no-new-habits")
                         }
                     }
                 }
                 Section("Habits") {
-                    ForEach(preview.dataset.habits) { habit in
+                    ForEach(plan.dataset.habits) { habit in
                         VStack(alignment: .leading) {
                             Text("\(habit.emoji) \(habit.name)")
                             Text(habitSummary(habit))
                                 .font(.caption).foregroundStyle(.secondary)
-                            if !replacing && unavailableIDs.contains(habit.id) { Text("Existing or previously deleted; this Habit will not be imported again.").font(.caption) }
-                            let categories = (preview.dataset.categories ?? []).filter { (habit.categoryIDs ?? []).contains($0.id) }
+                            if !replacing && plan.unavailableHabitIDs.contains(habit.id) { Text("Existing or previously deleted; this Habit will not be imported again.").font(.caption) }
+                            let categories = (plan.dataset.categories ?? []).filter { (habit.categoryIDs ?? []).contains($0.id) }
                             if !categories.isEmpty { Text(categories.map(\.name).joined(separator: ", ")).font(.caption) }
                         }
                     }
                 }
-                if !(preview.dataset.categories ?? []).isEmpty {
+                if !(plan.dataset.categories ?? []).isEmpty {
                     Section("Categories") {
-                        ForEach(preview.dataset.categories ?? []) { category in Text(category.name) }
+                        ForEach(plan.dataset.categories ?? []) { category in Text(category.name) }
                         Text("Categories and assignments are preserved in your data and exports. Category filtering and editing are not available yet.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
-                if !preview.warnings.isEmpty {
+                if !plan.warnings.isEmpty {
                     Section("Changes to review") {
-                        ForEach(Array(preview.warnings.enumerated()), id: \.offset) { _, warning in Text(warning) }
+                        ForEach(Array(plan.warnings.enumerated()), id: \.offset) { _, warning in Text(warning) }
                     }
                 }
-                ForEach(preview.conflicts) { conflict in
+                ForEach(plan.conflicts) { conflict in
                     Section("\(conflict.habitName) · \(conflict.day)") {
                         Text("Multiple records: \(conflict.amounts.map(String.init).joined(separator: ", ")). Choose the intended count.")
                         Picker("Count", selection: Binding(get: { choices[conflict.id]?.rawValue ?? "" }, set: { choices[conflict.id] = DuplicateDayResolution(rawValue: $0) })) {
@@ -213,25 +215,21 @@ private struct ImportConfirmation: View {
                          : "Only new Habit IDs are added. Existing habits, history, and preferences stay unchanged. Matching names are not treated as duplicates. A recovery backup will be saved before changes.")
                     Button(replacing ? "Replace Data and Restore" : "Import Data", role: replacing ? .destructive : nil) {
                         do {
-                            let data = try preview.resolved(choices)
-                            model.importData(data, replacing: replacing)
-                            if model.error == nil { onImported() }
+                            if try model.applyDataImport(plan, mode: mode, conflictChoices: choices) { onImported() }
                         } catch { problem = error.localizedDescription }
                     }
-                    .disabled((!replacing && !hasNewData) || preview.conflicts.contains { choices[$0.id] == nil })
+                    .disabled((!replacing && !addWasActionable) || plan.conflicts.contains { choices[$0.id] == nil })
                     .accessibilityIdentifier("confirm-import")
                 }
             }
-            .navigationTitle(native ? "Open Habit import" : "HabitKit data import")
+            .navigationTitle(source == .openHabit ? "Open Habit import" : "HabitKit data import")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
-            .onAppear {
-                let unavailable = (try? sharedStore().read().unavailableImportIDs) ?? Set(model.data.habits.map(\.id))
-                self.unavailable = unavailable
-                let unavailableIDs = unavailable.union(model.data.habits.map(\.id))
-                if !preview.dataset.habits.isEmpty && preview.dataset.habits.allSatisfy({ unavailableIDs.contains($0.id) }) {
-                    replacing = true
-                }
+            .onChange(of: mode) { _, mode in
+                if mode == .addNewHabits { refreshPlan() }
+            }
+            .onChange(of: model.data) { _, _ in
+                if mode == .addNewHabits { refreshPlan() }
             }
             .alert("Import problem", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
                 Button("OK") { problem = nil }
@@ -245,10 +243,20 @@ private struct ImportConfirmation: View {
         }
         return "Daily Target: \(habit.target) · Weekly goal: \(goal.target) days"
     }
+
+    private func refreshPlan() {
+        do {
+            let refreshed = try model.refreshDataImport(plan)
+            addWasActionable = addWasActionable || !refreshed.newHabits.isEmpty || !refreshed.newCategories.isEmpty
+            plan = refreshed
+        }
+        catch { problem = error.localizedDescription }
+    }
 }
 private struct RecoveryBackupsView: View {
+    @Environment(AppModel.self) private var model
     @State private var files: [URL] = []
-    @State private var pending: PendingBackup?
+    @State private var pending: PendingDataImport?
     @State private var problem: String?
     var body: some View {
         List {
@@ -261,8 +269,8 @@ private struct RecoveryBackupsView: View {
                         HStack {
                             Button("Restore") {
                                 do {
-                                    let backup = try Backup.decode(Data(contentsOf: file))
-                                    pending = PendingBackup(preview: ImportPreview(dataset: backup.dataset, exportedAt: backup.exportedAt), native: true)
+                                    let plan = try model.prepareDataImport(Data(contentsOf: file), source: .openHabit)
+                                    pending = PendingDataImport(plan: plan, source: .openHabit)
                                 }
                                 catch { problem = error.localizedDescription }
                             }.buttonStyle(.bordered)
@@ -283,7 +291,7 @@ private struct RecoveryBackupsView: View {
             do { files = try sharedStore().recoveryBackups() }
             catch { problem = error.localizedDescription }
         }
-        .sheet(item: $pending) { item in ImportConfirmation(preview: item.preview, native: true, replacing: true) }
+        .sheet(item: $pending) { item in ImportConfirmation(plan: item.plan, source: item.source, mode: .replaceAllData) }
         .alert("Backup problem", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
             Button("OK") { problem = nil }
         } message: { Text(problem ?? "") }

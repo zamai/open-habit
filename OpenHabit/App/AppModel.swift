@@ -29,19 +29,52 @@ final class AppModel {
             Task { await sync() }
         } catch { self.error = error.localizedDescription }
     }
-    func importData(_ data: Dataset, replacing: Bool) {
+    func prepareDataImport(_ data: Data, source: DataImportSource) throws -> DataImportPlan {
+        let store = try sharedStore()
+        return try DataImport.plan(
+            data,
+            source: source,
+            store: store
+        )
+    }
+    func refreshDataImport(_ plan: DataImportPlan) throws -> DataImportPlan {
+        try DataImport.refresh(plan, store: sharedStore())
+    }
+    func applyDataImport(
+        _ plan: DataImportPlan,
+        mode: DataImportMode,
+        conflictChoices: [String: DuplicateDayResolution]
+    ) throws -> Bool {
         error = nil
-        guard !replacing || sharedHabits.isEmpty else {
-            error = "Leave or stop sharing every Shared Habit before replacing all data."
-            return
-        }
         do {
-            if replacing { try sharedStore().restoreBackup(Backup(dataset: data)) }
-            else { try sharedStore().importDataset(data) }
+            let store = try sharedStore()
+            _ = try DataImport.apply(
+                plan,
+                mode: mode,
+                conflictChoices: conflictChoices,
+                to: store,
+                activeSharedHabitIDs: activeSharedHabitIDs(store: store)
+            )
             reload()
             WidgetCenter.shared.reloadAllTimelines()
             Task { await sync() }
-        } catch { self.error = error.localizedDescription }
+            return true
+        } catch let importError as DataImportError {
+            switch importError {
+            case .invalidConflictChoices:
+                throw importError
+            case .sharedHabitsPreventReplacement:
+                error = importError.localizedDescription
+                return false
+            }
+        } catch {
+            self.error = error.localizedDescription
+            return false
+        }
+    }
+    private func activeSharedHabitIDs(store: LocalStore) throws -> Set<UUID> {
+        let current = try store.read().dataset
+        return Set(try sharingStore().read(reconciling: current).keys)
     }
     func eraseData() {
         error = nil
