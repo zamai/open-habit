@@ -72,7 +72,7 @@ An in-app long press on the completion control opens this menu:
 - Undo latest Completion today.
 - Mark today complete by setting its count to the current Daily Target.
 - Mark yesterday complete by setting its count to the current Daily Target.
-- Edit today's Habit Day.
+- Edit today's note.
 - Edit the Habit.
 - Archive the Habit.
 - Delete the Habit, followed by destructive-action confirmation.
@@ -148,7 +148,7 @@ Habit Detail follows the supplied HabitKit reference and contains:
 
 The user may edit the Completion count and Day Note for today or any past date. Future dates are read-only.
 
-Tapping a calendar day selects it. Pressing and holding a day opens the Habit Day editor. The editor contains a count control and one optional multiline plain-text Day Note of at most 500 characters. Notes have no formatting, tags, or attachments.
+Tapping a calendar day selects it and focuses its Day Note without changing its Completion count. Pressing and holding a day opens the Habit Day editor. The editor contains a count control and one optional multiline plain-text Day Note of at most 500 characters. Notes have no formatting, tags, or attachments.
 
 Best-streak statistics, charts, sharing, and year-in-review are excluded.
 

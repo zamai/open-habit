@@ -24,6 +24,8 @@ Run the app and UI test selection used by CI with:
 bash scripts/ci/test.sh
 ```
 
+Keep ad-hoc signing enabled for Simulator builds so the app and widget can use their shared App Group container. `CODE_SIGNING_ALLOWED=NO` may compile, but the installed app will not have working shared storage.
+
 Signed-device, iCloud, and TestFlight checks require maintainer-managed Apple configuration. They are not expected for ordinary contributions.
 
 ## Pull requests

@@ -41,7 +41,7 @@ Share a habit with up to nine invited people. Members see the common habit defin
 
 ## For contributors
 
-[Build and test](docs/development.md) · [Contributing](CONTRIBUTING.md) · [Product design](docs/mvp.md) · [Verification notes](docs/verification.md) · [Security](SECURITY.md)
+[Contributing and build instructions](CONTRIBUTING.md#build-and-test) · [Product design](docs/mvp.md) · [Verification notes](docs/verification.md) · [Security](SECURITY.md)
 
 Questions or feedback? Visit [support](https://getopenhabit.com/support/) or email [contact@getopenhabit.com](mailto:contact@getopenhabit.com).
 
