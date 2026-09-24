@@ -20,3 +20,6 @@ xcuserdata/
 *.ipa
 *.xcarchive
 *.xcresult
+
+# Locally installed agent skills
+.agents/skills/
