@@ -14,51 +14,48 @@ struct HabitDetailView: View {
     var body: some View {
         Group {
             if let habit = model.data.habit(habitID) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(spacing: 16) {
-                                Text(habit.emoji).font(.system(size: 56)).frame(width: 64)
-                                Text(habit.name).font(.system(.largeTitle, design: .rounded, weight: .bold))
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            if !habit.detail.isEmpty { Text(habit.detail).foregroundStyle(.secondary) }
-                            if habit.archived { Label("Archived Habit", systemImage: "archivebox").font(.subheadline).foregroundStyle(.secondary) }
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 24) {
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 16) {
+                                    Text(habit.emoji).font(.system(size: 56)).frame(width: 64)
+                                    Text(habit.name).font(.system(.largeTitle, design: .rounded, weight: .bold))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                if !habit.detail.isEmpty { Text(habit.detail).foregroundStyle(.secondary) }
+                                if habit.archived { Label("Archived Habit", systemImage: "archivebox").font(.subheadline).foregroundStyle(.secondary) }
+                                if let state = model.sharedHabit(for: habit.id) {
+                                    Label("\(state.snapshot.members.count) \(state.snapshot.members.count == 1 ? "Member" : "Members")", systemImage: "person.2.fill").font(.subheadline).foregroundStyle(.secondary)
+                                }
+                            }.frame(maxWidth: .infinity, alignment: .leading)
+                            metrics(for: habit)
                             if let state = model.sharedHabit(for: habit.id) {
-                                Label("\(state.snapshot.members.count) \(state.snapshot.members.count == 1 ? "Member" : "Members")", systemImage: "person.2.fill").font(.subheadline).foregroundStyle(.secondary)
+                                SharedHabitMembersSection(state: state)
+                            } else if !habit.archived {
+                                if #available(iOS 18.0, *) {
+                                    Button("Share Habit", systemImage: "person.2.badge.plus") { sheet = .share(habit) }
+                                        .buttonStyle(.bordered)
+                                }
                             }
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                        metrics(for: habit)
-                        if let state = model.sharedHabit(for: habit.id) {
-                            SharedHabitMembersSection(state: state)
-                        } else if !habit.archived {
-                            if #available(iOS 18.0, *) {
-                                Button("Share Habit", systemImage: "person.2.badge.plus") { sheet = .share(habit) }
-                                    .buttonStyle(.bordered)
+                            MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
+                                          select: beginEditingNote,
+                                          edit: { date in sheet = .day(DaySelection(habitID: habitID, date: date)) })
+                            selectedDay(habit).id("selected-day-note")
+                            historyGrid(habit)
+                        }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
+                    }
+                    .onChange(of: noteFocused) { _, focused in
+                        if focused {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                proxy.scrollTo("selected-day-note", anchor: .center)
                             }
                         }
-                        VStack(alignment: .leading, spacing: 12) {
-                            ScrollView(.horizontal) {
-                                HistoryGrid(habit: habit, data: model.data, weeks: 53, onSelect: { selected = $0 }, onEdit: { sheet = .day(DaySelection(habitID: habitID, date: $0)) })
-                                    .frame(width: 1_035)
-                            }.defaultScrollAnchor(.trailing)
-                            HStack(spacing: 6) {
-                                Text("Empty"); ForEach([0, 1, 3], id: \.self) { count in DayTile(day: HabitDay(count: count), target: 3, color: habit.tint, today: false).frame(width: 13, height: 13) }; Text("Complete")
-                                Spacer(); Image(systemName: "circle.fill").font(.system(size: 4)); Text("Day Note")
-                            }.font(.caption2).foregroundStyle(.secondary)
-                        }
-                        MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
-                                      complete: { date in
-                                          selected = date
-                                          model.update { try $0.toggle(habitID, day: date) }
-                                      },
-                                      edit: { date in sheet = .day(DaySelection(habitID: habitID, date: date)) })
-                        selectedDay(habit)
-                    }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
+                    }
+                    .scrollDismissesKeyboard(.interactively)
+                    .refreshable { await model.sync() }
                 }
-                .scrollDismissesKeyboard(.interactively)
-                .refreshable { await model.sync() }
                 .background(Color(.systemGroupedBackground))
                     .toolbar {
                         if model.sharedHabit(for: habit.id)?.membership.role != .member {
@@ -121,6 +118,19 @@ struct HabitDetailView: View {
         }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22))
     }
 
+    private func historyGrid(_ habit: Habit) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ScrollView(.horizontal) {
+                HistoryGrid(habit: habit, data: model.data, weeks: 53, onSelect: { selected = $0 }, onEdit: { sheet = .day(DaySelection(habitID: habitID, date: $0)) })
+                    .frame(width: 1_035)
+            }.defaultScrollAnchor(.trailing)
+            HStack(spacing: 6) {
+                Text("Empty"); ForEach([0, 1, 3], id: \.self) { count in DayTile(day: HabitDay(count: count), target: 3, color: habit.tint, today: false).frame(width: 13, height: 13) }; Text("Complete")
+                Spacer(); Image(systemName: "circle.fill").font(.system(size: 4)); Text("Day Note")
+            }.font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+
     private func metrics(for habit: Habit) -> some View {
         let streak = model.data.currentStreak(for: habit)
         let monthTotal = model.data.completionTotal(for: habit.id, inMonthContaining: month)
@@ -137,6 +147,17 @@ struct HabitDetailView: View {
 
     private func loadSelectedNote() {
         noteDraft = model.data.day(habitID, selected).note
+    }
+
+    private func beginEditingNote(_ date: String) {
+        if selected == date {
+            noteFocused = true
+        } else {
+            selected = date
+            DispatchQueue.main.async {
+                if selected == date { noteFocused = true }
+            }
+        }
     }
 
     private func saveSelectedNote() {
@@ -167,7 +188,7 @@ private struct MonthCalendar: View {
     let data: Dataset
     @Binding var month: Date
     @Binding var selected: String
-    let complete: (String) -> Void
+    let select: (String) -> Void
     let edit: (String) -> Void
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -195,8 +216,8 @@ private struct MonthCalendar: View {
                         let date = calendar.date(byAdding: .day, value: index - offset, to: start)!
                         let key = LocalDay.string(date)
                         let day = data.day(habit.id, key)
-                        let canComplete = !habit.archived && key <= LocalDay.string()
-                        Button { if canComplete { complete(key) } } label: {
+                        let canSelect = key <= LocalDay.string()
+                        Button { if canSelect { select(key) } } label: {
                             Text("\(index - offset + 1)").font(.body.monospacedDigit())
                                 .foregroundStyle(key > LocalDay.string() ? .secondary : .primary)
                                 .frame(maxWidth: .infinity, minHeight: 44)
@@ -204,10 +225,10 @@ private struct MonthCalendar: View {
                                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(key == selected ? habit.tint : key == LocalDay.string() ? Color.primary.opacity(0.5) : .clear, lineWidth: key == selected ? 2 : 1) }
                                 .overlay(alignment: .bottom) { if !day.note.isEmpty { Circle().fill(.primary).frame(width: 4, height: 4).padding(.bottom, 3) } }
                         }.buttonStyle(.plain)
-                            .disabled(!canComplete)
-                            .sensoryFeedback(.impact(weight: .light), trigger: day.count)
+                            .disabled(!canSelect)
+                            .onLongPressGesture { if canSelect { edit(key) } }
                             .accessibilityLabel("\(key), \(day.count) Completions, target \(habit.target)\(day.note.isEmpty ? "" : ", has Day Note")")
-                            .accessibilityHint(canComplete ? (day.count >= habit.target ? "Clear this day’s Completions" : "Add one Completion") : "Future dates and Archived Habits are read-only")
+                            .accessibilityHint(canSelect ? "Edit this day’s note" : "Future dates are read-only")
                             .accessibilityAddTraits(key == selected ? .isSelected : [])
                             .accessibilityAction(named: "Edit Habit Day") { if key <= LocalDay.string() { edit(key) } }
                     }
