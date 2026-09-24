@@ -14,9 +14,8 @@ struct HabitDetailView: View {
     var body: some View {
         Group {
             if let habit = model.data.habit(habitID) {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 24) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack(spacing: 16) {
                                     Text(habit.emoji).font(.system(size: 56)).frame(width: 64)
@@ -40,28 +39,20 @@ struct HabitDetailView: View {
                                 }
                             }
                             MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
-                                          select: beginEditingNote,
-                                          edit: { date in sheet = .day(DaySelection(habitID: habitID, date: date)) })
-                            selectedDay(habit).id("selected-day-note")
+                                          select: incrementDay,
+                                          edit: editDayNote)
+                            selectedDay(habit)
                             historyGrid(habit)
-                        }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
-                    }
-                    .onChange(of: noteFocused) { _, focused in
-                        if focused {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                proxy.scrollTo("selected-day-note", anchor: .center)
-                            }
-                        }
-                    }
-                    .scrollDismissesKeyboard(.interactively)
-                    .refreshable { await model.sync() }
+                    }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
                 }
+                .scrollDismissesKeyboard(.interactively)
+                .refreshable { await model.sync() }
                 .background(Color(.systemGroupedBackground))
-                    .toolbar {
-                        if model.sharedHabit(for: habit.id)?.membership.role != .member {
-                            ToolbarItem(placement: .topBarTrailing) { Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) } }
-                        }
+                .toolbar {
+                    if model.sharedHabit(for: habit.id)?.membership.role != .member {
+                        ToolbarItem(placement: .topBarTrailing) { Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) } }
                     }
+                }
             } else { ContentUnavailableView("Habit unavailable", systemImage: "leaf", description: Text("This Habit may have been deleted from another device.")) }
         }
         .onAppear { loadSelectedNote() }
@@ -149,15 +140,18 @@ struct HabitDetailView: View {
         noteDraft = model.data.day(habitID, selected).note
     }
 
-    private func beginEditingNote(_ date: String) {
-        if selected == date {
-            noteFocused = true
-        } else {
-            selected = date
-            DispatchQueue.main.async {
-                if selected == date { noteFocused = true }
-            }
-        }
+    private func incrementDay(_ date: String) {
+        guard let habit = model.data.habit(habitID) else { return }
+        noteFocused = false
+        selected = date
+        let count = model.data.day(habitID, date).count
+        model.update { try $0.setCount(habitID, day: date, count: count >= habit.target ? 0 : count + 1) }
+    }
+
+    private func editDayNote(_ date: String) {
+        noteFocused = false
+        selected = date
+        sheet = .day(DaySelection(habitID: habitID, date: date))
     }
 
     private func saveSelectedNote() {
@@ -226,15 +220,16 @@ private struct MonthCalendar: View {
                                 .overlay(alignment: .bottom) { if !day.note.isEmpty { Circle().fill(.primary).frame(width: 4, height: 4).padding(.bottom, 3) } }
                         }.buttonStyle(.plain)
                             .disabled(!canSelect)
-                            .onLongPressGesture { if canSelect { edit(key) } }
+                            .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+                                if canSelect { edit(key) }
+                            })
                             .accessibilityLabel("\(key), \(day.count) Completions, target \(habit.target)\(day.note.isEmpty ? "" : ", has Day Note")")
-                            .accessibilityHint(canSelect ? "Edit this day’s note" : "Future dates are read-only")
+                            .accessibilityHint(canSelect ? "Tap to add a Completion. Touch and hold to edit the Day Note." : "Future dates are read-only")
                             .accessibilityAddTraits(key == selected ? .isSelected : [])
                             .accessibilityAction(named: "Edit Habit Day") { if key <= LocalDay.string() { edit(key) } }
                     }
                 }
             }
-            Button("Go to today") { month = Date(); selected = LocalDay.string() }.font(.subheadline).padding(.top, 6)
         }
     }
 }
@@ -245,6 +240,7 @@ struct DayEditor: View {
     let selection: DaySelection
     @State private var count: Int
     @State private var note: String
+    @FocusState private var noteFocused: Bool
     init(selection: DaySelection, data: Dataset) {
         self.selection = selection
         let day = data.day(selection.habitID, selection.date)
@@ -260,10 +256,12 @@ struct DayEditor: View {
                 }
                 Section {
                     TextEditor(text: $note).frame(minHeight: 150).accessibilityLabel("Day Note")
+                        .focused($noteFocused)
                         .onChange(of: note) { _, value in note = String(value.prefix(500)) }
                 } header: { Text("Day Note (optional)") } footer: { Text("\(note.count) / 500 characters") }
             }
             .disabled(selection.date > LocalDay.string())
+            .onAppear { noteFocused = true }
             .navigationTitle("Edit Habit Day").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }

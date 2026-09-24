@@ -10,7 +10,7 @@ final class HabitDetailUITests: XCTestCase {
         #endif
     }
 
-    func testCalendarDateStartsEditingItsNoteWithoutChangingCompletions() {
+    func testCalendarTapCyclesCompletionsAndHoldOpensDayNote() {
         app.launch()
 
         let exercise = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", ", Exercise,")).firstMatch
@@ -25,18 +25,23 @@ final class HabitDetailUITests: XCTestCase {
         let date = formatter.string(from: yesterday)
         let calendarDate = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", date + ",")).firstMatch
         makeHittable(calendarDate)
-        let completionsBeforeTap = calendarDate.label
+        let completionsBeforeTap = Int(calendarDate.label.split(separator: ",")[1].split(separator: " ")[0])!
+        let completionsAfterTap = completionsBeforeTap >= 1 ? 0 : completionsBeforeTap + 1
 
         calendarDate.tap()
+        XCTAssertTrue(calendarDate.label.contains(", \(completionsAfterTap) Completions,"))
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
+        XCTAssertFalse(app.buttons["Go to today"].exists)
 
-        let keyboard = app.keyboards.firstMatch
-        XCTAssertTrue(keyboard.waitForExistence(timeout: 2), app.debugDescription)
-        let note = app.descendants(matching: .any)["Day Note"].firstMatch
-        XCTAssertTrue(note.exists, app.debugDescription)
-        let visibleCenter = (app.frame.minY + keyboard.frame.minY) / 2
-        XCTAssertLessThan(abs(note.frame.midY - visibleCenter), 120)
-        XCTAssertLessThan(note.frame.maxY, keyboard.frame.minY)
-        XCTAssertEqual(calendarDate.label, completionsBeforeTap)
+        calendarDate.tap()
+        let completionsAfterSecondTap = completionsAfterTap >= 1 ? 0 : completionsAfterTap + 1
+        XCTAssertTrue(calendarDate.label.contains(", \(completionsAfterSecondTap) Completions,"))
+
+        calendarDate.press(forDuration: 1)
+        XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3), app.debugDescription)
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(calendarDate.label.contains(", \(completionsAfterSecondTap) Completions,"))
     }
 
     private func makeHittable(_ element: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
