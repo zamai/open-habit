@@ -1,6 +1,6 @@
 # Architecture review
 
-Reviewed September 22, 2026 for the version 1.0 App Store candidate.
+Historical snapshot: reviewed September 22, 2026 for the version 1.0 App Store candidate. Findings and open risks below describe that point in time, not the current release state. For current release steps, see [Releases](releases.md) and [Verification](verification.md).
 
 ## Shape of the app
 
@@ -41,11 +41,11 @@ The current full-zone private sync is intentionally simple. Incremental tokens a
 
 There are no third-party SDKs, analytics, ads, purchases, or developer accounts. Both the app and widget carry the privacy manifest. File timestamp access is declared because recovery backups display modification dates. Store copy now describes the product as it exists and does not promise public source access while the repository is private.
 
-## Known release risks
+## Release risks recorded at review time
 
 - Shared Habit creation, acceptance, progress synchronization, leaving, and owner cleanup still need a final two-account physical-device pass.
 - A Home Screen widget action with the app terminated still needs a provisioned-device pass.
 - App Review contact details and the App Privacy questionnaire still need completion in App Store Connect.
 - App Store screenshots are uploaded at the current required iPhone and iPad sizes.
 
-These are tracked as release gates in [`app-store-submission.md`](app-store-submission.md) and device checks in [`verification.md`](verification.md).
+The [version 1.0 submission record](app-store-submission.md) shows which release gates were subsequently completed. [Verification](verification.md) contains the ongoing signed-device checks.

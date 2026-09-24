@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'site/**'
+      - 'docs/privacy-policy.md'
+      - 'scripts/ci/check-privacy-policy.py'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -25,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Check public privacy copy
+        run: python3 scripts/ci/check-privacy-policy.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

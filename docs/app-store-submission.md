@@ -1,5 +1,7 @@
 # App Store submission
 
+Historical record for version 1.0, last updated September 23, 2026. This checklist records that submission; use [Releases](releases.md) and [Verification](verification.md) for the current release process.
+
 ## Product metadata
 
 - Name: **Open Habit: Daily Tracker**
@@ -25,7 +27,7 @@ Shared Habits use private CloudKit Invitations between people who know each othe
 
 Settings contains JSON export and import, recovery backups, iCloud status, and Delete All Data. Home Screen widgets are configured through the system widget editor. Shortcuts exposes Add Completions, Remove Completions, Today’s Progress, and Set Day Note.
 
-## Release gates
+## Version 1.0 release gates
 
 - [x] No third-party SDKs, analytics, advertising, accounts, or purchases.
 - [x] Privacy manifest declares the file-timestamp API used to display local recovery-backup dates.

@@ -47,7 +47,7 @@ Set `HABITKIT_ORPHAN_TEST_FILE` to the later export with 5 Habits and 3 stale ca
 
 For a disposable Simulator run with fixture staging, exact export/restore comparison, and cleanup, use `scripts/ci/test-import.sh` (requires an installed iOS runtime supporting iPhone 17). Set `HABITKIT_TEST_FILE` to include the private original-file UI round-trip; otherwise that optional UI case skips before changing data. Artifacts, including exported snapshots, are retained in the temporary directory printed by the runner. Set `IMPORT_RUNTIME` to a CoreSimulator runtime identifier to test a specific iOS version; by default the runner uses the newest available runtime. `IMPORT_SIMCTL` can point to the installed CoreSimulator `simctl` binary when Xcode's launcher is blocked by unfinished component installation.
 
-### Verified September 13, 2026
+### Historical verification: September 13, 2026
 
 - All 27 core tests passed with the matching original export recovered from iCloud Drive Downloads; no core tests skipped.
 - Both existing hosted app tests passed (App Intents and widget layout).

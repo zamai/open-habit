@@ -42,6 +42,6 @@ Before a release, verify the following with maintainer-controlled test accounts 
 
 ## Release verification
 
-A successful archive or upload is not the same as a working release. Confirm that the processed build is assigned to every configured internal and external TestFlight group, complete Beta App Review when required, and record any remaining external-testing state. The release checklist is maintained in [App Store submission](app-store-submission.md).
+A successful archive or upload is not the same as a working release. Confirm that the processed build is assigned to every configured internal and external TestFlight group, complete Beta App Review when required, and record any remaining external-testing state. Follow the current [release process](releases.md); the [version 1.0 submission record](app-store-submission.md) is retained for history.
 
 For import/export coverage and fixture details, see [Data format verification](data-format/README.md#verification).

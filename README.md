@@ -49,7 +49,7 @@ GitHub Actions runs the core, app, widget-rendering, deletion, and Shared Habit 
 
 The App Store Connect API key must have the **App Manager** or **Admin** role so CI can add builds to the external group and submit them for Beta App Review.
 
-Before App Store submission, follow the remaining release gates in [App Store submission](docs/app-store-submission.md).
+For future releases, follow the [release process](docs/releases.md) and [signed-device verification](docs/verification.md). The [version 1.0 submission record](docs/app-store-submission.md) is retained for history.
 
 ## Implementation
 

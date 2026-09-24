@@ -32,6 +32,8 @@ jobs:
         run: |
           bash -n scripts/ci/publish.sh
           python3 -m py_compile scripts/ci/wait-testflight.py scripts/ci/submit-app-store.py
+      - name: Check public privacy copy
+        run: python3 scripts/ci/check-privacy-policy.py
       - name: Test core, app, and widgets
         run: bash scripts/ci/test.sh
       - name: Upload test result
