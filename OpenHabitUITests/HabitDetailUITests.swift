@@ -40,8 +40,24 @@ final class HabitDetailUITests: XCTestCase {
         calendarDate.press(forDuration: 1)
         XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForExistence(timeout: 3), app.debugDescription)
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3), app.debugDescription)
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", " / 500")).firstMatch.exists)
         app.buttons["Cancel"].tap()
         XCTAssertTrue(calendarDate.label.contains(", \(completionsAfterSecondTap) Completions,"))
+
+        let note = app.descendants(matching: .any)["Day Note"].firstMatch
+        makeHittable(note)
+        note.tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 3), app.debugDescription)
+        let deadline = Date().addingTimeInterval(3)
+        while note.frame.maxY >= keyboard.frame.minY - 8 && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        XCTAssertLessThan(note.frame.maxY, keyboard.frame.minY - 8)
+        let settledNoteY = note.frame.minY
+        RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        XCTAssertLessThan(abs(note.frame.minY - settledNoteY), 8)
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", " / 500")).firstMatch.exists)
     }
 
     private func makeHittable(_ element: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {

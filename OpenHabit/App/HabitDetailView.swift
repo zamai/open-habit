@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import OpenHabitCore
 
 struct HabitDetailView: View {
@@ -14,8 +15,9 @@ struct HabitDetailView: View {
     var body: some View {
         Group {
             if let habit = model.data.habit(habitID) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 24) {
                             VStack(alignment: .leading, spacing: 10) {
                                 HStack(spacing: 16) {
                                     Text(habit.emoji).font(.system(size: 56)).frame(width: 64)
@@ -41,12 +43,16 @@ struct HabitDetailView: View {
                             MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
                                           select: incrementDay,
                                           edit: editDayNote)
-                            selectedDay(habit)
+                            selectedDay(habit).id("selected-day-note")
                             historyGrid(habit)
-                    }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
+                        }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
+                    }
+                    .scrollDismissesKeyboard(.interactively)
+                    .refreshable { await model.sync() }
+                    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                        if noteFocused { proxy.scrollTo("selected-day-note", anchor: .center) }
+                    }
                 }
-                .scrollDismissesKeyboard(.interactively)
-                .refreshable { await model.sync() }
                 .background(Color(.systemGroupedBackground))
                 .toolbar {
                     if model.sharedHabit(for: habit.id)?.membership.role != .member {
@@ -100,11 +106,15 @@ struct HabitDetailView: View {
                 TextField("Add a Day Note", text: $noteDraft, axis: .vertical)
                     .lineLimit(2...5)
                     .focused($noteFocused)
-                    .onChange(of: noteDraft) { _, value in noteDraft = String(value.prefix(500)) }
+                    .onChange(of: noteDraft) { _, value in
+                        if value.count > 500 { noteDraft = String(value.prefix(500)) }
+                    }
                     .padding(12)
                     .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
                     .accessibilityLabel("Day Note")
-                Text("\(noteDraft.count) / 500").font(.caption).foregroundStyle(.secondary)
+                if noteDraft.count == 500 {
+                    Text("500-character limit reached").font(.caption).foregroundStyle(.orange)
+                }
             }
         }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22))
     }
@@ -257,8 +267,12 @@ struct DayEditor: View {
                 Section {
                     TextEditor(text: $note).frame(minHeight: 150).accessibilityLabel("Day Note")
                         .focused($noteFocused)
-                        .onChange(of: note) { _, value in note = String(value.prefix(500)) }
-                } header: { Text("Day Note (optional)") } footer: { Text("\(note.count) / 500 characters") }
+                        .onChange(of: note) { _, value in
+                            if value.count > 500 { note = String(value.prefix(500)) }
+                        }
+                } header: { Text("Day Note (optional)") } footer: {
+                    if note.count == 500 { Text("500-character limit reached") }
+                }
             }
             .disabled(selection.date > LocalDay.string())
             .onAppear { noteFocused = true }
