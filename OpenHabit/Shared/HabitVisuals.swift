@@ -36,20 +36,25 @@ struct CompletionGlyph: View {
         ZStack {
             if count >= target || target == 1 {
                 RoundedRectangle(cornerRadius: size * 0.29)
-                    .fill(count >= target ? color : color.opacity(0.10))
+                    .fill(count >= target ? color : .clear)
                 RoundedRectangle(cornerRadius: size * 0.29)
-                    .strokeBorder(color.opacity(count >= target ? 1 : 0.6), lineWidth: 2)
+                    .strokeBorder(color.opacity(count >= target ? 1 : 0.65), lineWidth: 2.5)
                 if count >= target { Image(systemName: "checkmark").font(.system(size: size * 0.4, weight: .bold)).foregroundStyle(.white) }
             } else {
                 Canvas { context, canvas in
-                    let center = CGPoint(x: canvas.width / 2, y: canvas.height / 2)
-                    let gap = min(8.0, 100.0 / Double(target))
-                    for segment in 0..<target {
-                        var path = Path()
-                        path.addArc(center: center, radius: canvas.width / 2 - 3,
-                                    startAngle: .degrees(Double(segment) * 360 / Double(target) - 90 + gap / 2),
-                                    endAngle: .degrees(Double(segment + 1) * 360 / Double(target) - 90 - gap / 2), clockwise: false)
-                        context.stroke(path, with: .color(segment < count ? color : color.opacity(0.20)), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    let inset: CGFloat = 3
+                    let outline = Path(roundedRect: CGRect(x: inset, y: inset,
+                                                           width: canvas.width - inset * 2,
+                                                           height: canvas.height - inset * 2),
+                                       cornerRadius: size * 0.29)
+                    let segments = target
+                    let gap = min(0.025, 0.18 / CGFloat(segments))
+                    for segment in 0..<segments {
+                        let start = CGFloat(segment) / CGFloat(segments) + gap / 2
+                        let end = CGFloat(segment + 1) / CGFloat(segments) - gap / 2
+                        let path = outline.trimmedPath(from: start, to: end)
+                        context.stroke(path, with: .color(segment < count ? color : color.opacity(0.25)),
+                                       style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     }
                 }
                 Image(systemName: "plus").font(.system(size: size * 0.38, weight: .semibold)).foregroundStyle(color)

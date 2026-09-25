@@ -5,6 +5,25 @@ import OpenHabitCore
 @testable import OpenHabit
 
 final class WidgetLayoutTests: XCTestCase {
+    @MainActor func testCompletionGlyphStatesRender() throws {
+        let view = HStack(spacing: 20) {
+            CompletionGlyph(count: 0, target: 1, color: .orange)
+            CompletionGlyph(count: 0, target: 8, color: .blue)
+            CompletionGlyph(count: 3, target: 8, color: .blue)
+            CompletionGlyph(count: 8, target: 8, color: .blue)
+        }
+        .padding(12)
+        .background(Color.white)
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 3
+        let image = try XCTUnwrap(renderer.uiImage)
+        XCTAssertGreaterThan(try coloredPixelCount(image), 500)
+        let attachment = XCTAttachment(image: image)
+        attachment.name = "Completion glyph states"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     @MainActor func testAllWidgetSizesRender() throws {
         let cases: [(name: String, size: CGSize, rows: Int?)] = [
             ("One Habit widget", CGSize(width: 164, height: 164), nil),
