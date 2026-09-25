@@ -276,14 +276,22 @@ struct DayEditor: View {
             .onAppear { noteFocused = true }
             .navigationTitle("Edit Habit Day").navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        noteFocused = false
+                        dismiss()
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         model.update { journal in
                             try journal.setCount(selection.habitID, day: selection.date, count: count)
                             try journal.setNote(selection.habitID, day: selection.date, note: note)
                         }
-                        if model.error == nil { dismiss() }
+                        if model.error == nil {
+                            noteFocused = false
+                            dismiss()
+                        }
                     }.disabled(selection.date > LocalDay.string())
                 }
             }

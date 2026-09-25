@@ -42,6 +42,7 @@ final class HabitDetailUITests: XCTestCase {
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3), app.debugDescription)
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", " / 500")).firstMatch.exists)
         app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForNonExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(calendarDate.label.contains(", \(completionsAfterSecondTap) Completions,"))
 
         let note = app.descendants(matching: .any)["Day Note"].firstMatch
