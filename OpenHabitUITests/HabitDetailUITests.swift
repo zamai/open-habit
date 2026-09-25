@@ -54,6 +54,7 @@ final class HabitDetailUITests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         XCTAssertLessThan(note.frame.maxY, keyboard.frame.minY - 8)
+        XCTAssertLessThan(keyboard.frame.minY - note.frame.maxY, 80)
         let settledNoteY = note.frame.minY
         RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         XCTAssertLessThan(abs(note.frame.minY - settledNoteY), 8)

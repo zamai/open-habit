@@ -39,7 +39,16 @@ final class DeleteConfirmationUITests: XCTestCase {
         let habit = app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", " + name)).firstMatch
         XCTAssertTrue(habit.waitForExistence(timeout: 5), app.debugDescription)
         habit.tap()
+        XCTAssertFalse(app.buttons["Share Habit"].exists)
         app.buttons["Edit Habit"].tap()
+
+        let share = app.buttons["Share Habit"]
+        for _ in 0..<12 where !share.isHittable { app.swipeUp() }
+        XCTAssertTrue(share.isHittable, app.debugDescription)
+        share.tap()
+        XCTAssertTrue(app.navigationBars["Share Habit"].waitForExistence(timeout: 5), app.debugDescription)
+        app.navigationBars["Share Habit"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit"].exists)
 
         let delete = app.buttons["Delete Habit"]
         for _ in 0..<12 where !delete.isHittable { app.swipeUp() }

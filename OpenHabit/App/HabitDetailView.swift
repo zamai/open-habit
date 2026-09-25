@@ -34,11 +34,6 @@ struct HabitDetailView: View {
                             metrics(for: habit)
                             if let state = model.sharedHabit(for: habit.id) {
                                 SharedHabitMembersSection(state: state)
-                            } else if !habit.archived {
-                                if #available(iOS 18.0, *) {
-                                    Button("Share Habit", systemImage: "person.2.badge.plus") { sheet = .share(habit) }
-                                        .buttonStyle(.bordered)
-                                }
                             }
                             MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
                                           select: incrementDay,
@@ -50,7 +45,11 @@ struct HabitDetailView: View {
                     .scrollDismissesKeyboard(.interactively)
                     .refreshable { await model.sync() }
                     .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
-                        if noteFocused { proxy.scrollTo("selected-day-note", anchor: .center) }
+                        if noteFocused {
+                            withAnimation(.smooth(duration: 0.3)) {
+                                proxy.scrollTo("selected-day-note", anchor: .bottom)
+                            }
+                        }
                     }
                 }
                 .background(Color(.systemGroupedBackground))
@@ -80,7 +79,6 @@ struct HabitDetailView: View {
             case .day(let day): DayEditor(selection: day, data: model.data)
             case .create: HabitEditor(habit: Habit(), isNew: true)
             case .settings: SettingsView()
-            case .share(let habit): SharedHabitSetupView(habit: habit)
             }
         }
     }

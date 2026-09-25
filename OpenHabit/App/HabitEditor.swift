@@ -10,6 +10,7 @@ struct HabitEditor: View {
     @State private var previewCount = 0
     @State private var deleting = false
     @State private var choosingEmoji = false
+    @State private var sharingHabit: Habit?
     private var valid: Bool { (try? habit.validate()) != nil }
     var body: some View {
         NavigationStack {
@@ -85,10 +86,42 @@ struct HabitEditor: View {
                 }
                 if !isNew && model.sharedHabit(for: habit.id) == nil {
                     Section {
+                        if #available(iOS 18.0, *), !habit.archived {
+                            Button {
+                                sharingHabit = model.data.habit(habit.id)
+                            } label: {
+                                HStack {
+                                    Label {
+                                        Text("Share Habit").foregroundStyle(.primary)
+                                    } icon: {
+                                        Image(systemName: "square.and.arrow.up").foregroundStyle(.green)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.tertiary)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(habit != model.data.habit(habit.id))
+                        }
                         Button(habit.archived ? "Restore Habit" : "Archive Habit", systemImage: habit.archived ? "arrow.uturn.backward" : "archivebox") {
                             model.update { $0.append(.archive(habit.id, !habit.archived)) }; if model.error == nil { dismiss() }
                         }
-                        Button("Delete Habit", systemImage: "trash", role: .destructive) { deleting = true }
+                        Button(role: .destructive) { deleting = true } label: {
+                            Label {
+                                Text("Delete Habit")
+                            } icon: {
+                                Image(systemName: "trash").foregroundStyle(.red)
+                            }
+                        }
+                    } header: {
+                        Text("Actions")
+                    } footer: {
+                        if !habit.archived && habit != model.data.habit(habit.id) {
+                            Text("Save changes before sharing this Habit.")
+                        }
                     }
                 } else if let state = model.sharedHabit(for: habit.id) {
                     Section {
@@ -123,6 +156,7 @@ struct HabitEditor: View {
                 Button("Cancel", role: .cancel) {}
             } message: { Text("Its Completions and Day Notes will be removed from all synchronized devices.") }
             .sheet(isPresented: $choosingEmoji) { HabitEmojiPicker(selection: $habit.emoji) }
+            .sheet(item: $sharingHabit) { SharedHabitSetupView(habit: $0) }
         }
     }
 

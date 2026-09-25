@@ -2,7 +2,7 @@ import base64, json, os, subprocess, sys, tempfile, time, urllib.error, urllib.r
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 
 APP_ID = '6808947599'
-WHAT_TO_TEST = 'Open Habit 1.0 is free and open source. This build adds a streamlined emoji shelf, a full-screen custom emoji picker, and in-app links to privacy, support, and source code. Please test habit creation and editing, widgets, import/export, and Shared Habits.'
+WHAT_TO_TEST = os.environ.get('WHAT_TO_TEST', 'Share Habit is now in Edit Habit, the delete icon is red, and Day Note editing stays above the keyboard. Please check these flows and report any regressions.')
 f = {'key_id': os.environ['ASC_KEY_ID'], 'issuer_id': os.environ['ASC_ISSUER_ID'], 'private_key': os.environ['ASC_PRIVATE_KEY']}
 if len(f['private_key']) > 1 and f['private_key'][0] == f['private_key'][-1] and f['private_key'][0] in "'\"":
     f['private_key'] = f['private_key'][1:-1]

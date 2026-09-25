@@ -8,9 +8,9 @@ struct DaySelection: Identifiable {
     var id: String { Dataset.key(habitID, date) }
 }
 enum AppSheet: Identifiable {
-    case settings, create, edit(Habit), day(DaySelection), share(Habit)
+    case settings, create, edit(Habit), day(DaySelection)
     var id: String {
-        switch self { case .settings: "settings"; case .create: "create"; case .edit(let habit): "edit-\(habit.id)"; case .day(let day): day.id; case .share(let habit): "share-\(habit.id)" }
+        switch self { case .settings: "settings"; case .create: "create"; case .edit(let habit): "edit-\(habit.id)"; case .day(let day): day.id }
     }
 }
 
@@ -84,7 +84,6 @@ struct OverviewView: View {
                 case .create: HabitEditor(habit: Habit(), isNew: true)
                 case .edit(let habit): HabitEditor(habit: habit, isNew: false)
                 case .day(let day): DayEditor(selection: day, data: model.data)
-                case .share(let habit): SharedHabitSetupView(habit: habit)
                 }
             }
             .sheet(isPresented: Binding(
