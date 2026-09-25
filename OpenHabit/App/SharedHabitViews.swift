@@ -359,24 +359,13 @@ struct SharedHabitSetupView: View {
 struct SharedHabitMembersSection: View {
     @Environment(AppModel.self) private var model
     let state: SharedHabitState
-    @State private var invitation: InvitationLink?
-    @State private var inviting = false
     @State private var removing: SharedMember?
-    @State private var stoppingShare = false
-    @State private var leaving = false
-
-    private var invitations: [SharedInvitation] {
-        state.snapshot.invitations.sorted {
-            if $0.createdAt != $1.createdAt { return $0.createdAt < $1.createdAt }
-            return $0.id < $1.id
-        }
-    }
 
     private var membershipSummary: String {
         let memberCount = state.snapshot.members.count
         let members = memberCount == 1 ? "Member" : "Members"
-        guard !invitations.isEmpty else { return "\(memberCount) \(members)" }
-        return "\(memberCount) \(members) · \(invitations.count) Pending"
+        guard !state.snapshot.invitations.isEmpty else { return "\(memberCount) \(members)" }
+        return "\(memberCount) \(members) · \(state.snapshot.invitations.count) Pending"
     }
 
     var body: some View {
@@ -407,7 +396,36 @@ struct SharedHabitMembersSection: View {
                 }
             }
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+            SharedHabitSharingControls(state: state)
+        }
+        .confirmationDialog("Remove \(removing?.name ?? "Member")?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
+            Button("Remove Member", role: .destructive) {
+                if let member = removing { Task { await model.removeMember(member, habitID: state.membership.localHabitID) } }
+                removing = nil
+            }
+        } message: {
+            Text("They will stop seeing shared progress. Their Habit and personal history will remain private on their devices.")
+        }
+    }
+}
 
+struct SharedHabitSharingControls: View {
+    @Environment(AppModel.self) private var model
+    let state: SharedHabitState
+    @State private var invitation: InvitationLink?
+    @State private var inviting = false
+    @State private var stoppingShare = false
+    @State private var leaving = false
+
+    private var invitations: [SharedInvitation] {
+        state.snapshot.invitations.sorted {
+            if $0.createdAt != $1.createdAt { return $0.createdAt < $1.createdAt }
+            return $0.id < $1.id
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
             if !invitations.isEmpty {
                 Text("Invitations")
                     .font(.headline)
@@ -437,7 +455,6 @@ struct SharedHabitMembersSection: View {
                 }
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
             }
-
             if state.membership.role == .owner {
                 if #available(iOS 18.0, *) {
                     Button(inviting ? "Creating Invitation…" : "Invite a Member", systemImage: "person.badge.plus") {
@@ -452,8 +469,6 @@ struct SharedHabitMembersSection: View {
                 } else {
                     Text("Invitations require iOS 18 or later.").font(.footnote).foregroundStyle(.secondary)
                 }
-            }
-            if state.membership.role == .owner {
                 Button("Stop Sharing", systemImage: "person.2.slash", role: .destructive) { stoppingShare = true }
                     .buttonStyle(.bordered)
             } else {
@@ -463,14 +478,6 @@ struct SharedHabitMembersSection: View {
         }
         .sheet(item: $invitation) { invitation in
             InvitationReadyView(invitation: invitation)
-        }
-        .confirmationDialog("Remove \(removing?.name ?? "Member")?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
-            Button("Remove Member", role: .destructive) {
-                if let member = removing { Task { await model.removeMember(member, habitID: state.membership.localHabitID) } }
-                removing = nil
-            }
-        } message: {
-            Text("They will stop seeing shared progress. Their Habit and personal history will remain private on their devices.")
         }
         .alert("Stop sharing this Habit?", isPresented: $stoppingShare) {
             Button("Stop Sharing", role: .destructive) { Task { _ = await model.stopSharing(state.membership.localHabitID) } }

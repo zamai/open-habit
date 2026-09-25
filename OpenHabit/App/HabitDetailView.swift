@@ -32,12 +32,12 @@ struct HabitDetailView: View {
                                 }
                             }.frame(maxWidth: .infinity, alignment: .leading)
                             metrics(for: habit)
-                            if let state = model.sharedHabit(for: habit.id) {
-                                SharedHabitMembersSection(state: state)
-                            }
                             MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
                                           select: incrementDay,
                                           edit: editDayNote)
+                            if let state = model.sharedHabit(for: habit.id) {
+                                SharedHabitMembersSection(state: state)
+                            }
                             selectedDay(habit).id("selected-day-note")
                             historyGrid(habit)
                         }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)

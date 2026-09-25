@@ -43,3 +43,7 @@ import OpenHabitCore
 #Preview("Shared Habit") {
     NavigationStack { HabitDetailView(habitID: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!) }.environment(sharedPreviewModel())
 }
+#Preview("Shared Habit Settings") {
+    let model = sharedPreviewModel()
+    HabitEditor(habit: model.data.habits[0], isNew: false).environment(model)
+}

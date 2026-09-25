@@ -128,8 +128,13 @@ struct HabitEditor: View {
                         Label("This Shared Habit cannot be archived.", systemImage: "person.2")
                     } footer: {
                         Text(state.membership.role == .owner
-                             ? "Manage or stop sharing from the Members section in Habit Detail."
+                             ? "The Owner can manage sharing here or from Habit Detail."
                              : "Only the Owner can change the Shared Habit definition.")
+                    }
+                    Section("Sharing") {
+                        SharedHabitSharingControls(state: state)
+                            .padding(.vertical, 8)
+                            .listRowBackground(Color.clear)
                     }
                 }
             }
