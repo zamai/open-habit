@@ -21,7 +21,6 @@ struct OverviewView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var sheet: AppSheet?
     @State private var path: [UUID] = []
-    @State private var deleting: Habit?
     @State private var dragging: UUID?
     var body: some View {
         NavigationStack(path: $path) {
@@ -55,10 +54,10 @@ struct OverviewView: View {
                                 HabitCard(habit: habit, data: model.data, now: timeline.date,
                                           sharedMemberCount: model.sharedHabit(for: habit.id)?.snapshot.members.count,
                                           open: { path.append(habit.id) },
-                                          complete: { model.update { try $0.toggle(habit.id) } },
-                                          quickMenu: { quickMenu(habit) })
+                                          complete: { model.update { try $0.toggle(habit.id) } })
                                 .onDrag { dragging = habit.id; UIImpactFeedbackGenerator(style: .medium).impactOccurred(); return NSItemProvider(object: habit.id.uuidString as NSString) }
                                 .onDrop(of: [.text], delegate: HabitDrop(target: habit.id, dragging: $dragging, model: model))
+                                .contextMenu { quickMenu(habit) }
                                 .accessibilityAction(named: "Move earlier") { move(habit.id, offset: -1) }
                                 .accessibilityAction(named: "Move later") { move(habit.id, offset: 1) }
                             }
@@ -100,10 +99,6 @@ struct OverviewView: View {
                 }
                 .interactiveDismissDisabled()
             }
-            .alert("Permanently delete \(deleting?.name ?? "Habit")?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
-                Button("Delete", role: .destructive) { if let habit = deleting { delete(habit) }; deleting = nil }
-                Button("Cancel", role: .cancel) { deleting = nil }
-            } message: { Text("All Completions and Day Notes will also be deleted from your synchronized devices.") }
             .onOpenURL { url in
                 guard url.scheme == "openhabit", url.host == "habit", let id = UUID(uuidString: url.lastPathComponent) else { return }
                 model.reload(); path = [id]
@@ -117,10 +112,6 @@ struct OverviewView: View {
         Button("Edit today’s note", systemImage: "note.text") { sheet = .day(DaySelection(habitID: habit.id, date: LocalDay.string())) }
         if model.sharedHabit(for: habit.id)?.membership.role != .member {
             Button("Edit Habit", systemImage: "pencil") { sheet = .edit(habit) }
-        }
-        if model.sharedHabit(for: habit.id) == nil {
-            Button("Archive Habit", systemImage: "archivebox") { model.update { $0.append(.archive(habit.id, true)) } }
-            Button("Delete Habit", systemImage: "trash", role: .destructive) { deleting = habit }
         }
     }
     private func move(_ id: UUID, offset: Int) {
@@ -140,14 +131,13 @@ struct OverviewView: View {
     }
 }
 
-private struct HabitCard<Menu: View>: View {
+private struct HabitCard: View {
     let habit: Habit
     let data: Dataset
     let now: Date
     let sharedMemberCount: Int?
     let open: () -> Void
     let complete: () -> Void
-    @ViewBuilder let quickMenu: () -> Menu
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top, spacing: 14) {
@@ -183,7 +173,7 @@ private struct HabitCard<Menu: View>: View {
                         }.padding(.top, 3).frame(maxWidth: .infinity, alignment: .leading)
                     }.contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityHint("Open Habit Detail")
-                CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count, action: complete).contextMenu { quickMenu() }
+                CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count, action: complete)
             }
             Button(action: open) {
                 LabeledHistoryGrid(habit: habit, data: data, end: now)
@@ -193,6 +183,7 @@ private struct HabitCard<Menu: View>: View {
         .padding(18)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 26))
         .overlay { RoundedRectangle(cornerRadius: 26).strokeBorder(habit.tint.opacity(0.12), lineWidth: 1) }
+        .contentShape(RoundedRectangle(cornerRadius: 26))
         .transition(.blurReplace)
     }
 }

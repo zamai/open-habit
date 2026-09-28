@@ -10,6 +10,46 @@ final class HabitDetailUITests: XCTestCase {
         #endif
     }
 
+    func testWholeHabitCardOpensQuickActionsWithoutArchiveOrDelete() {
+        app.launch()
+
+        let title = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", ", Exercise,")).firstMatch
+        let completion = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Exercise, ")).firstMatch
+        let history = app.descendants(matching: .any)["View Exercise history"].firstMatch
+        makeHittable(title)
+        makeHittable(history)
+        makeHittable(completion)
+        let originalCompletions = completion.label
+
+        let padding = app.coordinate(withNormalizedOffset: .zero).withOffset(
+            CGVector(dx: title.frame.minX - 9, dy: title.frame.minY + 10)
+        )
+        let targets = [
+            title.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+            completion.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+            history.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)),
+            padding
+        ]
+        for target in targets {
+            target.press(forDuration: 1)
+            let editNote = app.buttons["Edit today’s note"]
+            XCTAssertTrue(editNote.waitForExistence(timeout: 3), app.debugDescription)
+            XCTAssertTrue(app.buttons["Edit Habit"].exists)
+            XCTAssertFalse(app.buttons["Archive Habit"].exists)
+            XCTAssertFalse(app.buttons["Delete Habit"].exists)
+            app.navigationBars["Open Habit"].tap()
+            XCTAssertTrue(editNote.waitForNonExistence(timeout: 3), app.debugDescription)
+            XCTAssertEqual(completion.label, originalCompletions, "Long pressing must not change Completions")
+        }
+
+        completion.tap()
+        XCTAssertNotEqual(completion.label, originalCompletions, "A normal tap must still change Completions")
+        completion.tap()
+        XCTAssertEqual(completion.label, originalCompletions)
+        title.tap()
+        XCTAssertTrue(app.navigationBars["Habit Detail"].waitForExistence(timeout: 3), app.debugDescription)
+    }
+
     func testCalendarTapCyclesCompletionsAndHoldOpensDayNote() {
         app.launch()
 

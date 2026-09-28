@@ -281,6 +281,8 @@ struct SharedHabitSetupView: View {
     @State private var creating = false
     @State private var shared = false
     @State private var invitation: InvitationLink?
+    @State private var pendingInvitation: InvitationLink?
+    @State private var activity: SharingActivity?
     @FocusState private var memberNameFocused: Bool
 
     private var validName: Bool {
@@ -329,26 +331,32 @@ struct SharedHabitSetupView: View {
                     Button(creating ? "Sharing…" : "Share") {
                         memberNameFocused = false
                         creating = true
+                        activity = .sharing
                         Task {
                             if await model.share(habit, memberName: memberName, history: history) {
                                 shared = true
                                 if #available(iOS 18.0, *) {
                                     if let url = await model.createInvitation(for: habit.id) {
-                                        invitation = InvitationLink(url: url)
-                                    } else {
-                                        dismiss()
+                                        pendingInvitation = InvitationLink(url: url)
                                     }
-                                } else {
-                                    dismiss()
                                 }
                             }
                             creating = false
+                            activity = nil
                         }
                     }
                     .disabled(!validName || creating)
                 }
             }
             .onAppear { memberNameFocused = true }
+            .fullScreenCover(item: $activity, onDismiss: {
+                if let pendingInvitation {
+                    invitation = pendingInvitation
+                    self.pendingInvitation = nil
+                } else if shared {
+                    dismiss()
+                }
+            }) { SharingActivityView(activity: $0) }
             .sheet(item: $invitation, onDismiss: { if shared { dismiss() } }) { invitation in
                 InvitationReadyView(invitation: invitation)
             }
@@ -360,6 +368,7 @@ struct SharedHabitMembersSection: View {
     @Environment(AppModel.self) private var model
     let state: SharedHabitState
     @State private var removing: SharedMember?
+    @State private var activity: SharingActivity?
 
     private var membershipSummary: String {
         let memberCount = state.snapshot.members.count
@@ -398,9 +407,16 @@ struct SharedHabitMembersSection: View {
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
             SharedHabitSharingControls(state: state)
         }
+        .fullScreenCover(item: $activity) { SharingActivityView(activity: $0) }
         .confirmationDialog("Remove \(removing?.name ?? "Member")?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
             Button("Remove Member", role: .destructive) {
-                if let member = removing { Task { await model.removeMember(member, habitID: state.membership.localHabitID) } }
+                if let member = removing {
+                    activity = .removing
+                    Task {
+                        await model.removeMember(member, habitID: state.membership.localHabitID)
+                        activity = nil
+                    }
+                }
                 removing = nil
             }
         } message: {
@@ -413,7 +429,8 @@ struct SharedHabitSharingControls: View {
     @Environment(AppModel.self) private var model
     let state: SharedHabitState
     @State private var invitation: InvitationLink?
-    @State private var inviting = false
+    @State private var pendingInvitation: InvitationLink?
+    @State private var activity: SharingActivity?
     @State private var stoppingShare = false
     @State private var leaving = false
 
@@ -430,67 +447,166 @@ struct SharedHabitSharingControls: View {
                 Text("Invitations")
                     .font(.headline)
                     .padding(.top, 4)
-                VStack(spacing: 0) {
-                    ForEach(Array(invitations.enumerated()), id: \.element.id) { index, invitation in
-                        if index > 0 { Divider().padding(.leading, 54) }
-                        HStack(spacing: 12) {
-                            Image(systemName: "envelope.badge")
-                                .frame(width: 30)
+            }
+            VStack(spacing: 0) {
+                ForEach(Array(invitations.enumerated()), id: \.element.id) { index, invitation in
+                    if index > 0 { Divider().padding(.leading, 60) }
+                    HStack(spacing: 16) {
+                        Image(systemName: "envelope.badge")
+                            .frame(width: 32)
+                            .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Pending Invitation \(index + 1)")
+                            Text(invitation.createdAt, format: .dateTime.month(.abbreviated).day().hour().minute())
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Pending Invitation \(index + 1)")
-                                Text(invitation.createdAt, format: .dateTime.month(.abbreviated).day().hour().minute())
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Button("Cancel Invitation", systemImage: "xmark", role: .destructive) {
-                                Task { await model.cancelInvitation(invitation.id, habitID: state.membership.localHabitID) }
-                            }
-                            .labelStyle(.iconOnly)
-                            .accessibilityLabel("Cancel Pending Invitation \(index + 1)")
                         }
-                        .padding(14)
+                        Spacer(minLength: 8)
+                        Button("Cancel Invitation", systemImage: "xmark", role: .destructive) {
+                            activity = .cancelling
+                            Task {
+                                await model.cancelInvitation(invitation.id, habitID: state.membership.localHabitID)
+                                activity = nil
+                            }
+                        }
+                        .labelStyle(.iconOnly)
+                        .accessibilityLabel("Cancel Pending Invitation \(index + 1)")
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 18)
                 }
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
-            }
-            if state.membership.role == .owner {
-                if #available(iOS 18.0, *) {
-                    Button(inviting ? "Creating Invitation…" : "Invite a Member", systemImage: "person.badge.plus") {
-                        inviting = true
-                        Task {
-                            if let url = await model.createInvitation(for: state.membership.localHabitID) { invitation = InvitationLink(url: url) }
-                            inviting = false
+                if state.membership.role == .owner {
+                    if #available(iOS 18.0, *) {
+                        if !invitations.isEmpty { Divider().padding(.leading, 60) }
+                        actionRow("Invite a Member", systemImage: "person.badge.plus", color: .green, chevron: true) {
+                            activity = .inviting
+                            Task {
+                                if let url = await model.createInvitation(for: state.membership.localHabitID) {
+                                    pendingInvitation = InvitationLink(url: url)
+                                }
+                                activity = nil
+                            }
                         }
+                        .disabled(state.snapshot.members.count + state.snapshot.invitations.count >= 10)
+                    } else {
+                        Text("Invitations require iOS 18 or later.").font(.footnote).foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(16)
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(inviting || state.snapshot.members.count + state.snapshot.invitations.count >= 10)
+                    Divider().padding(.leading, 60)
+                    actionRow("Stop Sharing", systemImage: "person.2.slash", color: .red, destructive: true) { stoppingShare = true }
                 } else {
-                    Text("Invitations require iOS 18 or later.").font(.footnote).foregroundStyle(.secondary)
+                    if !invitations.isEmpty { Divider().padding(.leading, 60) }
+                    actionRow("Leave Shared Habit", systemImage: "rectangle.portrait.and.arrow.right", color: .red, destructive: true) { leaving = true }
                 }
-                Button("Stop Sharing", systemImage: "person.2.slash", role: .destructive) { stoppingShare = true }
-                    .buttonStyle(.bordered)
-            } else {
-                Button("Leave Shared Habit", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) { leaving = true }
-                    .buttonStyle(.bordered)
             }
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
         }
+        .fullScreenCover(item: $activity, onDismiss: {
+            if let pendingInvitation {
+                invitation = pendingInvitation
+                self.pendingInvitation = nil
+            }
+        }) { SharingActivityView(activity: $0) }
         .sheet(item: $invitation) { invitation in
             InvitationReadyView(invitation: invitation)
         }
         .alert("Stop sharing this Habit?", isPresented: $stoppingShare) {
-            Button("Stop Sharing", role: .destructive) { Task { _ = await model.stopSharing(state.membership.localHabitID) } }
+            Button("Stop Sharing", role: .destructive) {
+                activity = .stopping
+                Task {
+                    _ = await model.stopSharing(state.membership.localHabitID)
+                    activity = nil
+                }
+            }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Shared visibility will end for everyone. Your Habit, Completions, and Day Notes remain local, and other Members keep their Habits and personal history.")
         }
         .alert("Leave this Shared Habit?", isPresented: $leaving) {
-            Button("Leave Shared Habit", role: .destructive) { Task { _ = await model.leaveSharedHabit(state.membership.localHabitID) } }
+            Button("Leave Shared Habit", role: .destructive) {
+                activity = .leaving
+                Task {
+                    _ = await model.leaveSharedHabit(state.membership.localHabitID)
+                    activity = nil
+                }
+            }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Your Habit, Completions, and Day Notes remain on this device as a Private Habit. Shared visibility ends.")
         }
+    }
+
+    private func actionRow(_ title: String, systemImage: String, color: Color, chevron: Bool = false, destructive: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: systemImage).frame(width: 32).foregroundStyle(color)
+                Text(title).foregroundStyle(destructive ? Color.red : Color.primary)
+                Spacer(minLength: 8)
+                if chevron {
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .frame(minHeight: 54)
+            .padding(.horizontal, 16)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private enum SharingActivity: String, Identifiable {
+    case sharing, inviting, cancelling, stopping, leaving, removing
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .sharing: "Setting Up Sharing…"
+        case .inviting: "Creating Invitation…"
+        case .cancelling: "Canceling Invitation…"
+        case .stopping: "Stopping Sharing…"
+        case .leaving: "Leaving Shared Habit…"
+        case .removing: "Removing Member…"
+        }
+    }
+
+    var message: String {
+        switch self {
+        case .sharing, .inviting: "Connecting through iCloud. Good habits are better together."
+        case .cancelling, .stopping, .leaving, .removing: "Updating your shared Habit in iCloud."
+        }
+    }
+}
+
+private struct SharingActivityView: View {
+    let activity: SharingActivity
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "icloud")
+                .font(.system(size: 40))
+                .foregroundStyle(.green)
+                .frame(width: 88, height: 88)
+                .background(Color.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 24))
+                .accessibilityHidden(true)
+            ProgressView()
+                .controlSize(.large)
+                .tint(.green)
+                .accessibilityHidden(true)
+            Text(activity.title)
+                .font(.title2.bold())
+            Text(activity.message)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+        .interactiveDismissDisabled()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(activity.title) \(activity.message)")
     }
 }
 
@@ -773,6 +889,36 @@ enum SharedHabitJoinPreview {
 #Preview("Join in Dark Mode") {
     let model = SharedHabitJoinPreview.makeModel()
     SharedHabitJoinView(offer: model.pendingJoin!).environment(model).tint(.green)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Sharing actions") {
+    let model = AppModel()
+    let habit = Habit(name: "Read together", emoji: "📖")
+    let definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
+    let owner = SharedMember(name: "Sam", colorIndex: 0, role: .owner)
+    let state = SharedHabitState(
+        membership: SharedHabitMembership(
+            sharedHabitID: definition.id, localHabitID: habit.id, memberID: owner.id, role: .owner,
+            visibleFromDay: nil, zoneName: "preview", zoneOwnerName: "preview", shareRecordName: "preview"
+        ),
+        snapshot: SharedHabitSnapshot(definition: definition, members: [owner], invitations: [SharedInvitation(id: "preview")])
+    )
+    SharedHabitSharingControls(state: state)
+        .padding(22)
+        .background(Color(.systemGroupedBackground))
+        .environment(model)
+        .tint(.green)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Creating invitation") {
+    SharingActivityView(activity: .inviting)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Stopping sharing") {
+    SharingActivityView(activity: .stopping)
         .preferredColorScheme(.dark)
 }
 #endif
