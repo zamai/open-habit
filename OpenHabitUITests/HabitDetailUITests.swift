@@ -32,13 +32,16 @@ final class HabitDetailUITests: XCTestCase {
         ]
         for target in targets {
             target.press(forDuration: 1)
-            let editNote = app.buttons["Edit today’s note"]
-            XCTAssertTrue(editNote.waitForExistence(timeout: 3), app.debugDescription)
+            let addNote = app.buttons["Add today’s note"]
+            XCTAssertTrue(addNote.waitForExistence(timeout: 3), app.debugDescription)
+            XCTAssertTrue(app.buttons["Mark yesterday complete"].exists)
+            XCTAssertFalse(app.buttons["Undo latest Completion today"].exists)
+            XCTAssertFalse(app.buttons["Mark today complete"].exists)
             XCTAssertTrue(app.buttons["Edit Habit"].exists)
             XCTAssertFalse(app.buttons["Archive Habit"].exists)
             XCTAssertFalse(app.buttons["Delete Habit"].exists)
             app.navigationBars["Open Habit"].tap()
-            XCTAssertTrue(editNote.waitForNonExistence(timeout: 3), app.debugDescription)
+            XCTAssertTrue(addNote.waitForNonExistence(timeout: 3), app.debugDescription)
             XCTAssertEqual(completion.label, originalCompletions, "Long pressing must not change Completions")
         }
 
@@ -48,6 +51,86 @@ final class HabitDetailUITests: XCTestCase {
         XCTAssertEqual(completion.label, originalCompletions)
         title.tap()
         XCTAssertTrue(app.navigationBars["Habit Detail"].waitForExistence(timeout: 3), app.debugDescription)
+    }
+
+    func testHabitCardHistoryTapsOpenDetailWithoutChangingCompletions() {
+        app.launch()
+        let history = app.buttons["history-00000000-0000-0000-0000-000000000001"]
+        let completion = app.buttons["complete-00000000-0000-0000-0000-000000000001"]
+        makeHittable(history)
+        let originalCompletions = completion.label
+
+        // Canvas cells, labels, and gaps should all belong to the same navigation button.
+        for point in [CGVector(dx: 0.5, dy: 0.5), CGVector(dx: 0.85, dy: 0.8), CGVector(dx: 0.05, dy: 0.4)] {
+            history.coordinate(withNormalizedOffset: point).tap()
+            XCTAssertTrue(app.navigationBars["Habit Detail"].waitForExistence(timeout: 3), app.debugDescription)
+            app.navigationBars["Habit Detail"].buttons.firstMatch.tap()
+            makeHittable(history)
+            XCTAssertEqual(completion.label, originalCompletions, "Opening history must not log a Completion")
+        }
+    }
+
+    func testCaptureUIGlossary() throws {
+        guard ProcessInfo.processInfo.environment["GENERATE_UI_GLOSSARY"] == "1" else {
+            throw XCTSkip("Opt-in screenshots for docs/ui-glossary.md")
+        }
+        executionTimeAllowance = 600
+        app.launch()
+        let title = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", ", Exercise,")).firstMatch
+        let history = app.buttons["history-00000000-0000-0000-0000-000000000001"]
+        makeHittable(history)
+        capture("glossary-overview")
+
+        title.tap()
+        XCTAssertTrue(app.navigationBars["Habit Detail"].waitForExistence(timeout: 3))
+        capture("glossary-habit-detail")
+        let date = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " Completions, target ")).firstMatch
+        makeHittable(date)
+        date.press(forDuration: 1)
+        XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3))
+        capture("glossary-day-note-sheet")
+        app.navigationBars["Edit Habit Day"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForNonExistence(timeout: 5))
+
+        makeHittable(app.descendants(matching: .any)["Day Note"].firstMatch)
+        app.swipeUp()
+        capture("glossary-note-and-history")
+        app.buttons["Edit Habit"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit"].waitForExistence(timeout: 3), app.debugDescription)
+        capture("glossary-habit-settings")
+        app.buttons["habit-emoji"].tap()
+        XCTAssertTrue(app.navigationBars["Choose Emoji"].waitForExistence(timeout: 3))
+        capture("glossary-emoji-picker")
+        app.navigationBars["Choose Emoji"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.navigationBars["Choose Emoji"].waitForNonExistence(timeout: 5))
+        app.collectionViews.firstMatch.swipeUp()
+        makeHittable(app.buttons["Share Habit"])
+        capture("glossary-habit-actions")
+        app.buttons["Share Habit"].tap()
+        XCTAssertTrue(app.navigationBars["Share Habit"].waitForExistence(timeout: 3))
+        capture("glossary-share-setup")
+        app.navigationBars["Share Habit"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.navigationBars["Share Habit"].waitForNonExistence(timeout: 5))
+        app.navigationBars["Edit Habit"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit"].waitForNonExistence(timeout: 5))
+
+        app.navigationBars["Habit Detail"].buttons.firstMatch.tap()
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+        capture("glossary-app-settings")
+        app.buttons["Done"].tap()
+
+        makeHittable(history)
+        history.press(forDuration: 1)
+        XCTAssertTrue(app.buttons["Add today’s note"].waitForExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(app.buttons["Edit Habit"].exists)
+        XCTAssertTrue(app.buttons["Mark yesterday complete"].exists)
+        XCTAssertFalse(app.buttons["Undo latest Completion today"].exists)
+        XCTAssertFalse(app.buttons["Mark today complete"].exists)
+        XCTAssertFalse(app.buttons["Archive Habit"].exists)
+        XCTAssertFalse(app.buttons["Delete Habit"].exists)
+        capture("glossary-quick-actions")
     }
 
     func testCalendarTapCyclesCompletionsAndHoldOpensDayNote() {
@@ -106,5 +189,12 @@ final class HabitDetailUITests: XCTestCase {
         XCTAssertTrue(element.waitForExistence(timeout: 3), app.debugDescription, file: file, line: line)
         for _ in 0..<10 where !element.isHittable { app.swipeUp() }
         XCTAssertTrue(element.isHittable, app.debugDescription, file: file, line: line)
+    }
+
+    private func capture(_ name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }

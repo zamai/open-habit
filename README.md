@@ -17,7 +17,7 @@ Interactive widgets put your habits and recent progress on the Home Screen. Choo
 
 ## See your progress at a glance
 
-Create habits with daily targets and optional streak goals. The overview shows a rolling year of history; open a habit for its monthly calendar, past-day corrections, and private Day Notes. Empty days stay empty—Open Habit does not label them failures.
+Create habits with daily targets and optional streak goals. The overview shows recent history; open a habit for its Month Calendar, full year of history, past-day corrections, and private Day Notes. Empty days stay empty—Open Habit does not label them failures.
 
 <img src="site/assets/iphone-overview-light.png" alt="Open Habit overview showing three habits, completion controls, and rolling history grids" width="340">
 
@@ -41,7 +41,7 @@ Share a habit with up to nine invited people. Members see the common habit defin
 
 ## For contributors
 
-[Contributing and build instructions](CONTRIBUTING.md#build-and-test) · [Product design](docs/mvp.md) · [Verification notes](docs/verification.md) · [Security](SECURITY.md)
+[Contributing and build instructions](CONTRIBUTING.md#build-and-test) · [Illustrated UI glossary](docs/ui-glossary.md) · [Product design](docs/mvp.md) · [Verification notes](docs/verification.md) · [Security](SECURITY.md)
 
 Questions or feedback? Visit [support](https://getopenhabit.com/support/) or email [contact@getopenhabit.com](mailto:contact@getopenhabit.com).
 

@@ -106,12 +106,10 @@ struct OverviewView: View {
         }
     }
     @ViewBuilder private func quickMenu(_ habit: Habit) -> some View {
-        Button("Undo latest Completion today", systemImage: "arrow.uturn.backward") { model.update { try $0.remove(habit.id, day: LocalDay.string()) } }
-        Button("Mark today complete", systemImage: "checkmark.circle") { model.update { try $0.setCount(habit.id, day: LocalDay.string(), count: habit.target) } }
         Button("Mark yesterday complete", systemImage: "clock.arrow.circlepath") { model.update { try $0.setCount(habit.id, day: LocalDay.string(Calendar.current.date(byAdding: .day, value: -1, to: Date())!), count: habit.target) } }
-        Button("Edit today’s note", systemImage: "note.text") { sheet = .day(DaySelection(habitID: habit.id, date: LocalDay.string())) }
+        Button("Add today’s note", systemImage: "note.text") { sheet = .day(DaySelection(habitID: habit.id, date: LocalDay.string())) }
         if model.sharedHabit(for: habit.id)?.membership.role != .member {
-            Button("Edit Habit", systemImage: "pencil") { sheet = .edit(habit) }
+            Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) }
         }
     }
     private func move(_ id: UUID, offset: Int) {
@@ -177,8 +175,11 @@ private struct HabitCard: View {
             }
             Button(action: open) {
                 LabeledHistoryGrid(habit: habit, data: data, end: now)
-                    .allowsHitTesting(false).accessibilityHidden(true)
-            }.buttonStyle(.plain).accessibilityElement(children: .ignore).accessibilityLabel("View \(habit.name) history")
+                    .contentShape(Rectangle())
+            }.buttonStyle(.plain)
+                .accessibilityLabel("View \(habit.name) history")
+                .accessibilityHint("Open Habit Detail")
+                .accessibilityIdentifier("history-\(habit.id.uuidString)")
         }
         .padding(18)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 26))

@@ -2,6 +2,8 @@
 
 This context describes personal and shared habits and the daily record a person builds by practising them.
 
+For screen and interface component names, see the [illustrated UI glossary](docs/ui-glossary.md).
+
 ## Language
 
 **Habit**:
@@ -21,8 +23,8 @@ A short name a Member chooses for one Shared Habit and may change only for thems
 _Avoid_: Account name, username
 
 **Member Color**:
-A stable color assigned automatically from a fixed ten-color palette to reinforce a Member's identity within a Shared Habit. Member Name and position remain visible so identity never depends on color alone.
-_Avoid_: Habit color, user-selected color
+A color from a fixed ten-color palette that reinforces a Member's identity within one Shared Habit, assigned automatically on joining and editable only by that Member. Member Name and position remain visible so identity never depends on color alone.
+_Avoid_: Habit color, global profile color
 
 **Owner**:
 The Member who controls a Shared Habit's common definition. Owner changes apply to every Member, while other Members may record their own progress but cannot change the definition.

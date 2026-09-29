@@ -2,6 +2,8 @@
 
 Status: agreed product design.
 
+For canonical screen/component names and current interaction screenshots, see the [UI glossary](ui-glossary.md).
+
 ## Product promise
 
 Open Habit is a private, offline-first iPhone and iPad habit tracker for people who want to record progress with almost no friction and retain ownership of their data. Its defining interaction is completing a Habit directly from the Home Screen.
@@ -58,24 +60,22 @@ Only positive Habits are supported. Streak Goals do not schedule particular days
 
 ## Completion interactions
 
-The completion control follows the supplied HabitKit reference:
+The Completion Button uses a squircle outline:
 
 - For a Daily Target of 1, the control is a checkbox that toggles between 0 and 1.
-- For a Daily Target greater than 1, the control begins as a plus surrounded by a segmented progress ring.
+- For a Daily Target greater than 1, the control begins as a plus surrounded by a segmented squircle outline.
 - Each tap adds one Completion and fills one segment until the Daily Target is reached.
 - At the Daily Target, the control becomes a checkbox.
 - Tapping that completed checkbox toggles the Habit Day back to 0.
 - The control never increments beyond the current Daily Target.
 
-An in-app long press on the completion control opens this menu:
+An in-app touch and hold anywhere on a Habit Card opens its Quick Actions menu:
 
-- Undo latest Completion today.
-- Mark today complete by setting its count to the current Daily Target.
 - Mark yesterday complete by setting its count to the current Daily Target.
-- Edit today's note.
-- Edit the Habit.
-- Archive the Habit.
-- Delete the Habit, followed by destructive-action confirmation.
+- Add today's note, opening the Day Note Sheet with any existing note preserved.
+- Edit Habit, using the same sliders icon as the Habit Settings button in Habit Detail.
+
+Today's quick logging uses the Completion Button. Archive and Delete remain in Habit Settings, not Quick Actions.
 
 Widget long press remains owned by iOS and does not show this menu.
 
@@ -100,9 +100,9 @@ The main screen takes its density and composition from HabitKit's full-width car
 - There are no category filters, statistics buttons, or view-mode controls.
 - iPhone shows one full-width Habit card per row.
 - Wider iPad layouts adapt to two card columns.
-- A card contains the emoji, name, one-line description, rolling history grid, and completion control.
-- The card does not show streak or goal chips.
-- Tapping noninteractive card content opens Habit Detail.
+- A Habit Card contains the emoji, name, one-line description, Compact Completion Grid, and Completion Button.
+- An optional Streak Badge shows Current Streak; a Shared Habit also shows a Members Badge.
+- Tapping the Habit Header or anywhere in the Compact Completion Grid opens Habit Detail without changing Completions.
 - Pressing, holding, and dragging a card reorders Habits with haptic feedback.
 - The manual order synchronizes through iCloud.
 
@@ -141,10 +141,11 @@ Habit Detail follows the supplied HabitKit reference and contains:
 - Emoji, name, and description.
 - Daily Target, optional Current Streak, and current-week progress for a Weekly Streak Goal.
 - Month Total for the calendar month currently visible.
-- A GitHub-style rolling year grid.
-- A month calendar for selecting an exact date.
-- The selected Habit Day's Completion count, current Daily Target, and Day Note.
-- Edit Habit access.
+- A Month Calendar: tap today or a past date to cycle Completions up to the Daily Target, then back to zero; touch and hold to open its Day Note Sheet without logging a Completion.
+- A Members Section below the Month Calendar for Shared Habits.
+- An Inline Note Editor for the selected Habit Day's private Day Note.
+- A GitHub-style Full Completion Grid at the very bottom. Tap a past tile to select the note date without changing Completions; touch and hold to open its Day Note Sheet.
+- Habit Settings access.
 
 The user may edit the Completion count and Day Note for today or any past date. Future dates are read-only.
 
@@ -287,7 +288,7 @@ The source-code link is added when the repository becomes public.
 1. A fresh install with no local or iCloud dataset creates the three specified Starter Habits exactly once, including one Water Completion today.
 2. A person can create, edit, reorder, archive, restore, and permanently delete multiple Habits.
 3. Target-1 controls toggle `0 ↔ 1`; higher targets show segmented progress, stop at the target, and toggle from completed back to zero.
-4. The in-app long-press menu exposes all seven agreed quick actions, with confirmation before deletion.
+4. Touch and hold anywhere on a Habit Card to open the three Quick Actions: Mark yesterday complete, Add today's note, and Edit Habit. The Compact Completion Grid opens Habit Detail on a normal tap without changing Completions; deletion remains a confirmed action in Habit Settings.
 5. Main-screen, detail, and widget tiles consistently show empty, partial, complete, today, and note-present states.
 6. A person can correct counts and attach or edit a Day Note for today or any past date, but not a future date.
 7. Changing a Daily Target immediately re-evaluates the presentation of all historical Habit Days without storing separate success states.

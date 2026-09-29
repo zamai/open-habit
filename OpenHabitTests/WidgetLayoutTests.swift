@@ -5,6 +5,36 @@ import OpenHabitCore
 @testable import OpenHabit
 
 final class WidgetLayoutTests: XCTestCase {
+    @MainActor func testCaptureSharedHabitGlossary() throws {
+        guard ProcessInfo.processInfo.environment["GENERATE_UI_GLOSSARY"] == "1" else {
+            throw XCTSkip("Opt-in screenshot for docs/ui-glossary.md")
+        }
+        let habit = Habit(name: "Exercise", emoji: "🏃", target: 3)
+        let definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
+        let owner = SharedMember(name: "Taylor", colorIndex: 0, role: .owner)
+        let friend = SharedMember(name: "Marta", colorIndex: 1, role: .member)
+        let membership = SharedHabitMembership(
+            sharedHabitID: definition.id, localHabitID: habit.id, memberID: owner.id, role: .owner,
+            visibleFromDay: nil, zoneName: "Preview", zoneOwnerName: "Preview", shareRecordName: "Preview"
+        )
+        let state = SharedHabitState(membership: membership, snapshot: SharedHabitSnapshot(
+            definition: definition, members: [owner, friend], invitations: [SharedInvitation(id: "preview")]
+        ))
+        let view = SharedHabitMembersSection(state: state)
+            .environment(AppModel())
+            .tint(.green)
+            .padding(22)
+            .frame(width: 390, height: 450, alignment: .top)
+            .background(Color(.systemGroupedBackground))
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2
+        let image = try XCTUnwrap(renderer.uiImage)
+        let attachment = XCTAttachment(image: image)
+        attachment.name = "glossary-sharing"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     @MainActor func testCompletionGlyphStatesRender() throws {
         let view = HStack(spacing: 20) {
             CompletionGlyph(count: 0, target: 1, color: .orange)
