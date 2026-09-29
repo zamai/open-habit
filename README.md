@@ -57,7 +57,10 @@ For future releases, follow the [release process](docs/releases.md) and [signed-
 - `OpenHabit/App`: overview, habit editor, rolling year and month calendar, Day Notes, archived habits, settings, export and confirmed replacement restore.
 - `OpenHabit/Shared`: shared storage, private CloudKit synchronization, App Intents, and reusable history/completion visuals.
 - `OpenHabit/Widgets`: configured small single-Habit and medium three-Habit interactive widgets. Hold a widget and choose Edit Widget to assign active Habits. Missing or archived assignments stay visible as configuration placeholders.
+- `OpenHabit/Watch`: watchOS 10+ companion app with a history grid, Crown/vertical swipe paging, and a compact Habit list. Record today's Completions. Personal Habits synchronize with the paired iPhone; editing and Shared Habits remain on the phone.
+- `OpenHabit/Connectivity`: Watch Connectivity exchanges the existing edit journal between local stores, preserving offline edits, deletion markers, and replacement generations.
 - `OpenHabitTests`: integration tests exercising all four intents and the widget button intent against real shared storage.
+- `OpenHabitWatchTests`: persistence, phone-edit reloads, multi-target Completion removal, midnight rollover, and replacement coverage for the Watch model.
 - `OpenHabitUITests`: an English-language Simulator smoke test that installs the small widget if missing and verifies its configuration menu. It changes the test Simulator’s Home Screen layout.
 
 Cloud synchronization exchanges UUID-addressed edits. Distinct additions merge, retries are idempotent, properties/notes/order use the latest timestamp (UUID breaks ties), archive is independent of property editing, and deletion tombstones prevent resurrection. Restore and Delete All Data create a new dataset generation; older offline edits cannot bring replaced data back. Deletion and replacement redact removed content from the journal and synchronize those redactions; only causality markers remain so old offline edits cannot resurrect it.

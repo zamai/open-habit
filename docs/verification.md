@@ -26,6 +26,14 @@ bash scripts/ci/test-import.sh
 
 ## Simulator limits
 
+### Watch companion acceptance (2026-09-29)
+
+Built and ran the iPhone and Watch apps with Xcode 27 on a paired iPhone 18 Pro Max and Apple Watch Series 12 (46mm), using synthetic example Habits. Verified first synchronization, the grid/list transition, vertical paging, Completion buttons in both views, removal of one Completion from a completed multi-target Habit, and reopening the last selected Habit. A Watch Completion appeared on the iPhone without relaunching it. Completion changes update the grid and counter directly, without an Added/Removed label or Undo action.
+
+The core suite completed 40 tests (3 skipped), iOS integration/widget layout completed 12 (1 skipped), and the Watch model suite completed 4, with no failures. Screenshots from this local run are in `artifacts/watch-implementation/`. The Watch tests are a separate local scheme and are not yet part of the CI test selection.
+
+Before release, check smaller Watch sizes, accessibility text sizes, Crown input, haptics, background file delivery for large journals, offline reconnection, and forwarding Watch changes through private iCloud on signed devices. Shared Habits and editing stay on the iPhone in this first Watch implementation.
+
 Simulator builds intentionally use local storage instead of live private-database synchronization. The deterministic Shared Habit join fixture validates navigation and local choices but stops before CloudKit acceptance. A successful Simulator build therefore does not establish production iCloud, push-notification, invitation, or signing behavior.
 
 ## Signed-device acceptance

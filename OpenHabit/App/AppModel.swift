@@ -18,6 +18,7 @@ final class AppModel {
         do {
             data = try sharedStore().read().dataset
             sharedHabits = try sharingStore().read(reconciling: data)
+            WatchSync.shared.publish()
         }
         catch { self.error = error.localizedDescription }
     }

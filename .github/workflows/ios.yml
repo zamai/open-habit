@@ -62,6 +62,8 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           APP_PROFILE: ${{ secrets.APP_PROFILE }}
           WIDGET_PROFILE: ${{ secrets.WIDGET_PROFILE }}
+          WATCH_PROFILE: ${{ secrets.WATCH_PROFILE }}
+          WHAT_TO_TEST: "Apple Watch companion: open Open Habit on your paired iPhone to synchronize personal Habits. Use the history grid, Crown or vertical swipe paging, and compact Habit list. Tap Completion buttons in either view; tapping a completed target removes one Completion. The grid and counter update directly. Please check iPhone and Watch synchronization, including reconnection after being offline."
         run: bash scripts/ci/publish.sh
   app-store:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-rc.')
@@ -83,6 +85,7 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           APP_PROFILE: ${{ secrets.APP_PROFILE }}
           WIDGET_PROFILE: ${{ secrets.WIDGET_PROFILE }}
+          WATCH_PROFILE: ${{ secrets.WATCH_PROFILE }}
         run: bash scripts/ci/publish.sh app-store
   local-testflight:
     if: github.event_name == 'workflow_dispatch' && inputs.testflight_runner == 'maintainer-mac' && github.ref == 'refs/heads/main'
@@ -103,6 +106,8 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
           APP_PROFILE: ${{ secrets.APP_PROFILE }}
           WIDGET_PROFILE: ${{ secrets.WIDGET_PROFILE }}
+          WATCH_PROFILE: ${{ secrets.WATCH_PROFILE }}
+          WHAT_TO_TEST: "Apple Watch companion: open Open Habit on your paired iPhone to synchronize personal Habits. Use the history grid, Crown or vertical swipe paging, and compact Habit list. Tap Completion buttons in either view; tapping a completed target removes one Completion. The grid and counter update directly. Please check iPhone and Watch synchronization, including reconnection after being offline."
         run: bash scripts/ci/publish.sh
   external-review-retry:
     if: github.event_name == 'schedule'

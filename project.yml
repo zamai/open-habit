@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.alex.openhabit
   deploymentTarget:
     iOS: '17.0'
+    watchOS: '10.0'
 packages:
   OpenHabitCore:
     path: OpenHabitCore
@@ -21,12 +22,16 @@ targets:
     type: application
     platform: iOS
     sources:
-      - OpenHabit/App
+      - path: OpenHabit/App
+        excludes: [SharePlacementPrototype.html]
       - OpenHabit/Shared
       - OpenHabit/Resources
+      - OpenHabit/Connectivity
     dependencies:
       - package: OpenHabitCore
       - target: OpenHabitWidgets
+      - target: OpenHabitWatch
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit
@@ -95,6 +100,44 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit.tests
+  OpenHabitWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - OpenHabit/Watch
+      - OpenHabit/Connectivity
+      - OpenHabit/Shared/HabitVisuals.swift
+      - OpenHabit/Resources
+    dependencies:
+      - package: OpenHabitCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit.watchkitapp
+        TARGETED_DEVICE_FAMILY: '4'
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SKIP_INSTALL: YES
+    info:
+      path: OpenHabit/Watch/Info.plist
+      properties:
+        CFBundleDisplayName: Open Habit
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.alex.openhabit
+        WKRunsIndependentlyOfCompanionApp: false
+        ITSAppUsesNonExemptEncryption: false
+  OpenHabitWatchTests:
+    type: bundle.unit-test
+    platform: watchOS
+    sources: [OpenHabitWatchTests]
+    dependencies:
+      - target: OpenHabitWatch
+      - package: OpenHabitCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit.watchkitapp.tests
+        TARGETED_DEVICE_FAMILY: '4'
   OpenHabitUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -106,6 +149,14 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.alex.openhabit.uitests
 schemes:
+  OpenHabitWatch:
+    build:
+      targets:
+        OpenHabitWatch: all
+    test:
+      targets: [OpenHabitWatchTests]
+    run:
+      config: Debug
   OpenHabit:
     build:
       targets:

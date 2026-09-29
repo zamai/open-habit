@@ -15,6 +15,7 @@
 		12BCFB098619C14842A65F69 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AC82FEFE33085BE2621C27 /* AppModel.swift */; };
 		19E250EACF64644EA639232E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B0662758E894912B6B7DD97D /* PrivacyInfo.xcprivacy */; };
 		1C6C9A337A8CC83BB63D0FDE /* HabitDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FE4A18CAF7B6C581E12D08 /* HabitDetailView.swift */; };
+		24D8B20BE62AC69561E16777 /* OpenHabitWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 0121BBA5B424091CF89D5B0C /* OpenHabitWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		255624308EB40131C9A12700 /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D164BBCCAE5874C2C25B801 /* SharedStore.swift */; };
 		285EF613E40CC689C46DDA9D /* SharingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C5337735D43C68CC0AB2BA /* SharingStore.swift */; };
 		2EF182EE28CE6AAA98D614EF /* SharedHabitViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD657C29628CD4F337145C30 /* SharedHabitViews.swift */; };
@@ -22,17 +23,25 @@
 		331371D1E296A3B956903543 /* HabitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */; };
 		3592F417ACF2FE6EB8EA6DA5 /* SharedCloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADB9C3783F74670F327D0E7 /* SharedCloudSync.swift */; };
 		35EAB4D04567C506A6223782 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0F6881D13A3A75264CAC9AF7 /* PrivacyInfo.xcprivacy */; };
+		37F89CBFF17760975D6C52FD /* HabitVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */; };
 		38789A7DE3B252C61EC252D5 /* OpenHabitWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23415D4CDEA5722AE5FB0FBC /* OpenHabitWidgets.swift */; };
+		3A62A9E10CDC21D2CF406272 /* WatchHabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98CD72C1FE1CF13620FA36A7 /* WatchHabitsView.swift */; };
 		3A9F0DAF6A2EB19B71C0618B /* OpenHabitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930C2515644CD54F9ACD9E40 /* OpenHabitApp.swift */; };
 		3E070FBB0EBC0DD82715AFAD /* WidgetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629B9C172642BD503791ECE0 /* WidgetUITests.swift */; };
 		4CBC419B1F076F012192B70B /* SharedHabitJoinUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5747915384329576A5C93E2 /* SharedHabitJoinUITests.swift */; };
 		67668BD896DEB07994BDC41D /* HabitWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */; };
 		6E2A48900630C267F5597326 /* HabitWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */; };
+		7526FDD0C8A8F55B5477C3BA /* WatchSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A69FF11BF0EC7700786572 /* WatchSync.swift */; };
 		7574FB776B7EFEA3EDB3B40C /* HabitVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */; };
 		77F44A2CB26063467B999B13 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1E203BB3C4FB682412D0ECE /* CloudSync.swift */; };
 		7E587AF68215396AF668E2E9 /* CloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1E203BB3C4FB682412D0ECE /* CloudSync.swift */; };
+		81E8C3F77B421E5C6C5E3838 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08CE54FF173592E32D6B5418 /* Assets.xcassets */; };
 		83A045439E89FAD829C9A608 /* DeleteConfirmationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC317774604784BA1C1D0DC3 /* DeleteConfirmationUITests.swift */; };
+		86C218A02F254AEFAB2E0943 /* WatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53CDE37EF1640F083646DC9B /* WatchModel.swift */; };
 		8A4C51CB8F05A6B79F632A14 /* HabitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */; };
+		8CABDD326277D229F81839C4 /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = F8DCC0D4BB5F5AB9FCE2FBD4 /* OpenHabitCore */; };
+		94996EC97107396483C6CF01 /* OpenHabitWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9396A02AFF196EBC899E0A7 /* OpenHabitWatchApp.swift */; };
+		972E328372BB39806BC1298E /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 35AF3900DB4C06B7A1DC3731 /* OpenHabitCore */; };
 		9EC563A43A66F1AB07CF2087 /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4E39577694E79816BB981CC1 /* OpenHabitCore */; };
 		A766AB177DCF3661F7DFFDD4 /* HabitVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */; };
 		AF1CF90A974B57A501DEC0FA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D403E24DB410F714097FFC5E /* SettingsView.swift */; };
@@ -41,6 +50,9 @@
 		B8ECC6B946F245C3210F389F /* HabitEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D8B16028A1C167D86F734A /* HabitEditor.swift */; };
 		C0B1DB153D3240BCA5FBF7A1 /* OpenHabitCore in Frameworks */ = {isa = PBXBuildFile; productRef = CFA001260E814B07646529BA /* OpenHabitCore */; };
 		C5237B463C2C8C3E1C9E9065 /* SharedCloudSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADB9C3783F74670F327D0E7 /* SharedCloudSync.swift */; };
+		D0F21A1DD851B73574D7D79E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B0662758E894912B6B7DD97D /* PrivacyInfo.xcprivacy */; };
+		D3C0542C24C5ECA79EA4B7D5 /* WatchSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A69FF11BF0EC7700786572 /* WatchSync.swift */; };
+		DFF12195867689999A401F5B /* WatchModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D060B877B3F507CC6E19357 /* WatchModelTests.swift */; };
 		E4CA5266E3E00387FFF044A2 /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8259AB12F1BC7BEEF985B827 /* OverviewView.swift */; };
 		EDC8C5667542AD1D62AD3F46 /* ImportUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 628DF07485DBFC431E79B585 /* ImportUITests.swift */; };
 		F035CB87B7BB03CE17FC3114 /* SharingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C5337735D43C68CC0AB2BA /* SharingStore.swift */; };
@@ -53,6 +65,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 03EB540A8DDCDC391B7E7E4F;
 			remoteInfo = OpenHabitWidgets;
+		};
+		1A71FE78C00AEDFFE0101E09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C819005FEC4D4AE0665ED0DC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1A79C1BD1E7035E98F127076;
+			remoteInfo = OpenHabitWatch;
 		};
 		447F45DDFD8E57749F75BBB0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -68,9 +87,27 @@
 			remoteGlobalIDString = BAE39B497656C559D9178B57;
 			remoteInfo = OpenHabit;
 		};
+		636F8EAA35726BB44DCA8B46 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C819005FEC4D4AE0665ED0DC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1A79C1BD1E7035E98F127076;
+			remoteInfo = OpenHabitWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		3D9E8FD849021B23C57FB7F8 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				24D8B20BE62AC69561E16777 /* OpenHabitWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F8195EA921357B822FFFF41E /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -85,6 +122,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0121BBA5B424091CF89D5B0C /* OpenHabitWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenHabitWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		08CE54FF173592E32D6B5418 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitWidgetContent.swift; sourceTree = "<group>"; };
 		0F6881D13A3A75264CAC9AF7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -92,22 +130,27 @@
 		366C96F85D6309FA8CDA9DA1 /* OpenHabitCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OpenHabitCore; path = OpenHabitCore; sourceTree = SOURCE_ROOT; };
 		369B2205DF7BED0C3A469B66 /* OpenHabitUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OpenHabitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		38BA391909BE888F0144AD0D /* OpenHabitWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = OpenHabitWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C4D77E9059072E0DE75176F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		44AC82FEFE33085BE2621C27 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		48EB354A3D7F83C66032EE69 /* HabitDetailUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDetailUITests.swift; sourceTree = "<group>"; };
+		53CDE37EF1640F083646DC9B /* WatchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchModel.swift; sourceTree = "<group>"; };
 		585229E5D111A46C575777E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5D164BBCCAE5874C2C25B801 /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
 		628DF07485DBFC431E79B585 /* ImportUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportUITests.swift; sourceTree = "<group>"; };
 		629B9C172642BD503791ECE0 /* WidgetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetUITests.swift; sourceTree = "<group>"; };
 		62FDB96AC8361DBC8F1B8E73 /* HabitIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitIntents.swift; sourceTree = "<group>"; };
+		65EC00D967FDD10E3AE260D3 /* OpenHabitWatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenHabitWatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7156FB95578D7B4822AF6C6B /* OpenHabit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenHabit.entitlements; sourceTree = "<group>"; };
 		7430E705935DB2F9A634CC00 /* OpenHabitWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenHabitWidgets.entitlements; sourceTree = "<group>"; };
 		74C5337735D43C68CC0AB2BA /* SharingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharingStore.swift; sourceTree = "<group>"; };
 		7D6E12A19A1FC02234EC8F07 /* Previews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Previews.swift; sourceTree = "<group>"; };
 		8259AB12F1BC7BEEF985B827 /* OverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewView.swift; sourceTree = "<group>"; };
 		8ADB9C3783F74670F327D0E7 /* SharedCloudSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCloudSync.swift; sourceTree = "<group>"; };
+		8D060B877B3F507CC6E19357 /* WatchModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchModelTests.swift; sourceTree = "<group>"; };
 		8FE5AC14C1BFE87E3A8EBBEE /* WidgetLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLayoutTests.swift; sourceTree = "<group>"; };
 		92D8B16028A1C167D86F734A /* HabitEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEditor.swift; sourceTree = "<group>"; };
 		930C2515644CD54F9ACD9E40 /* OpenHabitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenHabitApp.swift; sourceTree = "<group>"; };
+		98CD72C1FE1CF13620FA36A7 /* WatchHabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHabitsView.swift; sourceTree = "<group>"; };
 		A2CEF39454582E591F63A033 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A5747915384329576A5C93E2 /* SharedHabitJoinUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedHabitJoinUITests.swift; sourceTree = "<group>"; };
 		A79740D55713A0D974950385 /* OpenHabit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = OpenHabit.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -119,15 +162,33 @@
 		D403E24DB410F714097FFC5E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		DC317774604784BA1C1D0DC3 /* DeleteConfirmationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteConfirmationUITests.swift; sourceTree = "<group>"; };
 		E3FE4A18CAF7B6C581E12D08 /* HabitDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDetailView.swift; sourceTree = "<group>"; };
+		E5A69FF11BF0EC7700786572 /* WatchSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSync.swift; sourceTree = "<group>"; };
 		E7BD1F66A287930FB0C33213 /* HabitVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitVisuals.swift; sourceTree = "<group>"; };
+		F9396A02AFF196EBC899E0A7 /* OpenHabitWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenHabitWatchApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		052EAFD13242CA733B1C1061 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8CABDD326277D229F81839C4 /* OpenHabitCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		47F034090D0A3E6DFDBA0B37 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				9EC563A43A66F1AB07CF2087 /* OpenHabitCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB46ABCB399D78992E9B5768 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				972E328372BB39806BC1298E /* OpenHabitCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,15 +211,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0CBC8543DA7610B5CE99D9CF /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				3C4D77E9059072E0DE75176F /* Info.plist */,
+				F9396A02AFF196EBC899E0A7 /* OpenHabitWatchApp.swift */,
+				98CD72C1FE1CF13620FA36A7 /* WatchHabitsView.swift */,
+				53CDE37EF1640F083646DC9B /* WatchModel.swift */,
+			);
+			name = Watch;
+			path = OpenHabit/Watch;
+			sourceTree = "<group>";
+		};
 		11A05846A23C56EDD19F1E51 = {
 			isa = PBXGroup;
 			children = (
 				73B0510E80947462D5AAB6E9 /* App */,
+				5A8FA1D011644378A084749D /* Connectivity */,
 				BFF629099B85BEC797A7DE01 /* OpenHabitTests */,
 				AB4EC5E3357FF5808D84A983 /* OpenHabitUITests */,
+				76F0980D3460263C5E5E7C71 /* OpenHabitWatchTests */,
 				F522D5E1AD96053E0488AF42 /* Packages */,
 				55D24CADB5BA1A9859B30469 /* Resources */,
 				CDE1FB2B70D9ADD57C76834A /* Shared */,
+				0CBC8543DA7610B5CE99D9CF /* Watch */,
 				4036E96A0E4C2786C3582BE1 /* Widgets */,
 				AECBA570DADE1E1BDF922422 /* Products */,
 			);
@@ -186,6 +262,15 @@
 			path = OpenHabit/Resources;
 			sourceTree = "<group>";
 		};
+		5A8FA1D011644378A084749D /* Connectivity */ = {
+			isa = PBXGroup;
+			children = (
+				E5A69FF11BF0EC7700786572 /* WatchSync.swift */,
+			);
+			name = Connectivity;
+			path = OpenHabit/Connectivity;
+			sourceTree = "<group>";
+		};
 		73B0510E80947462D5AAB6E9 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -202,6 +287,14 @@
 			);
 			name = App;
 			path = OpenHabit/App;
+			sourceTree = "<group>";
+		};
+		76F0980D3460263C5E5E7C71 /* OpenHabitWatchTests */ = {
+			isa = PBXGroup;
+			children = (
+				8D060B877B3F507CC6E19357 /* WatchModelTests.swift */,
+			);
+			path = OpenHabitWatchTests;
 			sourceTree = "<group>";
 		};
 		AB4EC5E3357FF5808D84A983 /* OpenHabitUITests */ = {
@@ -222,6 +315,8 @@
 				A79740D55713A0D974950385 /* OpenHabit.app */,
 				B66D1CBBFE6BD88E034389B4 /* OpenHabitTests.xctest */,
 				369B2205DF7BED0C3A469B66 /* OpenHabitUITests.xctest */,
+				0121BBA5B424091CF89D5B0C /* OpenHabitWatch.app */,
+				65EC00D967FDD10E3AE260D3 /* OpenHabitWatchTests.xctest */,
 				38BA391909BE888F0144AD0D /* OpenHabitWidgets.appex */,
 			);
 			name = Products;
@@ -282,6 +377,26 @@
 			productReference = 38BA391909BE888F0144AD0D /* OpenHabitWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		1A79C1BD1E7035E98F127076 /* OpenHabitWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC3043E0F2F95089EA3099DC /* Build configuration list for PBXNativeTarget "OpenHabitWatch" */;
+			buildPhases = (
+				1A039536C901CE5282C0E4E6 /* Sources */,
+				0E84F7749D6B4A9201AF1B00 /* Resources */,
+				AB46ABCB399D78992E9B5768 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenHabitWatch;
+			packageProductDependencies = (
+				35AF3900DB4C06B7A1DC3731 /* OpenHabitCore */,
+			);
+			productName = OpenHabitWatch;
+			productReference = 0121BBA5B424091CF89D5B0C /* OpenHabitWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 		4CD901F5D1603A21567588D5 /* OpenHabitUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 739464526B164ADCEFCB9D9C /* Build configuration list for PBXNativeTarget "OpenHabitUITests" */;
@@ -320,6 +435,26 @@
 			productReference = B66D1CBBFE6BD88E034389B4 /* OpenHabitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		ADECBA5D85CFF057277F4F5D /* OpenHabitWatchTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B6ECCFBADEA4AE805F017B27 /* Build configuration list for PBXNativeTarget "OpenHabitWatchTests" */;
+			buildPhases = (
+				7222468EEE93669E9CAA7C2A /* Sources */,
+				052EAFD13242CA733B1C1061 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F82CADBB692B545FAF2DDBAB /* PBXTargetDependency */,
+			);
+			name = OpenHabitWatchTests;
+			packageProductDependencies = (
+				F8DCC0D4BB5F5AB9FCE2FBD4 /* OpenHabitCore */,
+			);
+			productName = OpenHabitWatchTests;
+			productReference = 65EC00D967FDD10E3AE260D3 /* OpenHabitWatchTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		BAE39B497656C559D9178B57 /* OpenHabit */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 820276ECB137CD62B773A165 /* Build configuration list for PBXNativeTarget "OpenHabit" */;
@@ -328,11 +463,13 @@
 				1D31374BB5506073AC125FBB /* Resources */,
 				E51FC2557DC579AF07DB49AA /* Frameworks */,
 				F8195EA921357B822FFFF41E /* Embed Foundation Extensions */,
+				3D9E8FD849021B23C57FB7F8 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				2E5142D36BD96196B83616C3 /* PBXTargetDependency */,
+				88B860A3AC9D5911E8D39F45 /* PBXTargetDependency */,
 			);
 			name = OpenHabit;
 			packageProductDependencies = (
@@ -355,12 +492,20 @@
 						DevelopmentTeam = 539QCPHM7F;
 						ProvisioningStyle = Automatic;
 					};
+					1A79C1BD1E7035E98F127076 = {
+						DevelopmentTeam = 539QCPHM7F;
+						ProvisioningStyle = Automatic;
+					};
 					4CD901F5D1603A21567588D5 = {
 						DevelopmentTeam = 539QCPHM7F;
 						ProvisioningStyle = Automatic;
 						TestTargetID = BAE39B497656C559D9178B57;
 					};
 					9C67A61F9177C0D82D285A83 = {
+						DevelopmentTeam = 539QCPHM7F;
+						ProvisioningStyle = Automatic;
+					};
+					ADECBA5D85CFF057277F4F5D = {
 						DevelopmentTeam = 539QCPHM7F;
 						ProvisioningStyle = Automatic;
 					};
@@ -390,12 +535,23 @@
 				BAE39B497656C559D9178B57 /* OpenHabit */,
 				03EB540A8DDCDC391B7E7E4F /* OpenHabitWidgets */,
 				9C67A61F9177C0D82D285A83 /* OpenHabitTests */,
+				1A79C1BD1E7035E98F127076 /* OpenHabitWatch */,
+				ADECBA5D85CFF057277F4F5D /* OpenHabitWatchTests */,
 				4CD901F5D1603A21567588D5 /* OpenHabitUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0E84F7749D6B4A9201AF1B00 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				81E8C3F77B421E5C6C5E3838 /* Assets.xcassets in Resources */,
+				D0F21A1DD851B73574D7D79E /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1D31374BB5506073AC125FBB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -416,6 +572,18 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1A039536C901CE5282C0E4E6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37F89CBFF17760975D6C52FD /* HabitVisuals.swift in Sources */,
+				94996EC97107396483C6CF01 /* OpenHabitWatchApp.swift in Sources */,
+				3A62A9E10CDC21D2CF406272 /* WatchHabitsView.swift in Sources */,
+				86C218A02F254AEFAB2E0943 /* WatchModel.swift in Sources */,
+				D3C0542C24C5ECA79EA4B7D5 /* WatchSync.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		54A9B1EBF045837E173A512D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -428,6 +596,14 @@
 				C5237B463C2C8C3E1C9E9065 /* SharedCloudSync.swift in Sources */,
 				05BAC5CECEC2960F59DC1EF0 /* SharedStore.swift in Sources */,
 				285EF613E40CC689C46DDA9D /* SharingStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7222468EEE93669E9CAA7C2A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DFF12195867689999A401F5B /* WatchModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -471,6 +647,7 @@
 				2EF182EE28CE6AAA98D614EF /* SharedHabitViews.swift in Sources */,
 				255624308EB40131C9A12700 /* SharedStore.swift in Sources */,
 				F035CB87B7BB03CE17FC3114 /* SharingStore.swift in Sources */,
+				7526FDD0C8A8F55B5477C3BA /* WatchSync.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -487,6 +664,16 @@
 			target = 03EB540A8DDCDC391B7E7E4F /* OpenHabitWidgets */;
 			targetProxy = 0D444EB68A9698A976DD7B0F /* PBXContainerItemProxy */;
 		};
+		88B860A3AC9D5911E8D39F45 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1A79C1BD1E7035E98F127076 /* OpenHabitWatch */;
+			targetProxy = 636F8EAA35726BB44DCA8B46 /* PBXContainerItemProxy */;
+		};
+		F82CADBB692B545FAF2DDBAB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1A79C1BD1E7035E98F127076 /* OpenHabitWatch */;
+			targetProxy = 1A71FE78C00AEDFFE0101E09 /* PBXContainerItemProxy */;
+		};
 		FF835F2601CC3BA46EF4FD10 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BAE39B497656C559D9178B57 /* OpenHabit */;
@@ -495,6 +682,24 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		103048B80F5B148DFC07BE6B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.watchkitapp.tests;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenHabitWatch.app/OpenHabitWatch";
+			};
+			name = Debug;
+		};
 		10B52561046071852A28E024 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -583,6 +788,24 @@
 			};
 			name = Release;
 		};
+		7B64636D9BBEA77AA20A9489 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.watchkitapp.tests;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OpenHabitWatch.app/OpenHabitWatch";
+			};
+			name = Release;
+		};
 		96F2DB3ADE89F5FF73156541 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -644,14 +867,26 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
+		};
+		9D93C7E150BADE18428A4C7B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = OpenHabit/Watch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
 		};
 		A477F129187A1407F1DD96E7 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -707,12 +942,12 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -733,6 +968,18 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		A5D0861905D8C70F18588AF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = OpenHabit/Watch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.alex.openhabit.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
 		};
 		D98E5F70061030B90DE5B117 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -807,6 +1054,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		AC3043E0F2F95089EA3099DC /* Build configuration list for PBXNativeTarget "OpenHabitWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A5D0861905D8C70F18588AF0 /* Debug */,
+				9D93C7E150BADE18428A4C7B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B6ECCFBADEA4AE805F017B27 /* Build configuration list for PBXNativeTarget "OpenHabitWatchTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				103048B80F5B148DFC07BE6B /* Debug */,
+				7B64636D9BBEA77AA20A9489 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		B865548D3FB0E2239F007A15 /* Build configuration list for PBXNativeTarget "OpenHabitWidgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -826,6 +1091,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		35AF3900DB4C06B7A1DC3731 /* OpenHabitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OpenHabitCore;
+		};
 		3760EEFF129A82CA87576726 /* OpenHabitCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = OpenHabitCore;
@@ -835,6 +1104,10 @@
 			productName = OpenHabitCore;
 		};
 		CFA001260E814B07646529BA /* OpenHabitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OpenHabitCore;
+		};
+		F8DCC0D4BB5F5AB9FCE2FBD4 /* OpenHabitCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = OpenHabitCore;
 		};

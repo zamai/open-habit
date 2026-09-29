@@ -108,6 +108,7 @@ struct DayTile: View {
     }
 }
 
+#if os(iOS)
 struct LabeledHistoryGrid: View {
     let habit: Habit
     let data: Dataset
@@ -213,6 +214,7 @@ struct CompactHistoryLayout {
         return max(0, min(CGFloat(week) * (tileSide + spacing), width - labelWidth))
     }
 }
+#endif
 
 struct HistoryGrid: View {
     let habit: Habit
@@ -269,6 +271,7 @@ private func historyDates(weeks: Int, end: Date, calendar: Calendar) -> [Date] {
     return (0..<(weeks * 7)).map { calendar.date(byAdding: .day, value: $0 - weeks * 7 + 1, to: last)! }
 }
 
+#if os(iOS)
 struct GlassGroup<Content: View>: View {
     @ViewBuilder let content: () -> Content
     @ViewBuilder var body: some View {
@@ -276,3 +279,4 @@ struct GlassGroup<Content: View>: View {
         else { content() }
     }
 }
+#endif

@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "OpenHabitCore",
-    platforms: [.iOS(.v17), .macOS(.v14)],
+    platforms: [.iOS(.v17), .macOS(.v14), .watchOS(.v10)],
     products: [.library(name: "OpenHabitCore", targets: ["OpenHabitCore"])],
     targets: [.target(name: "OpenHabitCore"), .testTarget(name: "OpenHabitCoreTests", dependencies: ["OpenHabitCore"], resources: [.copy("Fixtures")])]
 )

@@ -27,6 +27,7 @@ extension Notification.Name {
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         application.registerForRemoteNotifications()
+        WatchSync.shared.start()
         return true
     }
 
@@ -37,7 +38,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         Task {
-            do { _ = try await CloudSync.shared.synchronize(); WidgetCenter.shared.reloadAllTimelines(); completionHandler(.newData) }
+            do {
+                _ = try await CloudSync.shared.synchronize()
+                WidgetCenter.shared.reloadAllTimelines()
+                WatchSync.shared.publish()
+                completionHandler(.newData)
+            }
             catch { completionHandler(.failed) }
         }
     }
@@ -105,6 +111,11 @@ struct OpenHabitApp: App {
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .sharedHabitInvitationAccepted)) { _ in
                     Task { await model.preparePendingShare() }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .watchJournalChanged)) { _ in
+                    model.reload()
+                    WidgetCenter.shared.reloadAllTimelines()
+                    Task { await model.sync() }
                 }
                 .alert("Couldn’t save this change", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
                     Button("OK") { model.error = nil }
