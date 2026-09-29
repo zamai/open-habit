@@ -5,6 +5,50 @@ import OpenHabitCore
 @testable import OpenHabit
 
 final class WidgetLayoutTests: XCTestCase {
+    func testCompactHistoryFitsWholeMonthsAtNarrowAndWidePhoneWidths() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.firstWeekday = 2
+        let end = try XCTUnwrap(LocalDay.date("2026-09-29"))
+        // Phone width minus Overview padding, Habit Card padding, and weekday labels.
+        for (width, expectedMonths) in [(CGFloat(270), [6, 7, 8, 9]), (CGFloat(320), [5, 6, 7, 8, 9])] {
+            let layout = CompactHistoryLayout(width: width, end: end, calendar: calendar)
+            XCTAssertEqual(layout.months.map { calendar.component(.month, from: $0) }, expectedMonths)
+            XCTAssertLessThanOrEqual(layout.width, width)
+            XCTAssertEqual(layout.tileSide, 11, "Fit fewer months instead of squeezing day squares")
+            XCTAssertEqual(calendar.component(.weekday, from: layout.dates[0]), 2)
+            XCTAssertEqual(LocalDay.string(try XCTUnwrap(layout.dates.last)), "2026-10-04")
+            XCTAssertTrue(layout.dates.contains(calendar.startOfDay(for: end)))
+            XCTAssertTrue(layout.months.allSatisfy { calendar.component(.day, from: $0) == 1 && $0 <= end })
+        }
+    }
+
+    @MainActor func testCompactHistoryMonthLabelsDoNotOverlapOrClipAtMonthBoundaries() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_US")
+        let font = UIFont.systemFont(ofSize: 12)
+        for weekStart in [1, 2] {
+            calendar.firstWeekday = weekStart
+            for month in 1...12 {
+                for day in [1, 15, 28] {
+                    let end = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: 14)))
+                    for width in stride(from: CGFloat(200), through: 400, by: 10) {
+                        let layout = CompactHistoryLayout(width: width, end: end, calendar: calendar)
+                        var previousRight: CGFloat = -8
+                        for date in layout.months {
+                            let label = calendar.shortMonthSymbols[calendar.component(.month, from: date) - 1]
+                            let labelWidth = (label as NSString).size(withAttributes: [.font: font]).width
+                            let x = layout.labelX(for: date, width: labelWidth)
+                            XCTAssertGreaterThanOrEqual(x, previousRight + 8, "\(end), width \(width), \(label)")
+                            XCTAssertLessThanOrEqual(x + labelWidth, layout.width + 0.01)
+                            previousRight = x + labelWidth
+                        }
+                        XCTAssertLessThanOrEqual(layout.width, width)
+                    }
+                }
+            }
+        }
+    }
+
     @MainActor func testCaptureSharedHabitGlossary() throws {
         guard ProcessInfo.processInfo.environment["GENERATE_UI_GLOSSARY"] == "1" else {
             throw XCTSkip("Opt-in screenshot for docs/ui-glossary.md")
