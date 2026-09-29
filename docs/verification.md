@@ -30,7 +30,7 @@ bash scripts/ci/test-import.sh
 
 Built and ran the iPhone and Watch apps with Xcode 27 on a paired iPhone 18 Pro Max and Apple Watch Series 12 (46mm), using synthetic example Habits. Verified first synchronization, the grid/list transition, vertical paging, Completion buttons in both views, removal of one Completion from a completed multi-target Habit, and reopening the last selected Habit. A Watch Completion appeared on the iPhone without relaunching it. Completion changes update the grid and counter directly, without an Added/Removed label or Undo action.
 
-The core suite completed 40 tests (3 skipped), iOS integration/widget layout completed 12 (1 skipped), and the Watch model suite completed 4, with no failures. Screenshots from this local run are in `artifacts/watch-implementation/`. The Watch tests are a separate local scheme and are not yet part of the CI test selection.
+The core suite completed 40 tests (3 skipped), iOS integration/widget layout completed 12 (1 skipped), the iOS UI suite completed 8 (1 skipped), and the Watch model suite completed 4, with no failures. The grid and list also fit the 42mm Watch Simulator, with personal Habits received from its paired iPhone. Screenshots from this local run are in `artifacts/watch-implementation/`. The Watch tests are a separate local scheme and are not yet part of the CI test selection.
 
 Before release, check smaller Watch sizes, accessibility text sizes, Crown input, haptics, background file delivery for large journals, offline reconnection, and forwarding Watch changes through private iCloud on signed devices. Shared Habits and editing stay on the iPhone in this first Watch implementation.
 
