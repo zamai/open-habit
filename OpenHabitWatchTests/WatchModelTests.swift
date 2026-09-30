@@ -28,12 +28,16 @@ final class WatchModelTests: XCTestCase {
         XCTAssertNil(model.error)
     }
 
-    func testCompletedHabitRemovesOneInsteadOfClearingTheDay() throws {
+    func testMultiTargetHabitCyclesThroughTargetThenZero() throws {
         let model = WatchModel(store: store)
         let habit = model.data.active.first { $0.target > 1 }!
-        try store.transaction { try $0.setCount(habit.id, day: LocalDay.string(now), count: habit.target, now: now) }
-        model.complete(habit.id, now: now)
-        XCTAssertEqual(model.data.day(habit.id, LocalDay.string(now)).count, habit.target - 1)
+        let day = LocalDay.string(now)
+        XCTAssertEqual(model.data.day(habit.id, day).count, 1)
+        for expected in [2, 3, 0, 1] {
+            model.complete(habit.id, now: now)
+            XCTAssertEqual(model.data.day(habit.id, day).count, expected)
+            XCTAssertEqual(try store.read().dataset.day(habit.id, day).count, expected)
+        }
     }
 
     func testCompletionAfterMidnightRecordsTheNewDay() throws {

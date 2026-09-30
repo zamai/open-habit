@@ -28,17 +28,9 @@ final class WatchModel {
     func complete(_ habitID: UUID, now: Date = Date()) {
         error = nil
         do {
-            try store.transaction { journal in
-                guard let habit = journal.dataset.habit(habitID) else { throw HabitError.missingHabit }
-                guard !habit.archived else { throw HabitError.archivedHabit }
-                let day = LocalDay.string(now)
-                let added = journal.dataset.day(habitID, day).count < habit.target
-                if added { try journal.add(habitID, day: day, now: now) }
-                else { try journal.remove(habitID, day: day, now: now) }
-            }
+            try store.transaction { try $0.toggle(habitID, day: LocalDay.string(now), now: now) }
             reload()
             WatchSync.shared.publish()
         } catch { self.error = error.localizedDescription }
     }
-
 }

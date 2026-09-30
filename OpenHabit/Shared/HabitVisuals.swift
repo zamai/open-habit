@@ -95,10 +95,11 @@ struct DayTile: View {
     let target: Int
     let color: Color
     let today: Bool
+    var emptyColor: Color? = nil
     var body: some View {
         GeometryReader { geometry in
             RoundedRectangle(cornerRadius: geometry.size.width * 0.22)
-                .fill(day.count == 0 ? color.opacity(0.10) : color.opacity(0.25 + 0.75 * day.progress(target: target)))
+                .fill(day.count == 0 ? (emptyColor ?? color.opacity(0.10)) : color.opacity(0.25 + 0.75 * day.progress(target: target)))
                 .overlay(alignment: .topTrailing) {
                     if !day.note.isEmpty { Circle().fill(.primary).frame(width: 3, height: 3).offset(x: 1, y: -1) }
                 }
@@ -223,6 +224,7 @@ struct HistoryGrid: View {
     var spacing: CGFloat = 3
     var maxTileSide: CGFloat? = nil
     var end: Date = Date()
+    var emptyColor: Color? = nil
     var onSelect: ((String) -> Void)?
     var onEdit: ((String) -> Void)?
     private var calendar: Calendar { historyCalendar(for: data) }
@@ -239,7 +241,7 @@ struct HistoryGrid: View {
                         let key = LocalDay.string(date)
                         let isFuture = key > LocalDay.string(end)
                         let day = isFuture ? HabitDay() : data.day(habit.id, key)
-                        DayTile(day: day, target: habit.target, color: habit.tint, today: key == LocalDay.string(end))
+                        DayTile(day: day, target: habit.target, color: habit.tint, today: key == LocalDay.string(end), emptyColor: emptyColor)
                             .frame(maxWidth: maxTileSide, maxHeight: maxTileSide)
                             .contentShape(Rectangle())
                             .onTapGesture { if !isFuture { onSelect?(key) } }

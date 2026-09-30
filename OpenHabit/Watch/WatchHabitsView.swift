@@ -82,7 +82,8 @@ private struct WatchHabitPage: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     WatchCompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(date)).count)
                 }
-                HistoryGrid(habit: habit, data: data, weeks: weeks, spacing: 4, end: date)
+                HistoryGrid(habit: habit, data: data, weeks: weeks, spacing: 4, end: date,
+                            emptyColor: .white.opacity(0.28))
                     .frame(width: CGFloat(weeks) * side + CGFloat(weeks - 1) * 4, height: 7 * side + 24)
                     .frame(maxWidth: .infinity)
                     .accessibilityElement(children: .ignore)
@@ -105,23 +106,29 @@ private struct WatchHabitRow: View {
     let date: Date
 
     var body: some View {
-        HStack(spacing: 6) {
-            Text(habit.emoji).font(.system(size: 22)).accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(habit.name).font(.system(.caption, design: .rounded).weight(.semibold)).lineLimit(2)
-                HStack(spacing: 4) {
-                    HStack(spacing: 2) {
-                        ForEach(0..<7, id: \.self) { offset in
-                            let day = Calendar.current.date(byAdding: .day, value: offset - 6, to: date)!
-                            DayTile(day: data.day(habit.id, LocalDay.string(day)), target: habit.target,
-                                    color: habit.tint, today: offset == 6).frame(width: 7, height: 7)
-                        }
-                    }.accessibilityHidden(true)
-                    Text("\(data.day(habit.id, LocalDay.string(date)).count)/\(habit.target)")
-                        .font(.system(size: 10)).foregroundStyle(.secondary).monospacedDigit()
-                }
-            }.frame(maxWidth: .infinity, alignment: .leading)
-            WatchCompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(date)).count, size: 38)
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Text(habit.emoji).font(.system(size: 22)).accessibilityHidden(true)
+                Text(habit.name).font(.system(.caption, design: .rounded).weight(.semibold))
+                    .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+                WatchCompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(date)).count, size: 38)
+            }
+            HStack(spacing: 4) {
+                HStack(spacing: 2) {
+                    ForEach(0..<7, id: \.self) { offset in
+                        let day = Calendar.current.date(byAdding: .day, value: offset - 6, to: date)!
+                        DayTile(day: data.day(habit.id, LocalDay.string(day)), target: habit.target,
+                                color: habit.tint, today: offset == 6, emptyColor: .white.opacity(0.28))
+                            .frame(width: 7, height: 7)
+                    }
+                }.accessibilityHidden(true)
+                Spacer(minLength: 4)
+                Text("\(data.day(habit.id, LocalDay.string(date)).count)/\(habit.target)")
+                    .font(.system(size: 11)).foregroundStyle(.secondary).monospacedDigit()
+                    .fixedSize(horizontal: true, vertical: false)
+                    .frame(minWidth: 44, alignment: .trailing)
+            }
+            .padding(.leading, 28)
         }
         .padding(.vertical, 3)
     }
@@ -142,7 +149,7 @@ private struct WatchCompletionButton: View {
         .buttonStyle(.plain)
         .sensoryFeedback(.success, trigger: count)
         .accessibilityLabel("\(habit.name), \(count) of \(habit.target) Completions today")
-        .accessibilityHint(count >= habit.target ? "Remove one Completion" : "Add one Completion")
+        .accessibilityHint(count >= habit.target ? "Clear today's Completions" : "Add one Completion")
         .accessibilityIdentifier("watch-complete-\(habit.id.uuidString)")
     }
 }

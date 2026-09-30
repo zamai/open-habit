@@ -26,7 +26,7 @@ bash scripts/ci/test.sh
 
 Keep ad-hoc signing enabled for Simulator builds so the app and widget can use their shared App Group container. `CODE_SIGNING_ALLOWED=NO` may compile, but the installed app will not have working shared storage.
 
-To try the Watch app, install a watchOS Simulator runtime in Xcode and choose a paired iPhone and Apple Watch in Simulator (Device Hub in Xcode 27). Run the `OpenHabit` scheme on the iPhone, then the `OpenHabitWatch` scheme on its paired Watch. Keep both devices booted for Watch Connectivity. The Watch opens the last selected Habit; tap the list button to see all personal Habits, swipe vertically or turn the Crown to change pages, and tap a Completion button to record today. Tapping a completed target removes one Completion.
+To try the Watch app, install a watchOS Simulator runtime in Xcode and choose a paired iPhone and Apple Watch in Simulator (Device Hub in Xcode 27). Run the `OpenHabit` scheme on the iPhone, then the `OpenHabitWatch` scheme on its paired Watch. Keep both devices booted for Watch Connectivity. The Watch opens the last selected Habit; tap the list button to see all personal Habits, swipe vertically or turn the Crown to change pages, and tap a Completion button to record today. A multi-target Habit cycles from zero to its target and back to zero.
 
 Run `OpenHabitWatchTests` with the `OpenHabitWatch` scheme's Test action. These tests run locally; the current CI test selection runs the iOS suites. Watch Connectivity can be checked between paired Simulators, but background file transfers, offline reconnection, haptics, and iCloud forwarding still need signed devices before release.
 

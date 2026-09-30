@@ -2,7 +2,7 @@ import base64, json, os, subprocess, sys, tempfile, time, urllib.error, urllib.r
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 
 APP_ID = '6808947599'
-WHAT_TO_TEST = os.environ.get('WHAT_TO_TEST', 'Apple Watch companion: open Open Habit on your paired iPhone to synchronize personal Habits. Use the history grid, Crown or vertical swipe paging, and compact Habit list. Tap Completion buttons in either view; tapping a completed target removes one Completion. The grid and counter update directly. Please check iPhone and Watch synchronization, including reconnection after being offline.')
+WHAT_TO_TEST = os.environ.get('WHAT_TO_TEST', 'Apple Watch companion: empty grid squares are brighter, the compact list places daily counts below the habit name, and multi-target Completions cycle from zero to the target and back to zero. Please check these changes on your Watch, including its dimmed display.')
 f = {'key_id': os.environ['ASC_KEY_ID'], 'issuer_id': os.environ['ASC_ISSUER_ID'], 'private_key': os.environ['ASC_PRIVATE_KEY']}
 if len(f['private_key']) > 1 and f['private_key'][0] == f['private_key'][-1] and f['private_key'][0] in "'\"":
     f['private_key'] = f['private_key'][1:-1]
