@@ -18,4 +18,4 @@ Release credentials are maintained outside the repository. Never print, commit, 
 
 When asked to publish to TestFlight, distribute the newest processed build to every configured TestFlight tester group, internal and external. Submit it for Beta App Review when Apple requires review for external testing. Do not call the release complete after checking only Internal Testers: read back the build's group relationships and verify that every configured group is assigned, then report the external review/testing state if external access is not active yet.
 
-GitHub Actions uses the protected `testflight` environment for `main` and `v*`. Pull requests and `main` run deterministic app tests; the SpringBoard widget-install smoke test remains local.
+GitHub Actions iOS builds are disabled. Its remaining scheduled job only retries Beta App Review for already uploaded builds. Run `bash scripts/ci/test.sh` locally; no push, tag, or workflow dispatch currently builds or publishes the app. The SpringBoard widget-install smoke test remains local.

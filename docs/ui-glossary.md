@@ -23,9 +23,8 @@ Habit Detail
 ├── Habit Header
 ├── Metric Cards
 ├── Month Calendar
-├── Members Section: Shared Habits only
 ├── Inline Note Editor: selected date's private Day Note
-└── Full Completion Grid: longer history at the bottom
+└── Members Section: Shared Habits only
 
 Habit Settings (screen title: Edit Habit)
 ├── Habit Definition fields
@@ -78,8 +77,8 @@ Undo latest Completion today, Mark today complete, Archive Habit, and Delete Hab
 
 | Canonical name | Where to look | Behavior |
 | --- | --- | --- |
-| Habit Detail | The screen titled Habit Detail | Shows one Habit's progress, calendar, private notes, and longer history. Avoid “widget details.” |
-| Habit Settings button | Sliders at the top right | Opens Edit Habit. Not available to non-Owner Members. |
+| Habit Detail | The screen titled Habit Detail | Shows one Habit's progress, Month Calendar, private Day Note, and Members when shared. Avoid “widget details.” |
+| Habit Settings button | Sliders at the top right | Opens Edit Habit for an Owner or Private Habit. Non-Owner Members see a Sharing Settings button instead, where they can leave the Shared Habit. |
 | Metric Cards | Small rounded boxes above the calendar | Show Daily Target, Month Total, and Current Streak when enabled. The month total follows the displayed calendar month. |
 | Month Calendar | Numbered dates under a month heading | Tap a past date or today to select it and cycle its Completions up to the Daily Target, then back to zero. Touch and hold to open its Day Note Sheet without incrementing Completions. Future dates are read-only. |
 | Month Navigation | Left and right chevrons around the month heading | Changes the displayed month. |
@@ -88,18 +87,16 @@ Undo latest Completion today, Mark today complete, Archive Habit, and Delete Hab
 | Selected Date Outline | Habit-colored border in the Month Calendar | Identifies the date shown in the Inline Note Editor. Today and the selected date can be different. |
 | Note Indicator | Tiny dot on a Day Tile | Indicates that the Habit Day has a Day Note. It is not an extra Completion. |
 
-### Inline Note Editor and Full Completion Grid
+### Inline Note Editor
 
-<img src="images/ui-glossary/note-and-history.png" alt="Lower Habit Detail with the selected date’s Inline Note Editor and the horizontally scrolling Full Completion Grid with its legend" width="340">
+<img src="images/ui-glossary/inline-note.png" alt="Habit Detail with the Inline Note Editor below the Month Calendar" width="340">
 
 | Canonical name | Where to look | Behavior |
 | --- | --- | --- |
 | Inline Note Editor | Rounded box with a date, text field, and Save Note | Edits the selected Habit Day's private Day Note within Habit Detail. Focus scrolls the box above the keyboard. Save Note persists changes. |
 | Day Note field | Text input inside the Inline Note Editor or Day Note Sheet | Plain text, up to 500 characters. The limit message appears only when the limit is reached. |
-| Full Completion Grid | Small squares at the very bottom of Habit Detail | Shows 53 weeks of history and scrolls horizontally. Tap a past tile to select its date for the Inline Note Editor, without changing Completions. Touch and hold to open its Day Note Sheet. The remaining days of the current week are drawn empty and are read-only. |
-| Completion Legend | Empty-to-Complete swatches and Day Note dot below the grid | Explains the fill intensity and Note Indicator. |
 
-“Completion Grid” is the shared name for both history presentations. Say **Compact Completion Grid** when referring to a Habit Card and **Full Completion Grid** when referring to the bottom of Habit Detail. The Month Calendar has different tap behavior, so do not call it a Completion Grid.
+The Month Calendar remains the way to select a Habit Day and see its note. Habit Detail has no Completion Grid. The Compact Completion Grid remains on each Habit Card; Member Progress has a separate history grid.
 
 ### Day Note Sheet
 
@@ -142,16 +139,16 @@ The **Habit Actions** section is the grouped list of Share Habit, Archive Habit,
 
 ## Members and sharing
 
-<img src="images/ui-glossary/sharing.png" alt="Rendered Shared Habit example showing the Members Section, two Member Rows, a Pending Invitation row, Invite a Member, and red Stop Sharing" width="340">
+<img src="images/ui-glossary/sharing.png" alt="Rendered Members Section with two Member Rows" width="340">
 
 | Canonical name | Where to look | Behavior |
 | --- | --- | --- |
-| Members Section | Members heading and grouped Member Rows below the Month Calendar | Shows participants in a Shared Habit. |
+| Members Section | Members heading and grouped Member Rows after the Inline Note Editor | Shows participants in a Shared Habit. It is the last section in Habit Detail. |
 | Member Row | Colored initial, name, seven small bars, today's count, and chevron | Tap to open Member Progress. The Owner can touch and hold another Member's row to remove them with confirmation. |
 | Member Progress Strip | Seven short bars below a Member Name | Shows that Member's last seven days, not a Month Calendar. |
-| Member Progress | Detail screen opened from a Member Row | Shows that Member's Completion counts and Full Completion Grid. Other Members' Day Notes are never shown. |
+| Member Progress | Screen opened from a Member Row | Shows that Member's Completion counts and history grid. Other Members' Day Notes are never shown. |
 | Member Identity | Editor opened using the pencil by your own name in Member Progress | Edits your Member Name and Member Color for that Shared Habit. This pencil is separate from the Habit Settings icon. |
-| Sharing Controls | Grouped invitation and membership-management rows | Appears under Sharing in Habit Settings; the current build also includes it with the Members Section in Habit Detail. |
+| Sharing Controls | Grouped invitation and membership-management rows | Appears under Sharing in Habit Settings. Non-Owner Members can reach their leave action through Sharing Settings. |
 | Pending Invitation row | Envelope, numbered invitation, creation date, and red cancel icon | Represents an unaccepted Invitation. Cancel Invitation revokes that Invitation, not an existing membership. |
 | Invite a Member | Row with person-plus icon and chevron | Creates an Invitation, then opens the Invitation Sheet. Disabled when Members plus pending Invitations fill all ten places. |
 | Stop Sharing | Red row for the Owner | Requires confirmation. Ends sharing for everyone while preserving their personal Habits and history. |
@@ -160,7 +157,9 @@ The **Habit Actions** section is the grouped list of Share Habit, Archive Habit,
 | Sharing Progress Screen | Full-screen iCloud icon, spinner, action title, and message | Gives feedback while setting up sharing, creating/canceling an Invitation, stopping/leaving sharing, or removing a Member. It is not a success confirmation. |
 | Join Flow | Your Name → Review Habit → Choose Your Habit | The invitation recipient's three-step flow, distinct from the Owner's Share Setup. |
 
-The sharing illustration uses sample Members rendered from the real SwiftUI components. Capturing it does not create an iCloud Shared Habit or send an Invitation.
+<img src="images/ui-glossary/sharing-controls.png" alt="Habit Settings Sharing Controls with a Pending Invitation, Invite a Member, and Stop Sharing" width="340">
+
+These illustrations use sample Members rendered from the real SwiftUI components. Capturing them does not create an iCloud Shared Habit or send an Invitation.
 
 ## App Settings
 
@@ -191,7 +190,7 @@ These widget illustrations are renders of the current widget components, not pho
 
 > In Overview, tapping the Compact Completion Grid on the Exercise Habit Card should open Habit Detail without recording a Completion.
 
-> In Habit Detail, move the Inline Note Editor below the Month Calendar and keep the Full Completion Grid at the bottom.
+> In Habit Detail, keep the Inline Note Editor below the Month Calendar and the Members Section last.
 
 > In Habit Settings, put Invite a Member and Stop Sharing in the same grouped-row style as Habit Actions.
 
@@ -202,7 +201,7 @@ These widget illustrations are renders of the current widget components, not pho
 | UI names | Implementation |
 | --- | --- |
 | Overview, Habit Card, Habit Header, badges, Quick Actions | `OpenHabit/App/OverviewView.swift` (`HabitCard`, `quickMenu`) |
-| Completion Button, Day Tile, Compact/Full Completion Grid | `OpenHabit/Shared/HabitVisuals.swift` (`CompletionButton`, `DayTile`, `LabeledHistoryGrid`, `HistoryGrid`) |
+| Completion Button, Day Tile, Compact Completion Grid, Member Progress history grid | `OpenHabit/Shared/HabitVisuals.swift` (`CompletionButton`, `DayTile`, `LabeledHistoryGrid`, `HistoryGrid`) |
 | Habit Detail, Month Calendar, Inline Note Editor, Day Note Sheet | `OpenHabit/App/HabitDetailView.swift` (`HabitDetailView`, `MonthCalendar`, `selectedDay`, `DayEditor`) |
 | Habit Settings, Emoji Picker, Custom Emoji, Habit Actions | `OpenHabit/App/HabitEditor.swift` (`HabitEditor`, `HabitEmojiPicker`, `CustomEmojiPicker`) |
 | Members Section, Member Progress, Sharing Controls, Share Setup, Join Flow | `OpenHabit/App/SharedHabitViews.swift` |

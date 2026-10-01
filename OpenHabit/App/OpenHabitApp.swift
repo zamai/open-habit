@@ -80,6 +80,8 @@ struct OpenHabitApp: App {
             _model = State(initialValue: SharedHabitJoinPreview.makeModel(
                 withPrivateHabit: !ProcessInfo.processInfo.arguments.contains("--preview-join-empty")
             ))
+        } else if ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") {
+            _model = State(initialValue: sharedPreviewModel(asMember: ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail")))
         }
         #endif
     }
@@ -92,7 +94,7 @@ struct OpenHabitApp: App {
                 .tint(.green)
                 .task {
                     #if DEBUG && targetEnvironment(simulator)
-                    if SharedHabitJoinPreview.isEnabled { return }
+                    if SharedHabitJoinPreview.isEnabled || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
                     #endif
                     model.reload()
                     await model.preparePendingShare()
@@ -105,7 +107,7 @@ struct OpenHabitApp: App {
                 }
                 .onChange(of: scenePhase) { _, phase in
                     #if DEBUG && targetEnvironment(simulator)
-                    if SharedHabitJoinPreview.isEnabled { return }
+                    if SharedHabitJoinPreview.isEnabled || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
                     #endif
                     if phase == .active { model.reload(); Task { await model.preparePendingShare(); await model.sync() } }
                 }

@@ -70,6 +70,52 @@ final class HabitDetailUITests: XCTestCase {
         }
     }
 
+    func testSharedDetailEndsWithMembersAndKeepsSharingInSettings() {
+        app.launchArguments = ["--preview-shared-detail"]
+        app.launch()
+        let exercise = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", ", Exercise,")).firstMatch
+        makeHittable(exercise)
+        exercise.tap()
+
+        let day = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " Completions, target ")).firstMatch
+        let note = app.descendants(matching: .any)["Day Note"].firstMatch
+        let members = app.staticTexts["Members"].firstMatch
+        makeHittable(day)
+        makeHittable(note)
+        if ProcessInfo.processInfo.environment["GENERATE_UI_GLOSSARY"] == "1" {
+            capture("glossary-inline-note")
+        }
+        makeHittable(members)
+        XCTAssertLessThan(day.frame.minY, note.frame.minY)
+        XCTAssertLessThan(note.frame.minY, members.frame.minY)
+        XCTAssertFalse(app.staticTexts["Invitations"].exists)
+        XCTAssertFalse(app.buttons["Invite a Member"].exists)
+        XCTAssertFalse(app.buttons["Stop Sharing"].exists)
+        XCTAssertFalse(app.staticTexts["Empty"].exists, "The Full Completion Grid and its legend are gone")
+
+        app.buttons["Edit Habit"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit"].waitForExistence(timeout: 3))
+        let invitations = app.staticTexts["Invitations"]
+        for _ in 0..<8 where !invitations.exists { app.swipeUp() }
+        XCTAssertTrue(invitations.exists)
+        XCTAssertTrue(app.buttons["Invite a Member"].exists)
+        XCTAssertTrue(app.buttons["Stop Sharing"].exists)
+    }
+
+    func testSharedMemberCanStillLeaveFromSettings() {
+        app.launchArguments = ["--preview-shared-member-detail"]
+        app.launch()
+        let exercise = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", ", Exercise,")).firstMatch
+        makeHittable(exercise)
+        exercise.tap()
+
+        XCTAssertTrue(app.staticTexts["Members"].exists)
+        XCTAssertFalse(app.buttons["Leave Shared Habit"].exists)
+        app.buttons["Sharing Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Sharing Settings"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Leave Shared Habit"].exists)
+    }
+
     func testCaptureUIGlossary() throws {
         guard ProcessInfo.processInfo.environment["GENERATE_UI_GLOSSARY"] == "1" else {
             throw XCTSkip("Opt-in screenshots for docs/ui-glossary.md")
@@ -95,7 +141,7 @@ final class HabitDetailUITests: XCTestCase {
 
         makeHittable(app.descendants(matching: .any)["Day Note"].firstMatch)
         app.swipeUp()
-        capture("glossary-note-and-history")
+        capture("glossary-inline-note")
         app.buttons["Edit Habit"].tap()
         XCTAssertTrue(app.navigationBars["Edit Habit"].waitForExistence(timeout: 3), app.debugDescription)
         capture("glossary-habit-settings")

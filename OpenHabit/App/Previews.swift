@@ -10,7 +10,7 @@ import OpenHabitCore
     model.syncStatus = "Synced"
     return model
 }
-@MainActor private func sharedPreviewModel() -> AppModel {
+@MainActor func sharedPreviewModel(asMember: Bool = false) -> AppModel {
     let model = previewModel()
     guard let habit = model.data.habits.first else { return model }
     var definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
@@ -25,7 +25,8 @@ import OpenHabitCore
     }
     definition.id = UUID()
     let membership = SharedHabitMembership(
-        sharedHabitID: definition.id, localHabitID: habit.id, memberID: ownerID, role: .owner,
+        sharedHabitID: definition.id, localHabitID: habit.id,
+        memberID: asMember ? friendID : ownerID, role: asMember ? .member : .owner,
         visibleFromDay: nil, zoneName: "Preview", zoneOwnerName: "Preview", shareRecordName: "Preview"
     )
     model.sharedHabits[habit.id] = SharedHabitState(

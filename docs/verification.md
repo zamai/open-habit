@@ -10,7 +10,7 @@ The domain suite covers storage, synchronization semantics, streak and calendar 
 swift test --package-path OpenHabitCore
 ```
 
-The CI test entry point also exercises the app integration, widget rendering, deletion confirmation, and deterministic Shared Habit join flows on an iOS Simulator:
+The local test script also exercises the app integration, widget rendering, deletion confirmation, and deterministic Shared Habit join flows on an iOS Simulator:
 
 ```sh
 bash scripts/ci/test.sh

@@ -370,19 +370,13 @@ struct SharedHabitMembersSection: View {
     @State private var removing: SharedMember?
     @State private var activity: SharingActivity?
 
-    private var membershipSummary: String {
-        let memberCount = state.snapshot.members.count
-        let members = memberCount == 1 ? "Member" : "Members"
-        guard !state.snapshot.invitations.isEmpty else { return "\(memberCount) \(members)" }
-        return "\(memberCount) \(members) · \(state.snapshot.invitations.count) Pending"
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Members").font(.title2.bold())
                 Spacer()
-                Text(membershipSummary).font(.subheadline).foregroundStyle(.secondary)
+                Text("\(state.snapshot.members.count) \(state.snapshot.members.count == 1 ? "Member" : "Members")")
+                    .font(.subheadline).foregroundStyle(.secondary)
             }
             VStack(spacing: 0) {
                 ForEach(Array(state.snapshot.orderedMembers(currentMemberID: state.membership.memberID).enumerated()), id: \.element.id) { index, member in
@@ -405,7 +399,6 @@ struct SharedHabitMembersSection: View {
                 }
             }
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
-            SharedHabitSharingControls(state: state)
         }
         .fullScreenCover(item: $activity) { SharingActivityView(activity: $0) }
         .confirmationDialog("Remove \(removing?.name ?? "Member")?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {

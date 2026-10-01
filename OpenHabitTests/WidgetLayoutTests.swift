@@ -68,7 +68,7 @@ final class WidgetLayoutTests: XCTestCase {
             .environment(AppModel())
             .tint(.green)
             .padding(22)
-            .frame(width: 390, height: 450, alignment: .top)
+            .frame(width: 390, height: 240, alignment: .top)
             .background(Color(.systemGroupedBackground))
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2
@@ -77,6 +77,20 @@ final class WidgetLayoutTests: XCTestCase {
         attachment.name = "glossary-sharing"
         attachment.lifetime = .keepAlways
         add(attachment)
+
+        let controls = SharedHabitSharingControls(state: state)
+            .environment(AppModel())
+            .tint(.green)
+            .padding(22)
+            .frame(width: 390, height: 440, alignment: .top)
+            .background(Color(.systemGroupedBackground))
+        let controlsRenderer = ImageRenderer(content: controls)
+        controlsRenderer.scale = 2
+        let controlsImage = try XCTUnwrap(controlsRenderer.uiImage)
+        let controlsAttachment = XCTAttachment(image: controlsImage)
+        controlsAttachment.name = "glossary-sharing-controls"
+        controlsAttachment.lifetime = .keepAlways
+        add(controlsAttachment)
     }
 
     @MainActor func testCompletionGlyphStatesRender() throws {

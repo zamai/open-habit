@@ -45,9 +45,9 @@ Share a habit with up to nine invited people. Members see the common habit defin
 
 Questions or feedback? Visit [support](https://getopenhabit.com/support/) or email [contact@getopenhabit.com](mailto:contact@getopenhabit.com).
 
-GitHub Actions runs the core, app, widget-rendering, deletion, and Shared Habit join tests for pull requests and pushes to `main`. Main does not publish automatically: a manual workflow run publishes a development build, RC tags publish to TestFlight, and stable tags submit the matching version for App Review. See the [release policy](docs/releases.md). The Files round-trip and SpringBoard widget-install tests stay local because they depend on a disposable Files container or persistent Home Screen state.
+iOS builds in GitHub Actions are disabled to avoid hosted-runner costs. Run `bash scripts/ci/test.sh` locally before committing. Pushes and tags do not publish builds; see the [current release policy](docs/releases.md). The Files round-trip and SpringBoard widget-install tests also stay local because they depend on a disposable Files container or persistent Home Screen state.
 
-The App Store Connect API key must have the **App Manager** or **Admin** role so CI can add builds to the external group and submit them for Beta App Review.
+The App Store Connect API key must have the **App Manager** or **Admin** role so a local publisher can add builds to the external group and submit them for Beta App Review.
 
 For future releases, follow the [release process](docs/releases.md) and [signed-device verification](docs/verification.md). The [version 1.0 submission record](docs/app-store-submission.md) is retained for history.
 

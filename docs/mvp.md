@@ -142,9 +142,8 @@ Habit Detail follows the supplied HabitKit reference and contains:
 - Daily Target, optional Current Streak, and current-week progress for a Weekly Streak Goal.
 - Month Total for the calendar month currently visible.
 - A Month Calendar: tap today or a past date to cycle Completions up to the Daily Target, then back to zero; touch and hold to open its Day Note Sheet without logging a Completion.
-- A Members Section below the Month Calendar for Shared Habits.
 - An Inline Note Editor for the selected Habit Day's private Day Note.
-- A GitHub-style Full Completion Grid at the very bottom. Tap a past tile to select the note date without changing Completions; touch and hold to open its Day Note Sheet.
+- A Members Section after the Inline Note Editor for Shared Habits. Invitation and sharing controls stay in Habit Settings.
 - Habit Settings access.
 
 The user may edit the Completion count and Day Note for today or any past date. Future dates are read-only.

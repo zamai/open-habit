@@ -35,11 +35,10 @@ struct HabitDetailView: View {
                             MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
                                           select: incrementDay,
                                           edit: editDayNote)
+                            selectedDay(habit).id("selected-day-note")
                             if let state = model.sharedHabit(for: habit.id) {
                                 SharedHabitMembersSection(state: state)
                             }
-                            selectedDay(habit).id("selected-day-note")
-                            historyGrid(habit)
                         }.padding(22).frame(maxWidth: 850).frame(maxWidth: .infinity)
                     }
                     .scrollDismissesKeyboard(.interactively)
@@ -54,7 +53,18 @@ struct HabitDetailView: View {
                 }
                 .background(Color(.systemGroupedBackground))
                 .toolbar {
-                    if model.sharedHabit(for: habit.id)?.membership.role != .member {
+                    if let state = model.sharedHabit(for: habit.id), state.membership.role == .member {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            NavigationLink {
+                                ScrollView { SharedHabitSharingControls(state: state).padding(22) }
+                                    .background(Color(.systemGroupedBackground))
+                                    .navigationTitle("Sharing Settings")
+                            } label: {
+                                Image(systemName: "slider.horizontal.3")
+                                    .accessibilityLabel("Sharing Settings")
+                            }
+                        }
+                    } else {
                         ToolbarItem(placement: .topBarTrailing) { Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) } }
                     }
                 }
@@ -62,6 +72,9 @@ struct HabitDetailView: View {
         }
         .onAppear { loadSelectedNote() }
         .task(id: habitID) {
+            #if DEBUG && targetEnvironment(simulator)
+            if ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
+            #endif
             if model.sharedHabit(for: habitID) != nil { await model.sync() }
         }
         .onChange(of: selected) { _, _ in
@@ -115,19 +128,6 @@ struct HabitDetailView: View {
                 }
             }
         }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22))
-    }
-
-    private func historyGrid(_ habit: Habit) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ScrollView(.horizontal) {
-                HistoryGrid(habit: habit, data: model.data, weeks: 53, onSelect: { selected = $0 }, onEdit: { sheet = .day(DaySelection(habitID: habitID, date: $0)) })
-                    .frame(width: 1_035)
-            }.defaultScrollAnchor(.trailing)
-            HStack(spacing: 6) {
-                Text("Empty"); ForEach([0, 1, 3], id: \.self) { count in DayTile(day: HabitDay(count: count), target: 3, color: habit.tint, today: false).frame(width: 13, height: 13) }; Text("Complete")
-                Spacer(); Image(systemName: "circle.fill").font(.system(size: 4)); Text("Day Note")
-            }.font(.caption2).foregroundStyle(.secondary)
-        }
     }
 
     private func metrics(for habit: Habit) -> some View {
