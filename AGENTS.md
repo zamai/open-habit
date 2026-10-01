@@ -14,6 +14,8 @@ This is a single-context repository. See `docs/agents/domain.md`.
 
 ## TestFlight releases
 
+Before publishing to TestFlight or setting up local signing, read [docs/releases.md](docs/releases.md) for the publishing command, credential configuration, signing setup, and distribution checks.
+
 Release credentials are maintained outside the repository. Never print, commit, or add them to documentation. For local publishing, pass the App Store Connect key to `xcodebuild` with `-authenticationKeyPath`, `-authenticationKeyID`, and `-authenticationKeyIssuerID`; keep the private key in a mode-600 temporary file and remove it afterward.
 
 When asked to publish to TestFlight, distribute the newest processed build to every configured TestFlight tester group, internal and external. Submit it for Beta App Review when Apple requires review for external testing. Do not call the release complete after checking only Internal Testers: read back the build's group relationships and verify that every configured group is assigned, then report the external review/testing state if external access is not active yet.
