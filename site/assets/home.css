@@ -6,7 +6,8 @@ body { color:var(--ink); background:var(--paper); font-family:-apple-system,Blin
 .site-header nav { display:flex; gap:30px; font-size:14px; }
 .site-header nav a, footer a { color:inherit; text-decoration:none; opacity:.7; }
 .site-header nav a:hover, footer a:hover { opacity:1; }
-.nav-cta { padding:11px 16px; border:1px solid var(--line); border-radius:999px; color:inherit; font-size:13px; font-weight:650; text-decoration:none; }
+.header-actions { display:flex; align-items:center; gap:8px; }
+.nav-cta { padding:11px 16px; border:1px solid var(--line); border-radius:999px; color:inherit; font-size:13px; font-weight:650; text-decoration:none; white-space:nowrap; }
 main { overflow:hidden; }
 .hero { display:grid; width:min(1180px,calc(100% - 48px)); min-height:720px; margin:auto; grid-template-columns:1.05fr .95fr; align-items:center; gap:60px; }
 .eyebrow,.kicker { color:#28814b; font-size:12px; font-weight:750; letter-spacing:.13em; text-transform:uppercase; }
