@@ -11,7 +11,7 @@ settings:
   base:
     SWIFT_VERSION: '5.0'
     TARGETED_DEVICE_FAMILY: '1,2'
-    MARKETING_VERSION: '1.0'
+    MARKETING_VERSION: '1.1'
     CURRENT_PROJECT_VERSION: 36
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: 539QCPHM7F
@@ -23,7 +23,6 @@ targets:
     platform: iOS
     sources:
       - path: OpenHabit/App
-        excludes: [SharePlacementPrototype.html]
       - OpenHabit/Shared
       - OpenHabit/Resources
       - OpenHabit/Connectivity

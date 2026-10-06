@@ -17,6 +17,7 @@ xcuserdata/
 *.pem
 
 # Local release and test artifacts
+/artifacts/
 *.ipa
 *.xcarchive
 *.xcresult

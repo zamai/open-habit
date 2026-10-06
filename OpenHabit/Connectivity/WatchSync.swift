@@ -2,6 +2,9 @@ import Foundation
 import WatchConnectivity
 import OpenHabitCore
 import OSLog
+#if os(iOS)
+import UIKit
+#endif
 
 extension Notification.Name {
     static let watchJournalChanged = Notification.Name("WatchJournalChanged")
@@ -75,15 +78,48 @@ final class WatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
     }
 
     private func receive(_ payload: Data) {
+        #if os(iOS)
+        // Establish the assertion on the main thread before queuing any file-lock work.
+        DispatchQueue.main.async {
+            let cancellation = Progress(totalUnitCount: 1)
+            var task = UIBackgroundTaskIdentifier.invalid
+            task = UIApplication.shared.beginBackgroundTask(withName: "Receive Watch journal") {
+                cancellation.cancel()
+                // A running transaction observes cancellation before committing and ends
+                // the assertion after releasing its lock. Queued work never takes the lock.
+            }
+            guard task != .invalid else {
+                self.logger.info("Background time unavailable for Watch journal receive")
+                return
+            }
+            self.applyReceived(payload, cancellation: cancellation) {
+                DispatchQueue.main.async { UIApplication.shared.endBackgroundTask(task) }
+            }
+        }
+        #else
+        applyReceived(payload, cancellation: Progress(totalUnitCount: 1), completion: {})
+        #endif
+    }
+
+    private func applyReceived(_ payload: Data, cancellation: Progress, completion: @escaping () -> Void) {
         queue.async {
             do {
+                defer { completion() }
+                guard !cancellation.isCancelled else { return }
                 let edits = try JSONDecoder().decode([Edit].self, from: payload)
-                try self.store.transaction { $0.merge(edits) }
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .watchJournalChanged, object: nil)
-                }
-                self.send(force: false)
-            } catch { self.logger.error("Could not apply Watch synchronization: \(error.localizedDescription, privacy: .public)") }
+                guard !cancellation.isCancelled else { return }
+                try self.store.transaction(cancellation: cancellation) { $0.merge(edits) }
+            } catch is CancellationError {
+                self.logger.info("Watch journal receive expired before committing")
+                return
+            } catch {
+                self.logger.error("Could not apply Watch synchronization: \(error.localizedDescription, privacy: .public)")
+                return
+            }
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .watchJournalChanged, object: nil)
+            }
+            self.send(force: false)
         }
     }
 

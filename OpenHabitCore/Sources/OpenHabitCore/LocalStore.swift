@@ -9,19 +9,42 @@ import Glibc
 public struct LocalStore: Sendable {
     public let directory: URL
     public init(directory: URL) { self.directory = directory }
-    public func read() throws -> Journal { try transaction { $0 } }
+    public func read() throws -> Journal {
+        // Writers replace the file atomically. A reader sees a complete committed snapshot
+        // without holding an app-group lock while iOS suspends background Watch sync.
+        let url = directory.appendingPathComponent("journal.json")
+        guard FileManager.default.fileExists(atPath: url.path) else { return Journal() }
+        return try JSONDecoder().decode(Journal.self, from: Data(contentsOf: url))
+    }
     @discardableResult
-    public func transaction<T>(_ update: (inout Journal) throws -> T) throws -> T {
+    public func transaction<T>(cancellation: Progress? = nil, _ update: (inout Journal) throws -> T) throws -> T {
+        func checkCancellation() throws {
+            if cancellation?.isCancelled == true { throw CancellationError() }
+        }
+        try checkCancellation()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let lock = open(directory.appendingPathComponent("store.lock").path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
         guard lock >= 0 else { throw HabitError.storageUnavailable }
         defer { flock(lock, LOCK_UN); close(lock) }
-        guard flock(lock, LOCK_EX) == 0 else { throw HabitError.storageUnavailable }
+        if cancellation != nil {
+            // An expiring background receive must not wait indefinitely for the widget.
+            while flock(lock, LOCK_EX | LOCK_NB) != 0 {
+                guard errno == EWOULDBLOCK || errno == EINTR else { throw HabitError.storageUnavailable }
+                try checkCancellation()
+                Thread.sleep(forTimeInterval: 0.01)
+            }
+        } else {
+            guard flock(lock, LOCK_EX) == 0 else { throw HabitError.storageUnavailable }
+        }
+        try checkCancellation()
         let url = directory.appendingPathComponent("journal.json")
         let original = try FileManager.default.fileExists(atPath: url.path) ? Data(contentsOf: url) : nil
         var journal = try original.map { try JSONDecoder().decode(Journal.self, from: $0) } ?? Journal()
+        try checkCancellation()
         let result = try update(&journal)
+        try checkCancellation()
         let data = try JSONEncoder().encode(journal)
+        try checkCancellation()
         if data != original { try data.write(to: url, options: .atomic) }
         return result
     }

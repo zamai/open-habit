@@ -172,6 +172,51 @@ final class OpenHabitCoreTests: XCTestCase {
         XCTAssertEqual(reexported.dataset, backup.dataset)
     }
 
+    func testReadingMissingStoreDoesNotCreateFiles() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        XCTAssertTrue(try LocalStore(directory: directory).read().edits.isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
+    }
+
+    func testReadReturnsCommittedSnapshotWhileWriterHoldsLock() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = LocalStore(directory: directory)
+        let habit = Habit(name: "Water")
+        try store.transaction { try $0.save(habit) }
+        let url = directory.appendingPathComponent("journal.json")
+        let original = try Data(contentsOf: url)
+        let writerEntered = DispatchSemaphore(value: 0)
+        let releaseWriter = DispatchSemaphore(value: 0)
+        let writerFinished = expectation(description: "Writer committed")
+        DispatchQueue.global().async {
+            defer { writerFinished.fulfill() }
+            do {
+                try store.transaction { journal in
+                    journal.append(.delete(habit.id))
+                    writerEntered.signal()
+                    _ = releaseWriter.wait(timeout: .now() + 5)
+                }
+            } catch { XCTFail(error.localizedDescription) }
+        }
+        XCTAssertEqual(writerEntered.wait(timeout: .now() + 5), .success)
+        let readerFinished = expectation(description: "Read does not wait for the writer lock")
+        DispatchQueue.global().async {
+            defer { readerFinished.fulfill() }
+            do {
+                let snapshot = try store.read()
+                let bytes = try Data(contentsOf: url)
+                XCTAssertEqual(snapshot.dataset.habit(habit.id), habit)
+                XCTAssertEqual(bytes, original, "Reading must not rewrite the journal")
+            } catch { XCTFail(error.localizedDescription) }
+        }
+        wait(for: [readerFinished], timeout: 1)
+        releaseWriter.signal()
+        wait(for: [writerFinished], timeout: 5)
+        XCTAssertNil(try store.read().dataset.habit(habit.id))
+    }
+
     func testFailedTransactionPreservesExactOriginalAndAtomicRestore() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -187,6 +232,61 @@ final class OpenHabitCoreTests: XCTestCase {
         XCTAssertTrue(try store.read().dataset.initialized)
         XCTAssertTrue(try store.read().dataset.habits.isEmpty)
     }
+
+    func testExpiredTransactionPreservesJournalAndReleasesLock() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = LocalStore(directory: directory)
+        let habit = Habit(name: "Water")
+        try store.transaction { try $0.save(habit) }
+        let original = try Data(contentsOf: directory.appendingPathComponent("journal.json"))
+        let cancellation = Progress(totalUnitCount: 1)
+        XCTAssertThrowsError(try store.transaction(cancellation: cancellation) { journal in
+            journal.append(.delete(habit.id))
+            cancellation.cancel()
+        }) { XCTAssertTrue($0 is CancellationError) }
+        XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("journal.json")), original)
+        try store.transaction { $0.append(.delete(habit.id)) }
+        XCTAssertNil(try store.read().dataset.habit(habit.id))
+    }
+
+    func testExpiredTransactionStopsWaitingForWriter() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = LocalStore(directory: directory)
+        let writerEntered = DispatchSemaphore(value: 0)
+        let releaseWriter = DispatchSemaphore(value: 0)
+        let writerFinished = expectation(description: "Writer released lock")
+        DispatchQueue.global().async {
+            defer { writerFinished.fulfill() }
+            do {
+                try store.transaction { _ in
+                    writerEntered.signal()
+                    _ = releaseWriter.wait(timeout: .now() + 5)
+                }
+            } catch { XCTFail(error.localizedDescription) }
+        }
+        XCTAssertEqual(writerEntered.wait(timeout: .now() + 5), .success)
+        let cancellation = Progress(totalUnitCount: 1)
+        let waiting = DispatchSemaphore(value: 0)
+        let cancelled = expectation(description: "Expired receive stops waiting for lock")
+        DispatchQueue.global().async {
+            defer { cancelled.fulfill() }
+            waiting.signal()
+            do {
+                try store.transaction(cancellation: cancellation) { _ in
+                    XCTFail("Expired receive must not mutate the journal")
+                }
+                XCTFail("Expired receive must throw cancellation")
+            } catch { XCTAssertTrue(error is CancellationError) }
+        }
+        XCTAssertEqual(waiting.wait(timeout: .now() + 5), .success)
+        cancellation.cancel()
+        wait(for: [cancelled], timeout: 1)
+        releaseWriter.signal()
+        wait(for: [writerFinished], timeout: 5)
+    }
+
     func testSharedStoreConcurrentWritersDoNotLoseUpdates() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

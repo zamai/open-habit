@@ -1,9 +1,32 @@
 import XCTest
 import AppIntents
+import WatchConnectivity
 import OpenHabitCore
 @testable import OpenHabit
 
 final class IntentIntegrationTests: XCTestCase {
+    @MainActor
+    func testWatchMessagePersistsIncomingEditsAndPreservesLocalHabits() async throws {
+        let local = Habit(name: "Phone receive fixture")
+        let incoming = Habit(name: "Watch receive fixture")
+        try performLocalEdit { try $0.save(local) }
+        defer {
+            try? performLocalEdit {
+                $0.append(.delete(local.id))
+                $0.append(.delete(incoming.id))
+            }
+        }
+        var journal = Journal()
+        try journal.save(incoming)
+        let received = expectation(forNotification: .watchJournalChanged, object: nil)
+        let sync = WatchSync()
+        sync.session(WCSession.default, didReceiveMessageData: try JSONEncoder().encode(journal.edits))
+        await fulfillment(of: [received], timeout: 5)
+        let data = try sharedStore().read().dataset
+        XCTAssertEqual(data.habit(local.id), local)
+        XCTAssertEqual(data.habit(incoming.id), incoming)
+    }
+
     private func sharedState(localHabitID: UUID) -> SharedHabitState {
         let habit = Habit(id: localHabitID, name: "Shared state fixture")
         let member = SharedMember(name: "Taylor", colorIndex: 0, role: .owner)
