@@ -20,8 +20,8 @@
   <link rel="icon" href="assets/app-icon.png">
   <link rel="apple-touch-icon" href="assets/app-icon.png">
   <link rel="stylesheet" href="assets/base.css">
-  <link rel="stylesheet" href="assets/home.css">
-  <script src="assets/main.js" defer></script>
+  <link rel="stylesheet" href="assets/home.css?v=habitkit-faq-1">
+  <script src="assets/main.js?v=widget-selector-1" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -30,7 +30,7 @@
     "description": "A free, private, offline-first habit tracker for iPhone and iPad with interactive Home Screen widgets, Apple Shortcuts, personal iCloud sync, and portable JSON data.",
     "url": "https://getopenhabit.com/",
     "image": "https://getopenhabit.com/assets/app-icon.png",
-    "screenshot": "https://getopenhabit.com/assets/iphone-overview-light.png",
+    "screenshot": "https://getopenhabit.com/assets/iphone-overview-light.png?v=filled-history-1",
     "operatingSystem": "iOS 17 or later; iPadOS 17 or later",
     "applicationCategory": "HealthApplication",
     "isAccessibleForFree": true,
@@ -44,6 +44,22 @@
   }
   </script>
   <title>Open Habit — Open-Source Habit Tracker for iPhone and iPad</title>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I import HabitKit data into Open Habit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can move supported HabitKit version 2 JSON exports into Open Habit, a free, open-source habit tracker for iPhone and iPad. Importing into Open Habit is free. In HabitKit, open Settings → Data Import/Export → Export. Save habitkit_export.json to the Files app. In Open Habit, open Settings → Import → HabitKit data import, then choose the JSON file. Review the preview and any conversion warnings. If multiple records exist for the same day, choose how to combine them. Tap Import Data to add the new habits. Supported habits bring their completion history, notes, categories, and current daily or weekly goals. The standard import preserves existing Open Habit habits and skips matching IDs. Reminders and historical goal changes do not transfer; icons and colors may change. Inverse habits and custom-value tracking are not supported. Keep your original export. HabitKit is free to download with optional paid Pro upgrades. See its export guide for more help saving your file."
+      }
+    }
+  ]
+}
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -59,7 +75,6 @@
   <main id="main">
     <section class="hero" id="top">
       <div class="hero-copy reveal">
-        <p class="eyebrow"><span></span> Free and open source for iPhone and iPad</p>
         <h1>A little,<br>every day.</h1>
         <p class="hero-lede">A private habit tracker built for quick check-ins from your Home Screen, Shortcuts, or the app.</p>
         <div class="actions"><a class="button primary" href="https://apps.apple.com/app/id6808947599">Download on the App Store</a><a class="button secondary" href="https://github.com/zamai/open-habit">View the source</a></div>
@@ -67,9 +82,9 @@
       </div>
       <div class="hero-visual reveal">
         <div class="soft-orb"></div>
-        <video autoplay muted loop playsinline poster="assets/iphone-overview-light.png" aria-label="Recording progress for a Habit in Open Habit">
-          <source src="assets/completion-interaction.webm" type="video/webm">
-          <source src="assets/completion-interaction.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline poster="assets/iphone-overview-light.png?v=filled-history-1" aria-label="Recording progress for a Habit in Open Habit">
+          <source src="assets/completion-interaction.webm?v=filled-history-1" type="video/webm">
+          <source src="assets/completion-interaction.mp4?v=filled-history-1" type="video/mp4">
         </video>
         <div class="float-note"><b>Private by design</b><span>Local first. Your iCloud.</span></div>
       </div>
@@ -77,13 +92,39 @@
 
     <section class="promise-strip" aria-label="Open Habit at a glance"><div><b>01</b><span>Track anywhere</span></div><div><b>02</b><span>Keep your context</span></div><div><b>03</b><span>Own your data</span></div></section>
 
-    <section class="section track" id="features">
-      <div class="section-copy reveal"><p class="kicker">Less friction</p><h2>Make the check-in the easy part.</h2><p>Tap once from an interactive widget, run a Shortcut, or open the app. Every action saves locally first, so progress never waits for a connection.</p><div class="mini-list"><span>One-, three-, and six-Habit widgets</span><span>Add, remove, read progress, and set Day Notes with Shortcuts</span><span>Daily Targets from 1 to 99</span></div></div>
-      <div class="widget-stage reveal"><img src="assets/widget-three-habits.png" alt="Three-Habit widget showing Exercise, Drink water, and Read five pages"><span class="widget-caption">Your routines, one tap away.</span></div>
+    <section class="features" id="features" aria-labelledby="features-title">
+      <div class="features-heading section-copy reveal">
+        <div><p class="kicker">Less friction</p><h2 id="features-title">Small steps.<br>Right where you are.</h2></div>
+        <div><p>Record a Completion from your Home Screen, or build it into a Shortcut. Keep a private Day Note when there’s more to remember. Your progress saves locally first.</p><button class="demo-toggle" type="button" aria-pressed="false" hidden>Pause demos</button></div>
+      </div>
+      <div class="feature-demos">
+        <article class="feature-demo widget-showcase reveal" aria-labelledby="widgets-title">
+          <div class="widget-copy">
+            <p class="kicker">Home Screen widgets</p>
+            <h3 id="widgets-title">Your habits, right on your Home Screen.</h3>
+            <p>See your progress and check in without opening the app.</p>
+            <div class="widget-sizes" role="group" aria-label="Widget size">
+              <button type="button" data-widget="single" aria-pressed="false" aria-controls="widget-preview"><span class="widget-shape shape-small" aria-hidden="true"></span>One habit</button>
+              <button type="button" data-widget="three" aria-pressed="true" aria-controls="widget-preview"><span class="widget-shape shape-medium" aria-hidden="true"></span>Three habits</button>
+              <button type="button" data-widget="six" aria-pressed="false" aria-controls="widget-preview"><span class="widget-shape shape-large" aria-hidden="true"></span>Six habits</button>
+            </div>
+            <p class="widget-description" aria-live="polite">Three habits, with ten days of progress.</p>
+          </div>
+          <figure><div class="demo-stage"><div class="demo-device"><video id="widget-preview" class="demo-screen" poster="assets/widget-three-demo.png?v=2" width="780" height="1696" autoplay muted loop playsinline preload="metadata" aria-label="An iPhone Home Screen with a three-habit widget. Taps update each habit in order."><source src="assets/widget-three-demo.webm?v=2" type="video/webm"><source src="assets/widget-three-demo.mp4?v=2" type="video/mp4"><a href="assets/widget-three-demo.mp4?v=2">Watch the widget demo</a></video></div></div></figure>
+        </article>
+        <article class="feature-demo reveal">
+          <div class="feature-copy"><p class="kicker">Apple Shortcuts</p><h3>Make it part of your flow.</h3><p>Find Open Habit in Shortcuts and use its four actions in your own routines and automations.</p></div>
+          <figure><div class="demo-stage shortcuts-stage"><div class="demo-device"><video class="demo-screen" poster="assets/shortcuts-demo.png?v=2" width="780" height="1696" autoplay muted loop playsinline preload="metadata" aria-label="Searching for Open Habit in Apple Shortcuts reveals Add Completions, Remove Completions, Get Today's Progress, and Set Day Note."><source src="assets/shortcuts-demo.webm?v=2" type="video/webm"><source src="assets/shortcuts-demo.mp4?v=2" type="video/mp4"><a href="assets/shortcuts-demo.mp4?v=2">Watch the demo</a></video></div></div><figcaption>Four actions, ready for your Shortcuts.</figcaption></figure>
+        </article>
+        <article id="notes-demo" class="feature-demo reveal">
+          <div class="feature-copy"><p class="kicker">Day Notes</p><h3>Keep the story behind the day.</h3><p>Open a day in your Habit calendar and add a private note. Keep the small details alongside your progress, even in a Shared Habit.</p></div>
+          <figure><div class="demo-stage notes-stage"><div class="demo-device"><video class="demo-screen" poster="assets/notes-demo.png?v=2" width="780" height="1696" autoplay muted loop playsinline preload="metadata" aria-label="Adding a Day Note to Walk, saving it, and selecting calendar dates to see each day’s progress and note."><source src="assets/notes-demo.webm?v=2" type="video/webm"><source src="assets/notes-demo.mp4?v=2" type="video/mp4"><a href="assets/notes-demo.mp4?v=2">Watch the Day Notes demo</a></video></div></div><figcaption>Your progress. Your words. Just for you.</figcaption></figure>
+        </article>
+      </div>
     </section>
 
     <section class="history-section">
-      <div class="phone-pair reveal"><img class="phone back" src="assets/iphone-overview-light.png" alt="Open Habit overview"><img class="phone front" src="assets/iphone-calendar-note-light.png" alt="Habit calendar and private Day Note"></div>
+      <div class="phone-pair reveal"><img class="phone back" src="assets/iphone-overview-light.png?v=filled-history-1" alt="Open Habit overview"><img class="phone front" src="assets/iphone-calendar-note-light.png" alt="Habit calendar and private Day Note"></div>
       <div class="section-copy reveal"><p class="kicker">Progress with context</p><h2>See the pattern. Keep the story.</h2><p>Create Habits with an emoji, color, Daily Target, and optional daily or weekly Streak Goal. A rolling year shows the rhythm, while the calendar lets you correct any past day. Add a private Day Note when the reason matters as much as the count.</p><blockquote>Empty days stay empty. Open Habit never labels them failed, missed, or overdue.</blockquote></div>
     </section>
 
@@ -112,6 +153,14 @@
     <section class="faq" id="faq">
       <p class="kicker">The clear answers</p><h2>Good to know.</h2>
       <div class="faq-grid">
+        <details id="habitkit-import"><summary>How do I import HabitKit data into Open Habit?</summary><p>You can move supported HabitKit version 2 JSON exports into Open Habit, a free, open-source habit tracker for iPhone and iPad. Importing into Open Habit is free.</p>
+          <ol>
+            <li>In HabitKit, open Settings → Data Import/Export → Export. Save <code>habitkit_export.json</code> to the Files app.</li>
+            <li>In Open Habit, open Settings → Import → HabitKit data import, then choose the JSON file.</li>
+            <li>Review the preview and any conversion warnings. If multiple records exist for the same day, choose how to combine them. Tap Import Data to add the new habits.</li>
+          </ol>
+          <p>Supported habits bring their completion history, notes, categories, and current daily or weekly goals. The standard import preserves existing Open Habit habits and skips matching IDs. Reminders and historical goal changes do not transfer; icons and colors may change. Inverse habits and custom-value tracking are not supported. Keep your original export.</p>
+          <p><a href="https://apps.apple.com/app/id6443918070">HabitKit</a> is free to download with optional paid Pro upgrades. See its <a href="https://habitkit.app/help/data-backup-and-sync/export-and-import-your-data">export guide</a> for more help saving your file.</p></details>
         <details><summary>Does Open Habit require an account?</summary><p>No Open Habit account is required. An Apple Account is needed only for iCloud synchronization and Shared Habits.</p></details>
         <details><summary>Where is my data stored?</summary><p>On your devices and, when iCloud is available, in your private iCloud database. The developer does not receive your Habit data through the app.</p></details>
         <details><summary>Does tracking work offline?</summary><p>Yes. Changes save locally first and synchronize later when iCloud becomes available.</p></details>
