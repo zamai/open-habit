@@ -149,7 +149,7 @@ struct OverviewView: View {
     }
 }
 
-private struct HabitCard: View {
+struct HabitCard: View {
     let habit: Habit
     let data: Dataset
     let now: Date
@@ -162,16 +162,22 @@ private struct HabitCard: View {
         LabeledHistoryGrid.leadingInset(fontSize: historyLabelFontSize, data: data)
     }
 
+    private var hasDescription: Bool { !habit.detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private var hasSupportingText: Bool { hasDescription || habit.streakGoal != nil || sharedMemberCount != nil }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        HabitCardLayout(data: data, end: now, labelFontSize: historyLabelFontSize,
+                        spacing: hasSupportingText ? 18 : 8) {
             HStack(alignment: .top, spacing: 14) {
                 Button(action: open) {
                     HStack(alignment: .top, spacing: 8) {
                         Text(habit.emoji).font(.system(size: 26))
-                            .frame(width: historyLeadingInset - 8, height: 48)
+                            .frame(width: historyLeadingInset - 8)
                         VStack(alignment: .leading, spacing: 6) {
                             Text(habit.name).font(.system(.headline, design: .rounded)).foregroundStyle(.primary).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                            Text(habit.detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            if hasDescription {
+                                Text(habit.detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            }
                             if habit.streakGoal != nil || sharedMemberCount != nil {
                                 HStack(spacing: 8) {
                                     if let goal = habit.streakGoal {
@@ -198,7 +204,8 @@ private struct HabitCard: View {
                         }.padding(.top, 3).frame(maxWidth: .infinity, alignment: .leading)
                     }.contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityHint("Open Habit Detail")
-                CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count, action: complete)
+                CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count,
+                                 action: complete, alignment: .trailing)
             }
             Button(action: open) {
                 LabeledHistoryGrid(habit: habit, data: data, end: now)
@@ -213,6 +220,32 @@ private struct HabitCard: View {
         .overlay { RoundedRectangle(cornerRadius: 26).strokeBorder(habit.tint.opacity(0.12), lineWidth: 1) }
         .contentShape(RoundedRectangle(cornerRadius: 26))
         .transition(.blurReplace)
+    }
+}
+
+private struct HabitCardLayout: Layout {
+    let data: Dataset
+    let end: Date
+    let labelFontSize: CGFloat
+    let spacing: CGFloat
+
+    private func headerWidth(_ width: CGFloat) -> CGFloat {
+        LabeledHistoryGrid.contentWidth(in: width, fontSize: labelFontSize, data: data, end: end)
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.replacingUnspecifiedDimensions().width
+        let header = subviews[0].sizeThatFits(ProposedViewSize(width: headerWidth(width), height: nil))
+        let history = subviews[1].sizeThatFits(ProposedViewSize(width: width, height: nil))
+        return CGSize(width: width, height: header.height + spacing + history.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let headerProposal = ProposedViewSize(width: headerWidth(bounds.width), height: nil)
+        let headerHeight = subviews[0].sizeThatFits(headerProposal).height
+        subviews[0].place(at: bounds.origin, anchor: .topLeading, proposal: headerProposal)
+        subviews[1].place(at: CGPoint(x: bounds.minX, y: bounds.minY + headerHeight + spacing),
+                          anchor: .topLeading, proposal: ProposedViewSize(width: bounds.width, height: nil))
     }
 }
 

@@ -5,6 +5,56 @@ import OpenHabitCore
 @testable import OpenHabit
 
 final class WidgetLayoutTests: XCTestCase {
+    @MainActor func testHabitCardsAlignCompletionWithHistoryAndCollapseEmptyDetails() throws {
+        let end = try XCTUnwrap(LocalDay.date("2026-10-19"))
+        var data = Dataset()
+        data.settings.weekStart = .monday
+        let habit = Habit(name: "Read", emoji: "📖", color: .purple)
+
+        func render(_ habit: Habit, width: CGFloat) throws -> UIImage {
+            let renderer = ImageRenderer(content:
+                HabitCard(habit: habit, data: data, now: end, sharedMemberCount: nil, open: {}, complete: {})
+                    .frame(width: width)
+                    .environment(\.colorScheme, .light)
+                    .environment(\.locale, Locale(identifier: "en_US")))
+            renderer.scale = 1
+            return try XCTUnwrap(renderer.uiImage)
+        }
+
+        for width: CGFloat in [320, 390, 600] {
+            let compact = try render(habit, width: width)
+            let pixels = try rgbaPixels(compact)
+            func coloredRightEdge(in rows: Range<Int>) throws -> Int {
+                let edge = (Int(width / 2)..<Int(width - 18)).last { x in
+                    rows.contains { y in
+                        let offset = (y * compact.cgImage!.width + x) * 4
+                        let channels = pixels[offset..<(offset + 3)]
+                        return Int(channels.max()!) - Int(channels.min()!) > 8
+                    }
+                }
+                return try XCTUnwrap(edge)
+            }
+            let buttonEdge = try coloredRightEdge(in: 22..<70)
+            let calendarEdge = try coloredRightEdge(in: (Int(compact.size.height) - 100)..<(Int(compact.size.height) - 20))
+            XCTAssertLessThanOrEqual(abs(buttonEdge - calendarEdge), 2, "Width \(width)")
+
+            var described = habit
+            described.detail = "Five pages, every day."
+            XCTAssertGreaterThan(try render(described, width: width).size.height, compact.size.height)
+            described.streakGoal = StreakGoal(period: .daily)
+            XCTAssertGreaterThan(try render(described, width: width).size.height, compact.size.height)
+
+            var whitespace = habit
+            whitespace.detail = "  \n "
+            XCTAssertEqual(try render(whitespace, width: width).size.height, compact.size.height)
+
+            let attachment = XCTAttachment(image: compact)
+            attachment.name = "Compact Habit Card \(Int(width))"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+    }
+
     func testCompactHistoryFitsWholeMonthsAtNarrowAndWidePhoneWidths() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.firstWeekday = 2

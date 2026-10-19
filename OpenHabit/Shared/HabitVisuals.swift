@@ -72,10 +72,11 @@ struct CompletionButton: View {
     let habit: Habit
     let count: Int
     let action: () -> Void
+    var alignment: Alignment = .center
     var body: some View {
         Button(action: action) {
             CompletionGlyph(count: count, target: habit.target, color: habit.tint)
-                .frame(width: 56, height: 56, alignment: .center)
+                .frame(width: 56, height: 56, alignment: alignment)
         }
             .buttonStyle(CompletionStyle())
             .completionFeedback(count: count)
@@ -163,12 +164,24 @@ struct LabeledHistoryGrid: View {
         return max(30, weekdayWidth) + 10
     }
 
-    var body: some View {
-        let font = UIFont.systemFont(ofSize: labelFontSize)
+    private static func minimumTileSide(fontSize: CGFloat, data: Dataset, tileSide: CGFloat, spacing: CGFloat) -> CGFloat {
+        let calendar = historyCalendar(for: data)
+        let font = UIFont.systemFont(ofSize: fontSize)
         let monthWidth = calendar.shortMonthSymbols.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
         // Month starts are at least four columns apart. Budget for two labels and an
         // 8-point gap when the newest label must shift left from the final column.
-        let side = max(tileSide, ceil((2 * monthWidth + 8 - 4 * spacing) / 5))
+        return max(tileSide, ceil((2 * monthWidth + 8 - 4 * spacing) / 5))
+    }
+
+    static func contentWidth(in width: CGFloat, fontSize: CGFloat, data: Dataset, end: Date) -> CGFloat {
+        let inset = leadingInset(fontSize: fontSize, data: data)
+        let side = minimumTileSide(fontSize: fontSize, data: data, tileSide: 11, spacing: 3)
+        return inset + CompactHistoryLayout(width: max(0, width - inset), end: end,
+                                             calendar: historyCalendar(for: data), tileSide: side).width
+    }
+
+    var body: some View {
+        let side = Self.minimumTileSide(fontSize: labelFontSize, data: data, tileSide: tileSide, spacing: spacing)
         let gridY = labelFontSize + 10
         let gridX = Self.leadingInset(fontSize: labelFontSize, data: data)
         Canvas { context, size in
