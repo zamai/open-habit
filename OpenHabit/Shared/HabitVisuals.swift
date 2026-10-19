@@ -155,6 +155,14 @@ struct LabeledHistoryGrid: View {
 
     private var calendar: Calendar { historyCalendar(for: data) }
 
+    static func leadingInset(fontSize: CGFloat, data: Dataset) -> CGFloat {
+        let font = UIFont.systemFont(ofSize: fontSize)
+        let weekdayWidth = historyCalendar(for: data).shortWeekdaySymbols.map {
+            ($0 as NSString).size(withAttributes: [.font: font]).width
+        }.max() ?? 0
+        return max(30, weekdayWidth) + 10
+    }
+
     var body: some View {
         let font = UIFont.systemFont(ofSize: labelFontSize)
         let monthWidth = calendar.shortMonthSymbols.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
@@ -162,9 +170,8 @@ struct LabeledHistoryGrid: View {
         // 8-point gap when the newest label must shift left from the final column.
         let side = max(tileSide, ceil((2 * monthWidth + 8 - 4 * spacing) / 5))
         let gridY = labelFontSize + 10
-        let weekdayWidth = max(30, calendar.shortWeekdaySymbols.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0)
+        let gridX = Self.leadingInset(fontSize: labelFontSize, data: data)
         Canvas { context, size in
-            let gridX = weekdayWidth + 10
             let availableWidth = max(0, size.width - gridX)
             let layout = CompactHistoryLayout(width: availableWidth, end: end, calendar: calendar,
                                               tileSide: side, spacing: spacing)

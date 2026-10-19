@@ -156,12 +156,19 @@ private struct HabitCard: View {
     let sharedMemberCount: Int?
     let open: () -> Void
     let complete: () -> Void
+    @ScaledMetric(relativeTo: .caption) private var historyLabelFontSize: CGFloat = 12
+
+    private var historyLeadingInset: CGFloat {
+        LabeledHistoryGrid.leadingInset(fontSize: historyLabelFontSize, data: data)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top, spacing: 14) {
                 Button(action: open) {
-                    HStack(alignment: .top, spacing: 12) {
-                        Text(habit.emoji).font(.system(size: 30)).frame(width: 44, height: 48)
+                    HStack(alignment: .top, spacing: 8) {
+                        Text(habit.emoji).font(.system(size: 26))
+                            .frame(width: historyLeadingInset - 8, height: 48)
                         VStack(alignment: .leading, spacing: 6) {
                             Text(habit.name).font(.system(.headline, design: .rounded)).foregroundStyle(.primary).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                             Text(habit.detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
