@@ -10,6 +10,32 @@ final class HabitDetailUITests: XCTestCase {
         #endif
     }
 
+    func testCreatingHabitReturnsToTopAndKeepsNewestHabitFirst() {
+        app.launch()
+        app.swipeUp()
+        app.buttons["add-habit"].tap()
+        let name = "Morning stretch \(UUID().uuidString.prefix(8))"
+        let field = app.textFields["habit-name"]
+        XCTAssertTrue(field.waitForExistence(timeout: 3))
+        field.tap()
+        field.typeText(name)
+        app.buttons["save-habit"].tap()
+        XCTAssertTrue(app.navigationBars["New Habit"].waitForNonExistence(timeout: 5))
+
+        let created = app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", ", " + name)).firstMatch
+        let existing = app.buttons["complete-00000000-0000-0000-0000-000000000001"]
+        XCTAssertTrue(created.waitForExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(created.isHittable, "The new Habit should be visible without scrolling")
+        XCTAssertLessThan(created.frame.minY, existing.frame.minY)
+        capture("New Habit at the top")
+
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(created.waitForExistence(timeout: 3), app.debugDescription)
+        XCTAssertTrue(created.isHittable)
+        XCTAssertLessThan(created.frame.minY, existing.frame.minY, "The new order should survive relaunch")
+    }
+
     func testWholeHabitCardOpensQuickActionsWithoutArchiveOrDelete() {
         app.launch()
 

@@ -22,8 +22,10 @@ struct OverviewView: View {
     @State private var sheet: AppSheet?
     @State private var path: [UUID] = []
     @State private var dragging: UUID?
+    @State private var pendingCreatedHabitID: UUID?
     var body: some View {
         NavigationStack(path: $path) {
+            ScrollViewReader { scroll in
             TimelineView(.periodic(from: .now, by: 30)) { timeline in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
@@ -31,7 +33,7 @@ struct OverviewView: View {
                             Text(timeline.date.formatted(.dateTime.weekday(.wide).month(.wide).day()).uppercased())
                                 .font(.caption.weight(.semibold)).tracking(1.4).foregroundStyle(.secondary)
                             Text("A little, every day.").font(.system(.largeTitle, design: .rounded, weight: .bold))
-                        }.padding(.top, 10)
+                        }.padding(.top, 10).id("overview-top")
                         if !model.data.settings.examplesDismissed && !model.data.habits.isEmpty {
                             HStack(alignment: .top, spacing: 12) {
                                 Image(systemName: "leaf").foregroundStyle(.green).font(.title3)
@@ -50,11 +52,12 @@ struct OverviewView: View {
                         }
                         GlassGroup {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: sizeClass == .regular && !typeSize.isAccessibilitySize ? 2 : 1), spacing: 16) {
-                            ForEach(model.data.active) { habit in
+                            ForEach(model.data.active.filter { $0.id != pendingCreatedHabitID }) { habit in
                                 HabitCard(habit: habit, data: model.data, now: timeline.date,
                                           sharedMemberCount: model.sharedHabit(for: habit.id)?.snapshot.members.count,
                                           open: { path.append(habit.id) },
                                           complete: { model.update { try $0.toggle(habit.id) } })
+                                .transition(habitTransition)
                                 .onDrag { dragging = habit.id; UIImpactFeedbackGenerator(style: .medium).impactOccurred(); return NSItemProvider(object: habit.id.uuidString as NSString) }
                                 .onDrop(of: [.text], delegate: HabitDrop(target: habit.id, dragging: $dragging, model: model))
                                 .contextMenu { quickMenu(habit) }
@@ -77,10 +80,16 @@ struct OverviewView: View {
             .navigationDestination(for: UUID.self) { id in
                 HabitDetailView(habitID: id, onDelete: deleteFromDetail)
             }
-            .sheet(item: $sheet) { destination in
+            .sheet(item: $sheet, onDismiss: {
+                guard pendingCreatedHabitID != nil else { return }
+                scroll.scrollTo("overview-top", anchor: .top)
+                withAnimation(reduceMotion ? nil : .smooth(duration: 0.4)) {
+                    pendingCreatedHabitID = nil
+                }
+            }) { destination in
                 switch destination {
                 case .settings: SettingsView()
-                case .create: HabitEditor(habit: Habit(), isNew: true)
+                case .create: HabitEditor(habit: Habit(), isNew: true, onCreated: { pendingCreatedHabitID = $0 })
                 case .edit(let habit): HabitEditor(habit: habit, isNew: false)
                 case .day(let day): DayEditor(selection: day, data: model.data)
                 }
@@ -103,10 +112,21 @@ struct OverviewView: View {
                 guard url.scheme == "openhabit", url.host == "habit", let id = UUID(uuidString: url.lastPathComponent) else { return }
                 model.reload(); path = [id]
             }
+            }
         }
     }
+    private var habitTransition: AnyTransition {
+        .asymmetric(insertion: reduceMotion ? .identity : .move(edge: .top).combined(with: .opacity), removal: .opacity)
+    }
     @ViewBuilder private func quickMenu(_ habit: Habit) -> some View {
-        Button("Mark yesterday complete", systemImage: "clock.arrow.circlepath") { model.update { try $0.setCount(habit.id, day: LocalDay.string(Calendar.current.date(byAdding: .day, value: -1, to: Date())!), count: habit.target) } }
+        Button("Mark yesterday complete", systemImage: "clock.arrow.circlepath") {
+            let day = LocalDay.string(Calendar.current.date(byAdding: .day, value: -1, to: Date())!)
+            let previousCount = model.data.day(habit.id, day).count
+            model.update { try $0.setCount(habit.id, day: day, count: habit.target) }
+            if model.error == nil && previousCount < habit.target {
+                UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.8)
+            }
+        }
         Button("Add today’s note", systemImage: "note.text") { sheet = .day(DaySelection(habitID: habit.id, date: LocalDay.string())) }
         if model.sharedHabit(for: habit.id)?.membership.role != .member {
             Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) }

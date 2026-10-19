@@ -99,9 +99,14 @@ struct HabitWidgetContent: View {
                     let tile = RecentDayTile(day: entry.data.day(habit.id, LocalDay.string(date)), target: habit.target,
                                              color: habit.tint, today: today, size: tileSide)
                     if today {
-                        Button(intent: ToggleHabitIntent(id: habit.id)) { tile }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Track \(habit.name)")
+                        let count = entry.data.day(habit.id, LocalDay.string(date)).count
+                        Button(intent: ToggleHabitIntent(id: habit.id)) {
+                            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: tileSide)
+                                .modifier(WidgetCompletionTransition(count: count))
+                        }
+                            .buttonStyle(CompletionStyle())
+                            .accessibilityLabel("\(habit.name), \(count) Completions, Daily Target \(habit.target)")
+                            .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
                     } else {
                         Link(destination: URL(string: "openhabit://habit/\(habit.id.uuidString)")!) { tile }
                             .buttonStyle(.plain)
@@ -137,10 +142,26 @@ struct HabitWidgetContent: View {
     private func widgetButton(_ habit: Habit, size: CGFloat) -> some View {
         let count = entry.data.day(habit.id, LocalDay.string(entry.date)).count
         return Button(intent: ToggleHabitIntent(id: habit.id)) {
-            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size).frame(minWidth: 44, minHeight: 44)
-        }.buttonStyle(.plain)
+            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size)
+                .modifier(WidgetCompletionTransition(count: count))
+                .frame(minWidth: 44, minHeight: 44)
+        }.buttonStyle(CompletionStyle())
             .accessibilityLabel("\(habit.name), \(count) Completions, Daily Target \(habit.target)")
             .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
+    }
+}
+
+// Widgets animate archived timeline changes rather than local keyframe state.
+private struct WidgetCompletionTransition: ViewModifier {
+    let count: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .id(count)
+            .transition(reduceMotion || count == 0 ? .identity : .asymmetric(
+                insertion: .scale(scale: 0.82).combined(with: .opacity), removal: .opacity))
+            .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.4), value: count)
     }
 }
 

@@ -146,8 +146,8 @@ private struct WatchCompletionButton: View {
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .sensoryFeedback(.success, trigger: count)
+        .buttonStyle(CompletionStyle())
+        .completionFeedback(count: count)
         .accessibilityLabel("\(habit.name), \(count) of \(habit.target) Completions today")
         .accessibilityHint(count >= habit.target ? "Clear today's Completions" : "Add one Completion")
         .accessibilityIdentifier("watch-complete-\(habit.id.uuidString)")

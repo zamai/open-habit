@@ -39,7 +39,9 @@ struct CompletionGlyph: View {
                     .fill(count >= target ? color : .clear)
                 RoundedRectangle(cornerRadius: size * 0.29)
                     .strokeBorder(color.opacity(count >= target ? 1 : 0.65), lineWidth: 2.5)
-                if count >= target { Image(systemName: "checkmark").font(.system(size: size * 0.4, weight: .bold)).foregroundStyle(.white) }
+                Image(systemName: "checkmark")
+                    .font(.system(size: size * 0.4, weight: .bold))
+                    .foregroundStyle(count >= target ? .white : color.opacity(0.35))
             } else {
                 Canvas { context, canvas in
                     let inset: CGFloat = 3
@@ -48,7 +50,8 @@ struct CompletionGlyph: View {
                                                            height: canvas.height - inset * 2),
                                        cornerRadius: size * 0.29)
                     let segments = target
-                    let gap = min(0.025, 0.18 / CGFloat(segments))
+                    // Leave visible space after the rounded line caps extend into each gap.
+                    let gap = min(0.055, 0.4 / CGFloat(segments))
                     for segment in 0..<segments {
                         let start = CGFloat(segment) / CGFloat(segments) + gap / 2
                         let end = CGFloat(segment + 1) / CGFloat(segments) - gap / 2
@@ -75,18 +78,50 @@ struct CompletionButton: View {
                 .frame(width: 56, height: 56, alignment: .center)
         }
             .buttonStyle(CompletionStyle())
-            .sensoryFeedback(.impact(weight: .light), trigger: count)
+            .completionFeedback(count: count)
             .accessibilityLabel("\(habit.name), \(count) Completions today, Daily Target \(habit.target)")
             .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
             .accessibilityIdentifier("complete-\(habit.id.uuidString)")
     }
 }
 struct CompletionStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.9 : 1)
             .opacity(configuration.isPressed ? 0.75 : 1)
             .contentShape(.rect(cornerRadius: 18))
+            .animation(reduceMotion ? nil : .snappy(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+extension View {
+    func completionFeedback(count: Int) -> some View {
+        modifier(CompletionFeedback(count: count))
+    }
+}
+
+private struct CompletionFeedback: ViewModifier {
+    let count: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var additions = 0
+
+    func body(content: Content) -> some View {
+        let motionReduced = reduceMotion
+        return content
+            .keyframeAnimator(initialValue: CGFloat(1), trigger: additions) { content, scale in
+                content.scaleEffect(motionReduced ? 1 : scale)
+            } keyframes: { _ in
+                LinearKeyframe(0.82, duration: 0.07)
+                SpringKeyframe(1.2, duration: 0.2, spring: .bouncy)
+                SpringKeyframe(1, duration: 0.3, spring: .bouncy)
+            }
+            .onChange(of: count) { old, new in
+                if new > old { additions += 1 }
+            }
+            .sensoryFeedback(trigger: count) { old, new in
+                new > old ? .impact(flexibility: .soft, intensity: 0.8) : .selection
+            }
     }
 }
 

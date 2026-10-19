@@ -7,6 +7,7 @@ struct HabitEditor: View {
     @State var habit: Habit
     let isNew: Bool
     var onDelete: ((Habit) -> Void)?
+    var onCreated: ((UUID) -> Void)?
     @State private var previewCount = 0
     @State private var deleting = false
     @State private var choosingEmoji = false
@@ -144,7 +145,11 @@ struct HabitEditor: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isNew ? "Create" : "Save") {
                         habit.name = habit.name.trimmingCharacters(in: .whitespacesAndNewlines)
-                        model.update { try $0.save(habit) }; if model.error == nil { dismiss() }
+                        model.update { try $0.save(habit) }
+                        if model.error == nil {
+                            if isNew { onCreated?(habit.id) }
+                            dismiss()
+                        }
                     }.disabled(!valid).accessibilityIdentifier("save-habit")
                 }
             }

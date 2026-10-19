@@ -2,6 +2,29 @@ import XCTest
 @testable import OpenHabitCore
 
 final class OpenHabitCoreTests: XCTestCase {
+    func testNewHabitComesFirstAndEditingPreservesManualOrder() throws {
+        var journal = Journal()
+        journal.seedIfEmpty(now: now)
+        let reordered = Array(journal.dataset.habits.map(\.id).reversed())
+        journal.append(.order(reordered))
+
+        var habit = Habit(name: "Stretch")
+        try journal.save(habit)
+        XCTAssertEqual(journal.dataset.active.map(\.id), [habit.id] + reordered)
+
+        let second = Habit(name: "Walk")
+        try journal.save(second)
+        habit.name = "Stretch every morning"
+        try journal.save(habit)
+        let expected = [second.id, habit.id] + reordered
+        XCTAssertEqual(journal.dataset.active.map(\.id), expected)
+
+        let restored = try JSONDecoder().decode(Journal.self, from: JSONEncoder().encode(journal))
+        var otherDevice = Journal()
+        otherDevice.merge(restored.edits)
+        XCTAssertEqual(otherDevice.dataset.active.map(\.id), expected)
+    }
+
     func testCustomColorPersistsAndLegacyHabitStillDecodes() throws {
         var habit = Habit(name: "Water")
         let legacy = try JSONEncoder().encode(habit)

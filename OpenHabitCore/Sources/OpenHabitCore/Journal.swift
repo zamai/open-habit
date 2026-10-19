@@ -155,7 +155,12 @@ public struct Journal: Codable, Sendable {
         data.days[Dataset.key(data.habits[1].id, LocalDay.string(now))] = HabitDay(count: 1)
         append(.initialize(data), now: now)
     }
-    public mutating func save(_ habit: Habit) throws { try habit.validate(); append(.save(habit)) }
+    public mutating func save(_ habit: Habit) throws {
+        try habit.validate()
+        let ids = dataset.habits.map(\.id)
+        append(.save(habit))
+        if !ids.contains(habit.id) { append(.order([habit.id] + ids)) }
+    }
     public mutating func add(_ id: UUID, day: String, amount: Int = 1, now: Date = Date()) throws {
         try LocalDay.validatePast(day, now: now)
         guard amount > 0 else { throw HabitError.invalidAmount }

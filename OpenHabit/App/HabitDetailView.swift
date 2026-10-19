@@ -226,7 +226,8 @@ private struct MonthCalendar: View {
                                 .background(habit.tint.opacity(day.count == 0 ? 0.05 : 0.15 + day.progress(target: habit.target) * 0.55), in: RoundedRectangle(cornerRadius: 12))
                                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(key == selected ? habit.tint : key == LocalDay.string() ? Color.primary.opacity(0.5) : .clear, lineWidth: key == selected ? 2 : 1) }
                                 .overlay(alignment: .bottom) { if !day.note.isEmpty { Circle().fill(.primary).frame(width: 4, height: 4).padding(.bottom, 3) } }
-                        }.buttonStyle(.plain)
+                        }.buttonStyle(CompletionStyle())
+                            .completionFeedback(count: day.count)
                             .disabled(!canSelect)
                             .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
                                 if canSelect { edit(key) }
@@ -259,8 +260,10 @@ struct DayEditor: View {
             Form {
                 Section {
                     Text(LocalDay.date(selection.date)?.formatted(date: .complete, time: .omitted) ?? selection.date).font(.headline)
-                    Stepper("Completions: \(count)", value: $count, in: 0...max(99, count))
-                        .sensoryFeedback(.impact(weight: .light), trigger: count)
+                    Stepper(value: $count, in: 0...max(99, count)) {
+                        Text("Completions: \(count)")
+                            .completionFeedback(count: count)
+                    }
                 }
                 Section {
                     TextEditor(text: $note).frame(minHeight: 150).accessibilityLabel("Day Note")
