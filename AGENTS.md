@@ -1,3 +1,7 @@
+## Before starting work
+
+Always pull the latest `main` before starting any task: run `git fetch origin main` and fast-forward the working branch (`git pull --ff-only origin main` on `main`, or rebase a feature branch onto `origin/main`). Do not start work on a stale checkout.
+
 ## Agent skills
 
 ### Issue tracker
