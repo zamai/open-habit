@@ -79,24 +79,13 @@ struct SettingsView: View {
                     NavigationLink { RecoveryBackupsView() } label: {
                         Label("Recovery Backups", systemImage: "clock.arrow.circlepath")
                     }
+                    Button("Delete All Data", role: .destructive) { deleting = true }
                 }
                 Section {
-                    NavigationLink("About Open Habit") {
-                        ScrollView {
-                            VStack(spacing: 20) {
-                                Image(systemName: "leaf.circle.fill").font(.system(size: 72)).foregroundStyle(.green)
-                                Text("Open Habit").font(.largeTitle.bold())
-                                Text("A little, every day.").font(.title3)
-                                Text("Private habits. Small steps. Your data.\nFree and open source, with no Open Habit account or hosted user-data service.").multilineTextAlignment(.center).foregroundStyle(.secondary)
-                                Text(appVersion).font(.caption).foregroundStyle(.secondary)
-                            }.padding(30).frame(maxWidth: .infinity)
-                        }.navigationTitle("About")
-                    }
                     Link("Privacy Policy", destination: URL(string: "https://getopenhabit.com/privacy")!)
                     Link("Support", destination: URL(string: "https://getopenhabit.com/support")!)
                     Link("Source Code", destination: URL(string: "https://github.com/zamai/open-habit")!)
-                    Button("Delete All Data", role: .destructive) { deleting = true }
-                }
+                } footer: { Text(appVersion) }
             }
             .navigationTitle("Settings").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }

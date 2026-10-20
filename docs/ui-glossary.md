@@ -169,9 +169,9 @@ These illustrations use sample Members rendered from the real SwiftUI components
 
 ## App Settings
 
-<img src="images/ui-glossary/app-settings.png" alt="App Settings with Appearance, First day of week, iCloud sync status, Archived Habits, backup/import actions, and About" width="340">
+<img src="images/ui-glossary/app-settings.png" alt="App Settings with Appearance, First day of week, iCloud sync status, Archived Habits, backup, import, recovery, and Delete All Data, followed by Privacy Policy, Support, and Source Code links" width="340">
 
-**App Settings** is the screen titled **Settings**, opened from the gear in Overview. It contains Appearance, First day of week, Sync Status and Sync now, Archived Habits, Export Backup, Import, Recovery Backups, About, and Delete All Data. These apply across the app rather than to one Habit.
+**App Settings** is the screen titled **Settings**, opened from the gear in Overview. It contains Appearance, First day of week, Sync Status and Sync now, Archived Habits, Export Backup, Import, Recovery Backups, and Delete All Data, followed by links to the Privacy Policy, Support, and Source Code with the app version beneath them. These apply across the app rather than to one Habit.
 
 **Archived Habits** is the list of preserved Habits excluded from Overview and widgets. **Recovery Backups** is the list of local recovery snapshots. **Import Confirmation** is the preview and choice of Add New Habits or Replace All Data before a Data Import is applied.
 
