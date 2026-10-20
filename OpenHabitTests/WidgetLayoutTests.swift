@@ -5,6 +5,29 @@ import OpenHabitCore
 @testable import OpenHabit
 
 final class WidgetLayoutTests: XCTestCase {
+    @MainActor func testCompactHabitCardsKeepSquareGeometryAndEqualMargins() throws {
+        let now = try XCTUnwrap(LocalDay.date("2026-10-20"))
+        var data = Dataset()
+        data.settings.weekStart = .sunday
+        let habit = Habit(name: "A habit with a longer title", emoji: "📖", color: .purple,
+                          streakGoal: StreakGoal(period: .weekly, target: 3))
+        for side: CGFloat in [133, 146, 169.5, 174, 188, 273] {
+            let layout = CompactHabitCardLayout(side: side)
+            XCTAssertGreaterThanOrEqual(layout.sectionGap, 8)
+            XCTAssertEqual(28 + 44 + layout.sectionGap + layout.gridHeight, side, accuracy: 0.001)
+            XCTAssertEqual(layout.contentWidth + 28, side, accuracy: 0.001)
+            for appearance in [ColorScheme.light, .dark] {
+                let renderer = ImageRenderer(content:
+                    CompactHabitCard(habit: habit, data: data, now: now, sharedMemberCount: 3, open: {}, complete: {})
+                        .frame(width: side, height: side).environment(\.colorScheme, appearance))
+                renderer.scale = 2
+                let image = try XCTUnwrap(renderer.uiImage)
+                XCTAssertEqual(image.size.width, side, accuracy: 0.5)
+                XCTAssertEqual(image.size.height, side, accuracy: 0.5)
+            }
+        }
+    }
+
     @MainActor func testHabitCardsAlignCompletionWithHistoryAndCollapseEmptyDetails() throws {
         let end = try XCTUnwrap(LocalDay.date("2026-10-19"))
         var data = Dataset()

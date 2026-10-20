@@ -73,10 +73,11 @@ struct CompletionButton: View {
     let count: Int
     let action: () -> Void
     var alignment: Alignment = .center
+    var size: CGFloat = 48
     var body: some View {
         Button(action: action) {
-            CompletionGlyph(count: count, target: habit.target, color: habit.tint)
-                .frame(width: 56, height: 56, alignment: alignment)
+            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size)
+                .frame(width: max(44, size + 8), height: max(44, size + 8), alignment: alignment)
         }
             .buttonStyle(CompletionStyle())
             .completionFeedback(count: count)

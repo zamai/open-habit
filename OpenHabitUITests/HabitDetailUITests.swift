@@ -210,6 +210,34 @@ final class HabitDetailUITests: XCTestCase {
         #endif
     }
 
+    func testCompactOverviewPersistsAndKeepsCompletionAndDetailActions() {
+        app.launch()
+        let compact = app.buttons["overview-compact"]
+        XCTAssertTrue(compact.waitForExistence(timeout: 5))
+        compact.tap()
+        XCTAssertTrue(compact.isSelected)
+        let completion = app.buttons["complete-00000000-0000-0000-0000-000000000001"]
+        makeHittable(completion)
+        let original = completion.label
+        completion.tap()
+        XCTAssertNotEqual(completion.label, original)
+        completion.tap()
+        XCTAssertEqual(completion.label, original)
+        let history = app.buttons["history-00000000-0000-0000-0000-000000000001"]
+        history.tap()
+        XCTAssertTrue(app.navigationBars["Habit Detail"].waitForExistence(timeout: 5))
+        app.navigationBars["Habit Detail"].buttons.firstMatch.tap()
+        XCTAssertTrue(compact.waitForExistence(timeout: 5))
+        XCTAssertTrue(compact.isSelected)
+        XCTAssertEqual(completion.label, original, "Opening history must not log a Completion")
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(compact.waitForExistence(timeout: 5))
+        XCTAssertTrue(compact.isSelected, "The view selection should survive relaunch")
+        app.buttons["overview-details"].tap()
+        XCTAssertTrue(app.buttons["overview-details"].isSelected)
+    }
+
     func testCreatingHabitReturnsToTopAndKeepsNewestHabitFirst() {
         app.launch()
         app.swipeUp()
@@ -266,7 +294,7 @@ final class HabitDetailUITests: XCTestCase {
             XCTAssertTrue(app.buttons["Edit Habit"].exists)
             XCTAssertFalse(app.buttons["Archive Habit"].exists)
             XCTAssertFalse(app.buttons["Delete Habit"].exists)
-            app.navigationBars["Open Habit"].tap()
+            app.navigationBars.firstMatch.tap()
             XCTAssertTrue(addNote.waitForNonExistence(timeout: 3), app.debugDescription)
             XCTAssertEqual(completion.label, originalCompletions, "Long pressing must not change Completions")
         }

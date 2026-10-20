@@ -44,7 +44,7 @@ Habit Settings (screen title: Edit Habit)
 | Overview | The screen titled Open Habit | Lists active Habits. |
 | App Settings button | Gear at the top left | Opens settings for the whole app. |
 | Add Habit button | Plus at the top right | Opens New Habit. |
-| Habit Card | One large rounded container | Contains one Habit's header, quick logging control, and history. Touch and hold anywhere on it for Quick Actions. Hold and drag to reorder. Avoid “habit widget” or “pill” for this container. |
+| Habit Card | A rounded container in Details or Compact layout | Contains one Habit's header, quick logging control, and history. Touch and hold anywhere on it for Quick Actions. Hold and drag to reorder. Avoid “habit widget” or “pill” for this container. |
 | Habit Header | Emoji, Habit name, and description at the top of the card | Tap to open Habit Detail. |
 | Streak Badge | Optional flame and day/week count below the description | Shows Current Streak when a Streak Goal is enabled. It is not a Completion count. |
 | Members Badge | Optional people icon and Member count | Identifies a Shared Habit. |
@@ -70,6 +70,12 @@ From left to right: an empty single-target Habit, an empty multi-target Habit, p
 | Edit Habit | Opens Habit Settings. Its icon is sliders, matching the button in Habit Detail. Only the Owner can edit a Shared Habit's definition. |
 
 Undo latest Completion today, Mark today complete, Archive Habit, and Delete Habit are not in Quick Actions. Today's quick logging belongs to the Completion Button; archive and delete belong to Habit Actions in Habit Settings.
+
+### Overview view switcher
+
+The icon-only switcher at the bottom chooses **Details** (full Habit Cards) or **Compact** (two tinted, square Habit Cards per row). The selection is saved on this device. VoiceOver announces both labels and the selected view. Accessibility text sizes use full-width Habit Cards for readability.
+
+Compact Habit Cards show the emoji, optional Current Streak badge, Habit name, Completion Button, and Completion Grid. Shared Habits also show a people indicator. Header and history taps open Habit Detail; the Completion Button logs today. Quick Actions and reordering work in both layouts. The app name is no longer repeated at the center of the Overview toolbar.
 
 ## Habit Detail
 
