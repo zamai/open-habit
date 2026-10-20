@@ -17,6 +17,9 @@ if [[ ! -f "$CONFIG" ]]; then
 fi
 command -v op >/dev/null
 command -v jq >/dev/null
+if [[ -z "${OPEN_HABIT_SIGNING_KEYCHAIN:-}" ]]; then
+  exec python3 scripts/release/with-signing-keychain.py "$CONFIG" bash "$PWD/scripts/release/publish-local.sh" "$@"
+fi
 RELEASE_DIR=$(mktemp -d /tmp/open-habit-release.XXXXXX)
 KEY_PATH="$RELEASE_DIR/AuthKey.p8"
 cleanup() {
@@ -42,7 +45,7 @@ AUTH=(-authenticationKeyPath "$KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -aut
 xcodebuild -quiet -project OpenHabit.xcodeproj -scheme OpenHabit -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$RELEASE_DIR/OpenHabit.xcarchive" \
   -derivedDataPath "$RELEASE_DIR/DerivedData" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-  "${AUTH[@]}" archive
+  OTHER_CODE_SIGN_FLAGS="--keychain $OPEN_HABIT_SIGNING_KEYCHAIN" "${AUTH[@]}" archive
 xcodebuild -quiet -exportArchive -archivePath "$RELEASE_DIR/OpenHabit.xcarchive" \
   -exportPath "$RELEASE_DIR/export" -exportOptionsPlist scripts/release/ExportOptions-local.plist \
   "${AUTH[@]}"
