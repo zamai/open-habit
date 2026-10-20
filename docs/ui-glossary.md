@@ -73,7 +73,7 @@ Undo latest Completion today, Mark today complete, Archive Habit, and Delete Hab
 
 ### Overview view switcher
 
-The floating icon-only switcher at the bottom chooses **Details** (full Habit Cards) or **Compact** (two tinted, square Habit Cards per row). On iOS 26 and later it uses interactive Liquid Glass, with a glass morph between selections; earlier versions use an adaptive material. Habit content scrolls behind the controls without a full-width shelf. The selection is saved on this device. VoiceOver announces both labels and the selected view. Accessibility text sizes use full-width Habit Cards for readability.
+The floating icon-only switcher at the bottom chooses **Details** (full Habit Cards) or **Compact** (two tinted, square Habit Cards per row). It uses a native segmented control inside one shared capsule: Liquid Glass on iOS 26 and later, adaptive material on earlier versions. Switching layouts produces selection haptics. Scrolling down hides the control; scrolling up brings it back. Reduce Motion replaces the movement with a short fade. Habit content scrolls behind the controls without a full-width shelf. The selection is saved on this device. VoiceOver announces both labels and the selected view. Accessibility text sizes use full-width Habit Cards for readability.
 
 Compact Habit Cards show the emoji, optional Current Streak badge, Habit name, Completion Button, and Completion Grid. Shared Habits also show a people indicator. Header and history taps open Habit Detail; the Completion Button logs today. Quick Actions and reordering work in both layouts. The app name is no longer repeated at the center of the Overview toolbar.
 

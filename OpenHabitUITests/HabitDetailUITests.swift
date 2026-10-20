@@ -212,7 +212,7 @@ final class HabitDetailUITests: XCTestCase {
 
     func testCompactOverviewPersistsAndKeepsCompletionAndDetailActions() {
         app.launch()
-        let compact = app.buttons["overview-compact"]
+        let compact = app.segmentedControls["overview-layout"].buttons["Compact"]
         XCTAssertTrue(compact.waitForExistence(timeout: 5))
         compact.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
         XCTAssertTrue(compact.isSelected)
@@ -236,8 +236,26 @@ final class HabitDetailUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(compact.waitForExistence(timeout: 5))
         XCTAssertTrue(compact.isSelected, "The view selection should survive relaunch")
-        app.buttons["overview-details"].tap()
-        XCTAssertTrue(app.buttons["overview-details"].isSelected)
+        app.segmentedControls["overview-layout"].buttons["Details"].tap()
+        XCTAssertTrue(app.segmentedControls["overview-layout"].buttons["Details"].isSelected)
+    }
+
+    func testOverviewSwitcherHidesScrollingDownAndReturnsScrollingUp() {
+        app.launch()
+        let picker = app.segmentedControls["overview-layout"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        let details = picker.buttons["Details"]
+        details.tap()
+        XCTAssertTrue(details.isSelected)
+        app.scrollViews.firstMatch.swipeUp()
+        capture("overview-switcher-scrolled-down")
+        XCTAssertTrue(picker.waitForNonExistence(timeout: 3), app.debugDescription)
+        app.scrollViews.firstMatch.swipeDown()
+        XCTAssertTrue(picker.waitForExistence(timeout: 3), "Scrolling up should restore the switcher")
+        XCTAssertTrue(details.isSelected, "Scrolling should not change the chosen layout")
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(picker.waitForExistence(timeout: 5), "The switcher should start visible after relaunch")
     }
 
     func testCreatingHabitReturnsToTopAndKeepsNewestHabitFirst() {
@@ -437,6 +455,7 @@ final class HabitDetailUITests: XCTestCase {
 
     func testCalendarTapCyclesCompletionsAndHoldOpensDayNote() {
         app.launch()
+        app.segmentedControls["overview-layout"].buttons["Details"].tap()
 
         let exercise = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", ", Exercise,")).firstMatch
         makeHittable(exercise)

@@ -24,6 +24,7 @@ struct OverviewView: View {
     @State private var path: [UUID] = []
     @State private var dragging: UUID?
     @State private var pendingCreatedHabitID: UUID?
+    @State private var layoutSwitcherVisible = true
     var body: some View {
         NavigationStack(path: $path) {
             ScrollViewReader { scroll in
@@ -68,12 +69,19 @@ struct OverviewView: View {
                     }.padding(.horizontal, 20).padding(.bottom, 92).frame(maxWidth: compact && !typeSize.isAccessibilitySize ? 600 : 1100)
                         .frame(maxWidth: .infinity)
                 }
+                .modifier(OverviewScrollVisibility(visible: $layoutSwitcherVisible))
                 .background(Color(.systemGroupedBackground))
             }
             .overlay(alignment: .bottom) {
-                OverviewLayoutSwitcher(compact: $compact)
-                    .padding(.bottom, 8)
+                if layoutSwitcherVisible {
+                    OverviewLayoutSwitcher(compact: $compact)
+                        .padding(.bottom, 8)
+                        .transition(reduceMotion ? .opacity : .offset(y: 28).combined(with: .opacity)
+                            .combined(with: .scale(scale: 0.94, anchor: .bottom)))
+                }
             }
+            .animation(reduceMotion ? .linear(duration: 0.15) : .smooth(duration: 0.24), value: layoutSwitcherVisible)
+            .onChange(of: path) { _, _ in layoutSwitcherVisible = true }
             .navigationTitle("").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { Button("Settings", systemImage: "gearshape") { sheet = .settings } }
@@ -163,59 +171,66 @@ struct OverviewView: View {
     }
 }
 
+/// Observe actual scrolling, so switching layouts or resizing cannot hide the control.
+private struct OverviewScrollVisibility: ViewModifier {
+    @Binding var visible: Bool
+    @State private var scrolling = false
+    @State private var previousTranslation: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18, *) {
+            content
+                .onScrollPhaseChange { _, phase in
+                    scrolling = phase == .interacting || phase == .decelerating
+                }
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    min(max(0, geometry.contentOffset.y + geometry.contentInsets.top),
+                        max(0, geometry.contentSize.height - geometry.containerSize.height + geometry.contentInsets.bottom))
+                } action: { old, new in
+                    guard scrolling else { return }
+                    if new <= 2 { visible = true }
+                    else if new - old > 0.5 { visible = false }
+                    else if old - new > 1.5 { visible = true }
+                }
+        } else {
+            content.simultaneousGesture(
+                DragGesture(minimumDistance: 8)
+                    .onChanged { value in
+                        let delta = value.translation.height - previousTranslation
+                        if delta < -1 { visible = false }
+                        else if delta > 1 { visible = true }
+                        previousTranslation = value.translation.height
+                    }
+                    .onEnded { _ in previousTranslation = 0 }
+            )
+        }
+    }
+}
+
 struct OverviewLayoutSwitcher: View {
     @Binding var compact: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Namespace private var glassSelection
 
     var body: some View {
-        if #available(iOS 26, *) {
-            GlassEffectContainer(spacing: 12) {
-                buttons
-            }
-        } else {
-            buttons.padding(6)
-                .background(.regularMaterial, in: Capsule())
-        }
-    }
-
-    private var buttons: some View {
-        HStack(spacing: 4) {
-            layoutButton("Details", icon: "rectangle.grid.1x2", selected: !compact) { compact = false }
-            layoutButton("Compact", icon: "square.grid.2x2", selected: compact) { compact = true }
-        }
-    }
-
-    private func layoutButton(_ title: String, icon: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button {
-            withAnimation(reduceMotion ? nil : .smooth(duration: 0.3), action)
-        } label: {
+        Group {
             if #available(iOS 26, *) {
-                if selected {
-                    label(title, icon: icon, selected: true)
-                        .glassEffect(.regular.tint(Color.primary.opacity(0.12)).interactive(), in: .capsule)
-                        .glassEffectID("selection", in: glassSelection)
-                        .glassEffectTransition(reduceMotion ? .materialize : .matchedGeometry)
-                } else {
-                    label(title, icon: icon, selected: false)
-                        .glassEffect(.regular.interactive(), in: .capsule)
-                        .glassEffectID(title, in: glassSelection)
-                }
+                picker.glassEffect(.regular, in: .capsule)
             } else {
-                label(title, icon: icon, selected: selected)
-                    .background(selected ? Color.primary.opacity(0.08) : .clear, in: Capsule())
+                picker.background(.regularMaterial, in: Capsule())
             }
-        }.buttonStyle(.plain)
-            .accessibilityIdentifier("overview-" + title.lowercased())
-            .accessibilityAddTraits(selected ? .isSelected : [])
+        }
+        .sensoryFeedback(.selection, trigger: compact)
+        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.77), value: compact)
     }
 
-    private func label(_ title: String, icon: String, selected: Bool) -> some View {
-        Label(title, systemImage: icon).labelStyle(.iconOnly)
-            .font(.system(size: 19, weight: .semibold))
-            .frame(width: 56, height: 44)
-            .contentShape(Capsule())
-            .foregroundStyle(selected ? Color.primary : Color.secondary)
+    private var picker: some View {
+        Picker("Habit layout", selection: $compact) {
+            Image(systemName: "rectangle.grid.1x2").accessibilityLabel("Details").tag(false)
+            Image(systemName: "square.grid.2x2").accessibilityLabel("Compact").tag(true)
+        }
+        .pickerStyle(.segmented)
+        .accessibilityIdentifier("overview-layout")
+        .frame(width: 152).padding(8)
     }
 }
 
