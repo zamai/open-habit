@@ -73,6 +73,40 @@ import OpenHabitCore
     model.sharedHabits[habits[3].id] = shared
     return model
 }
+
+/// Starter Habits with months of history, for website screenshots and recordings.
+/// Replaces the Simulator's local data so taps persist through reloads.
+@MainActor func websiteDemoModel() -> AppModel {
+    var journal = Journal()
+    journal.seedIfEmpty()
+    // Three more Habits fill the six-Habit widget; the starter Habits stay first.
+    for habit in [Habit(name: "Meditate", emoji: "🧘", color: .pink),
+                  Habit(name: "Stretch", emoji: "🤸", color: .teal),
+                  Habit(name: "Practice guitar", emoji: "🎸", color: .yellow)] {
+        try! journal.save(habit)
+    }
+    let starters = Set((1...3).map { UUID(uuidString: "00000000-0000-0000-0000-00000000000\($0)")! })
+    let ids = journal.dataset.habits.map(\.id)
+    journal.append(.order(ids.filter(starters.contains).sorted { $0.uuidString < $1.uuidString } + ids.filter { !starters.contains($0) }))
+    var seed: UInt64 = 70
+    for (index, habit) in journal.dataset.habits.enumerated() {
+        let density = [0.62, 0.78, 0.7, 0.55, 0.6, 0.5][index % 6]
+        for offset in 1..<240 {
+            seed = seed &* 6364136223846793005 &+ 1442695040888963407
+            guard Double(seed >> 11) / Double(1 << 53) < density else { continue }
+            let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date())!
+            try! journal.setCount(habit.id, day: LocalDay.string(date), count: habit.target)
+        }
+    }
+    var settings = journal.dataset.settings
+    settings.examplesDismissed = true
+    journal.append(.settings(settings))
+    try! sharedStore().transaction { $0 = journal }
+    let model = AppModel()
+    model.reload()
+    model.loading = false
+    return model
+}
 #endif
 #Preview("Starter Habits") { OverviewView().environment(previewModel()) }
 #Preview("Empty dataset") { OverviewView().environment(previewModel(empty: true)) }
