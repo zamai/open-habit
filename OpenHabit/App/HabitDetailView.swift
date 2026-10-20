@@ -4,6 +4,7 @@ import OpenHabitCore
 
 struct HabitDetailView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var typeSize
     let habitID: UUID
     var onDelete: ((Habit) -> Void)?
     @State private var selected = LocalDay.string()
@@ -25,7 +26,7 @@ struct HabitDetailView: View {
                                         .fixedSize(horizontal: false, vertical: true)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                                if !habit.detail.isEmpty { Text(habit.detail).foregroundStyle(.secondary) }
+                                if !habit.detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { Text(habit.detail).foregroundStyle(.secondary) }
                                 if habit.archived { Label("Archived Habit", systemImage: "archivebox").font(.subheadline).foregroundStyle(.secondary) }
                                 if let state = model.sharedHabit(for: habit.id) {
                                     Label("\(state.snapshot.members.count) \(state.snapshot.members.count == 1 ? "Member" : "Members")", systemImage: "person.2.fill").font(.subheadline).foregroundStyle(.secondary)
@@ -73,7 +74,7 @@ struct HabitDetailView: View {
         .onAppear { loadSelectedNote() }
         .task(id: habitID) {
             #if DEBUG && targetEnvironment(simulator)
-            if ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
+            if ProcessInfo.processInfo.arguments.contains("--layout-audit") || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
             #endif
             if model.sharedHabit(for: habitID) != nil { await model.sync() }
         }
@@ -131,16 +132,24 @@ struct HabitDetailView: View {
     }
 
     private func metrics(for habit: Habit) -> some View {
+        Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10) {
+            if typeSize.isAccessibilitySize {
+                metricCards(for: habit)
+            } else {
+                GridRow { metricCards(for: habit) }
+            }
+        }
+    }
+
+    @ViewBuilder private func metricCards(for habit: Habit) -> some View {
         let streak = model.data.currentStreak(for: habit)
         let monthTotal = model.data.completionTotal(for: habit.id, inMonthContaining: month)
-        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 10)], spacing: 10) {
-            HabitMetric(value: "\(habit.target)", label: "Daily Target", color: habit.tint)
-            HabitMetric(value: "\(monthTotal)", label: "\(month.formatted(.dateTime.month(.abbreviated))) Total", color: habit.tint)
-            if let goal = habit.streakGoal {
-                let weeklyProgress = model.data.completedDays(for: habit, inWeekContaining: Date())
-                let label = goal.period == .daily ? "Day Streak" : "Week Streak\n\(weeklyProgress) / \(goal.target) this week"
-                HabitMetric(value: "\(streak)", label: label, color: habit.tint)
-            }
+        HabitMetric(value: "\(habit.target)", label: "Daily Target", color: habit.tint)
+        HabitMetric(value: "\(monthTotal)", label: "\(month.formatted(.dateTime.month(.abbreviated))) Total", color: habit.tint)
+        if let goal = habit.streakGoal {
+            let weeklyProgress = model.data.completedDays(for: habit, inWeekContaining: Date())
+            let label = goal.period == .daily ? "Day Streak" : "Week Streak\n\(weeklyProgress) / \(goal.target) this week"
+            HabitMetric(value: "\(streak)", label: label, color: habit.tint)
         }
     }
 
@@ -178,7 +187,7 @@ struct HabitMetric: View {
             Text(value).font(.title2.monospacedDigit().weight(.bold)).foregroundStyle(color)
             Text(label).font(.caption).foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 64, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)

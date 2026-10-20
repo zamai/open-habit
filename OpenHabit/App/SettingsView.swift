@@ -16,6 +16,7 @@ private struct PendingDataImport: Identifiable {
 }
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.dismiss) private var dismiss
     @State private var exporting = false
     @State private var importing = false
@@ -37,16 +38,17 @@ struct SettingsView: View {
                     }
                 }
                 Section {
-                    HStack {
-                        Label(model.syncStatus, systemImage: model.syncStatus == "Synced" ? "checkmark.icloud" : "icloud")
-                        Spacer()
-                        Button {
-                            Task { await model.sync() }
-                        } label: {
-                            Label("Sync now", systemImage: "arrow.triangle.2.circlepath")
+                    if typeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 12) {
+                            syncStatusLabel
+                            syncButton
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        HStack {
+                            syncStatusLabel
+                            Spacer()
+                            syncButton
                         }
-                        .buttonStyle(.bordered)
-                        .disabled(model.syncing)
                     }
                 } footer: { Text("Private iCloud sync keeps your devices together and can recover your data after reinstalling. It isn’t a versioned backup: edits and deletions sync too.") }
                 Section {
@@ -74,17 +76,21 @@ struct SettingsView: View {
                         Button("Open Habit import") { nativeImport = true; importing = true }
                         Button("HabitKit data import") { nativeImport = false; importing = true }
                     }
-                    NavigationLink("Recovery Backups") { RecoveryBackupsView() }
+                    NavigationLink { RecoveryBackupsView() } label: {
+                        Label("Recovery Backups", systemImage: "clock.arrow.circlepath")
+                    }
                 }
                 Section {
                     NavigationLink("About Open Habit") {
-                        VStack(spacing: 20) {
-                            Image(systemName: "leaf.circle.fill").font(.system(size: 72)).foregroundStyle(.green)
-                            Text("Open Habit").font(.largeTitle.bold())
-                            Text("A little, every day.").font(.title3)
-                            Text("Private habits. Small steps. Your data.\nFree and open source, with no Open Habit account or hosted user-data service.").multilineTextAlignment(.center).foregroundStyle(.secondary)
-                            Text(appVersion).font(.caption).foregroundStyle(.secondary)
-                        }.padding(30).navigationTitle("About")
+                        ScrollView {
+                            VStack(spacing: 20) {
+                                Image(systemName: "leaf.circle.fill").font(.system(size: 72)).foregroundStyle(.green)
+                                Text("Open Habit").font(.largeTitle.bold())
+                                Text("A little, every day.").font(.title3)
+                                Text("Private habits. Small steps. Your data.\nFree and open source, with no Open Habit account or hosted user-data service.").multilineTextAlignment(.center).foregroundStyle(.secondary)
+                                Text(appVersion).font(.caption).foregroundStyle(.secondary)
+                            }.padding(30).frame(maxWidth: .infinity)
+                        }.navigationTitle("About")
                     }
                     Link("Privacy Policy", destination: URL(string: "https://getopenhabit.com/privacy")!)
                     Link("Support", destination: URL(string: "https://getopenhabit.com/support")!)
@@ -120,6 +126,24 @@ struct SettingsView: View {
             } message: { Text("This removes all Habits, Completions, Day Notes, and categories from synchronized devices. A recovery backup is kept on this device under Recovery Backups. Example Habits will not return.") }
             .alert("Backup problem", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) { Button("OK") { problem = nil } } message: { Text(problem ?? "") }
         }
+    }
+
+    private var syncStatusLabel: some View {
+        Label(model.syncStatus, systemImage: model.syncStatus == "Synced" ? "checkmark.icloud" : "icloud")
+    }
+
+    private var syncButton: some View {
+        Button {
+            Task { await model.sync() }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.triangle.2.circlepath").accessibilityHidden(true)
+                Text("Sync now")
+            }.fixedSize()
+        }
+        .buttonStyle(.bordered)
+        .fixedSize()
+        .disabled(model.syncing)
     }
 
     private var appVersion: String {

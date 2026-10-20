@@ -455,18 +455,22 @@ struct SharedHabitSharingControls: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer(minLength: 8)
-                        Button("Cancel Invitation", systemImage: "xmark", role: .destructive) {
+                        Button(role: .destructive) {
                             activity = .cancelling
                             Task {
                                 await model.cancelInvitation(invitation.id, habitID: state.membership.localHabitID)
                                 activity = nil
                             }
+                        } label: {
+                            Image(systemName: "xmark")
+                                .foregroundStyle(.red)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
-                        .labelStyle(.iconOnly)
                         .accessibilityLabel("Cancel Pending Invitation \(index + 1)")
                     }
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 18)
+                    .padding(.vertical, 12)
                 }
                 if state.membership.role == .owner {
                     if #available(iOS 18.0, *) {
@@ -786,7 +790,8 @@ struct SharedMemberDetailView: View {
                                 } label: {
                                     Image(systemName: "pencil")
                                         .font(.subheadline.weight(.semibold))
-                                        .frame(width: 32, height: 32)
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                                 .foregroundStyle(.secondary)
@@ -797,10 +802,12 @@ struct SharedMemberDetailView: View {
                         if displayedMember.role == .owner { Label("Owner", systemImage: "crown.fill").font(.caption).foregroundStyle(.secondary) }
                     }
                 }
-                HStack(spacing: 10) {
+                Grid(horizontalSpacing: 10) {
+                    GridRow {
                     SharedMetric(value: "\(displayedMember.counts[LocalDay.string()] ?? 0) / \(definition.target)", label: "Today", color: displayedMember.tint)
                     if habit.streakGoal != nil {
                         SharedMetric(value: "\(dataset.currentStreak(for: habit))", label: "Current Streak", color: displayedMember.tint)
+                    }
                     }
                 }
                 ScrollView(.horizontal) {
@@ -832,7 +839,7 @@ private struct SharedMetric: View {
             Text(value).font(.title2.monospacedDigit().bold()).foregroundStyle(color)
             Text(label).font(.caption).foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
     }

@@ -150,6 +150,7 @@ struct OverviewView: View {
 }
 
 struct HabitCard: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let habit: Habit
     let data: Dataset
     let now: Date
@@ -166,8 +167,7 @@ struct HabitCard: View {
     private var hasSupportingText: Bool { hasDescription || habit.streakGoal != nil || sharedMemberCount != nil }
 
     var body: some View {
-        HabitCardLayout(data: data, end: now, labelFontSize: historyLabelFontSize,
-                        spacing: hasSupportingText ? 18 : 8) {
+        VStack(alignment: .leading, spacing: hasSupportingText ? 18 : 8) {
             HStack(alignment: .top, spacing: 14) {
                 Button(action: open) {
                     HStack(alignment: .top, spacing: 8) {
@@ -176,29 +176,13 @@ struct HabitCard: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(habit.name).font(.system(.headline, design: .rounded)).foregroundStyle(.primary).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                             if hasDescription {
-                                Text(habit.detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                Text(habit.detail).font(.caption).foregroundStyle(.secondary)
+                                    .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
                             }
                             if habit.streakGoal != nil || sharedMemberCount != nil {
-                                HStack(spacing: 8) {
-                                    if let goal = habit.streakGoal {
-                                        let streak = data.currentStreak(for: habit, asOf: now)
-                                        let unit = goal.period == .daily
-                                            ? (streak == 1 ? "day" : "days")
-                                            : (streak == 1 ? "week" : "weeks")
-                                        Label("\(streak) \(unit)", systemImage: "flame.fill")
-                                            .font(.caption2.monospacedDigit().weight(.semibold))
-                                            .foregroundStyle(habit.tint)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(habit.tint.opacity(0.12), in: Capsule())
-                                            .fixedSize()
-                                            .accessibilityLabel("Current streak: \(streak) \(unit)")
-                                    }
-                                    if let sharedMemberCount {
-                                        Label("\(sharedMemberCount) \(sharedMemberCount == 1 ? "Member" : "Members")", systemImage: "person.2.fill")
-                                            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-                                            .fixedSize()
-                                    }
+                                ViewThatFits(in: .horizontal) {
+                                    HStack(spacing: 8) { badges }.fixedSize(horizontal: true, vertical: false)
+                                    VStack(alignment: .leading, spacing: 6) { badges }
                                 }
                             }
                         }.padding(.top, 3).frame(maxWidth: .infinity, alignment: .leading)
@@ -221,31 +205,27 @@ struct HabitCard: View {
         .contentShape(RoundedRectangle(cornerRadius: 26))
         .transition(.blurReplace)
     }
-}
 
-private struct HabitCardLayout: Layout {
-    let data: Dataset
-    let end: Date
-    let labelFontSize: CGFloat
-    let spacing: CGFloat
-
-    private func headerWidth(_ width: CGFloat) -> CGFloat {
-        LabeledHistoryGrid.contentWidth(in: width, fontSize: labelFontSize, data: data, end: end)
-    }
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.replacingUnspecifiedDimensions().width
-        let header = subviews[0].sizeThatFits(ProposedViewSize(width: headerWidth(width), height: nil))
-        let history = subviews[1].sizeThatFits(ProposedViewSize(width: width, height: nil))
-        return CGSize(width: width, height: header.height + spacing + history.height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let headerProposal = ProposedViewSize(width: headerWidth(bounds.width), height: nil)
-        let headerHeight = subviews[0].sizeThatFits(headerProposal).height
-        subviews[0].place(at: bounds.origin, anchor: .topLeading, proposal: headerProposal)
-        subviews[1].place(at: CGPoint(x: bounds.minX, y: bounds.minY + headerHeight + spacing),
-                          anchor: .topLeading, proposal: ProposedViewSize(width: bounds.width, height: nil))
+    @ViewBuilder private var badges: some View {
+        if let goal = habit.streakGoal {
+            let streak = data.currentStreak(for: habit, asOf: now)
+            let unit = goal.period == .daily
+                ? (streak == 1 ? "day" : "days")
+                : (streak == 1 ? "week" : "weeks")
+            Label("\(streak) \(unit)", systemImage: "flame.fill")
+                .font(.caption2.monospacedDigit().weight(.semibold))
+                .foregroundStyle(habit.tint)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(habit.tint.opacity(0.12), in: Capsule())
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityLabel("Current streak: \(streak) \(unit)")
+        }
+        if let sharedMemberCount {
+            Label("\(sharedMemberCount) \(sharedMemberCount == 1 ? "Member" : "Members")", systemImage: "person.2.fill")
+                .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 

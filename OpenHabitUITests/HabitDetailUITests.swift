@@ -1,5 +1,205 @@
 import XCTest
 
+/// Opt-in real Simulator screenshots. The normal suite skips this audit.
+final class LayoutAuditUITests: XCTestCase {
+    private let app = XCUIApplication()
+    private var directory: URL!
+
+    func testCaptureLandscape() throws {
+        guard let path = ProcessInfo.processInfo.environment["OPEN_HABIT_AUDIT_DIR"] else {
+            throw XCTSkip("Opt-in phone-width audit")
+        }
+        directory = URL(fileURLWithPath: path)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        launch()
+        capture("23-overview-landscape")
+        app.swipeUp()
+        capture("24-overview-landscape-lower")
+    }
+
+    func testCaptureInlineKeyboard() throws {
+        guard let path = ProcessInfo.processInfo.environment["OPEN_HABIT_AUDIT_DIR"] else {
+            throw XCTSkip("Opt-in phone-width audit")
+        }
+        continueAfterFailure = false
+        directory = URL(fileURLWithPath: path)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        launch()
+        openHabit("Drum kit practice")
+        let note = app.descendants(matching: .any)["Day Note"].firstMatch
+        reveal(note)
+        note.tap()
+        let keyboard = app.keyboards.firstMatch
+        XCTAssertTrue(keyboard.waitForExistence(timeout: 5))
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        capture("22-inline-note-keyboard")
+        let gap = keyboard.frame.minY - note.frame.maxY
+        print("INLINE_NOTE_KEYBOARD_GAP: \(gap)")
+        XCTAssertGreaterThan(gap, 8)
+        XCTAssertLessThan(gap, 80)
+    }
+
+    func testCaptureAccessibleLayouts() throws {
+        guard let path = ProcessInfo.processInfo.environment["OPEN_HABIT_AUDIT_DIR"] else {
+            throw XCTSkip("Opt-in phone-width audit")
+        }
+        continueAfterFailure = false
+        directory = URL(fileURLWithPath: path)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        launch()
+        capture("01-overview")
+        app.swipeUp()
+        capture("02-overview-lower")
+        let longTitle = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "A longer habit title")).firstMatch
+        reveal(longTitle)
+        let completion = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "A longer habit title")).firstMatch
+        XCTAssertGreaterThanOrEqual(longTitle.frame.minX, 20)
+        XCTAssertLessThanOrEqual(completion.frame.maxX, app.frame.maxX - 20)
+        app.swipeUp()
+        capture("02b-shared-card")
+        launch()
+        app.buttons["add-habit"].tap()
+        capture("03-new-habit")
+        launch()
+        app.buttons["Settings"].tap()
+        capture("04-settings")
+        let sync = app.buttons["Sync now"]
+        XCTAssertTrue(sync.staticTexts["Sync now"].isHittable)
+        XCTAssertLessThan(sync.frame.height, 88)
+        reveal(app.buttons["About Open Habit"])
+        app.buttons["About Open Habit"].tap()
+        capture("05-about")
+        launch()
+        openHabit("Drum kit practice")
+        capture("06-habit-detail")
+        launch()
+        openHabit("A longer habit title")
+        reveal(app.staticTexts["Taylor"])
+        app.staticTexts["Taylor"].tap()
+        capture("07-member-progress")
+        let identity = app.buttons["Edit My Member Identity"]
+        XCTAssertGreaterThanOrEqual(identity.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(identity.frame.height, 44)
+        identity.tap()
+        capture("08-member-identity")
+    }
+
+    func testCapturePhoneLayoutAudit() throws {
+        guard let path = ProcessInfo.processInfo.environment["OPEN_HABIT_AUDIT_DIR"] else {
+            throw XCTSkip("Opt-in phone-width audit")
+        }
+        continueAfterFailure = false
+        executionTimeAllowance = 600
+        directory = URL(fileURLWithPath: path)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        XCUIDevice.shared.orientation = .portrait
+        launch()
+        capture("01-overview")
+        app.swipeUp()
+        capture("02-overview-lower")
+        guard ProcessInfo.processInfo.environment["OPEN_HABIT_AUDIT_DEEP"] == "1" else { return }
+
+        launch()
+        openHabit("Drum kit practice")
+        capture("03-habit-detail")
+        let day = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " Completions, target ")).firstMatch
+        day.press(forDuration: 0.7)
+        XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForExistence(timeout: 5))
+        capture("04-day-note")
+        app.navigationBars["Edit Habit Day"].buttons["Cancel"].tap()
+        app.swipeUp()
+        capture("05-inline-note")
+        app.buttons["Edit Habit"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit"].waitForExistence(timeout: 5))
+        capture("06-habit-settings")
+        app.buttons["habit-emoji"].tap()
+        XCTAssertTrue(app.navigationBars["Choose Emoji"].waitForExistence(timeout: 5))
+        capture("07-emoji-picker")
+        app.navigationBars["Choose Emoji"].buttons["Cancel"].tap()
+        reveal(app.buttons["Share Habit"])
+        capture("08-habit-actions")
+        app.buttons["Share Habit"].tap()
+        XCTAssertTrue(app.navigationBars["Share Habit"].waitForExistence(timeout: 5))
+        capture("09-share-setup")
+
+        launch()
+        app.buttons["add-habit"].tap()
+        XCTAssertTrue(app.navigationBars["New Habit"].waitForExistence(timeout: 5))
+        capture("10-new-habit")
+        launch()
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+        capture("11-settings")
+        reveal(app.buttons["About Open Habit"])
+        capture("12-settings-lower")
+        app.buttons["About Open Habit"].tap()
+        capture("13-about")
+        launch()
+        app.buttons["Settings"].tap()
+        reveal(app.buttons["Archived Habits"])
+        app.buttons["Archived Habits"].tap()
+        capture("14-archived-habits")
+        app.navigationBars["Archived Habits"].buttons.firstMatch.tap()
+        reveal(app.buttons["Recovery Backups"])
+        app.buttons["Recovery Backups"].tap()
+        capture("15-recovery-backups")
+
+        launch()
+        openHabit("A longer habit title")
+        reveal(app.staticTexts["Taylor"])
+        capture("16-shared-members")
+        app.staticTexts["Taylor"].tap()
+        capture("17-member-progress")
+        app.buttons["Edit My Member Identity"].tap()
+        capture("18-member-identity")
+        launch()
+        openHabit("A longer habit title")
+        app.buttons["Edit Habit"].tap()
+        reveal(app.buttons["Stop Sharing"])
+        capture("19-sharing-controls")
+        let cancelInvitation = app.buttons["Cancel Pending Invitation 1"]
+        XCTAssertGreaterThanOrEqual(cancelInvitation.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(cancelInvitation.frame.height, 44)
+
+        launch(arguments: ["--preview-join"])
+        capture("20-join-identity")
+        app.textFields.firstMatch.tap()
+        app.textFields.firstMatch.typeText("Alex")
+        app.buttons["join-continue"].tap()
+        capture("21-join-tracking")
+    }
+
+    private func launch(arguments: [String] = ["--layout-audit"]) {
+        app.terminate()
+        app.launchArguments = arguments
+        app.launch()
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 5))
+    }
+
+    private func openHabit(_ name: String) {
+        let title = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
+        reveal(title)
+        title.tap()
+        XCTAssertTrue(app.navigationBars["Habit Detail"].waitForExistence(timeout: 5))
+    }
+
+    private func reveal(_ element: XCUIElement) {
+        for _ in 0..<8 where !element.isHittable { app.swipeUp() }
+        XCTAssertTrue(element.isHittable, app.debugDescription)
+    }
+
+    private func capture(_ name: String) {
+        let screenshot = XCUIScreen.main.screenshot()
+        try! screenshot.pngRepresentation.write(to: directory.appendingPathComponent(name + ".png"))
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+}
+
 final class HabitDetailUITests: XCTestCase {
     private let app = XCUIApplication()
 

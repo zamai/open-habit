@@ -21,7 +21,8 @@ final class WidgetLayoutTests: XCTestCase {
             return try XCTUnwrap(renderer.uiImage)
         }
 
-        for width: CGFloat in [320, 390, 600] {
+        // Card widths after the Overview's 20-point margins, across iPhone widths.
+        for width: CGFloat in [335, 350, 353, 362, 374, 380, 388, 390, 400, 600] {
             let compact = try render(habit, width: width)
             let pixels = try rgbaPixels(compact)
             func coloredRightEdge(in rows: Range<Int>) throws -> Int {
@@ -37,6 +38,8 @@ final class WidgetLayoutTests: XCTestCase {
             let buttonEdge = try coloredRightEdge(in: 22..<70)
             let calendarEdge = try coloredRightEdge(in: (Int(compact.size.height) - 100)..<(Int(compact.size.height) - 20))
             XCTAssertLessThanOrEqual(abs(buttonEdge - calendarEdge), 2, "Width \(width)")
+            XCTAssertLessThanOrEqual(abs(calendarEdge - Int(width - 19)), 1,
+                                     "The grid must fill the card, not just match an inset button")
 
             var described = habit
             described.detail = "Five pages, every day."
@@ -63,8 +66,8 @@ final class WidgetLayoutTests: XCTestCase {
         for (width, expectedMonths) in [(CGFloat(270), [6, 7, 8, 9]), (CGFloat(320), [5, 6, 7, 8, 9])] {
             let layout = CompactHistoryLayout(width: width, end: end, calendar: calendar)
             XCTAssertEqual(layout.months.map { calendar.component(.month, from: $0) }, expectedMonths)
-            XCTAssertLessThanOrEqual(layout.width, width)
-            XCTAssertEqual(layout.tileSide, 11, "Fit fewer months instead of squeezing day squares")
+            XCTAssertEqual(layout.width, width, accuracy: 0.001)
+            XCTAssertGreaterThanOrEqual(layout.tileSide, 11, "Fill the width without squeezing day squares")
             XCTAssertEqual(calendar.component(.weekday, from: layout.dates[0]), 2)
             XCTAssertEqual(LocalDay.string(try XCTUnwrap(layout.dates.last)), "2026-10-04")
             XCTAssertTrue(layout.dates.contains(calendar.startOfDay(for: end)))
@@ -92,7 +95,7 @@ final class WidgetLayoutTests: XCTestCase {
                             XCTAssertLessThanOrEqual(x + labelWidth, layout.width + 0.01)
                             previousRight = x + labelWidth
                         }
-                        XCTAssertLessThanOrEqual(layout.width, width)
+                        XCTAssertEqual(layout.width, width, accuracy: 0.001)
                     }
                 }
             }
@@ -252,12 +255,14 @@ final class WidgetLayoutTests: XCTestCase {
     }
 
     @MainActor func testHabitMetricCardsHaveEqualBackgroundHeights() throws {
-        let view = HStack(spacing: 10) {
+        let view = Grid(horizontalSpacing: 10) {
+            GridRow {
             HabitMetric(value: "1", label: "Daily Target", color: .green)
             HabitMetric(value: "4", label: "Sep Total", color: .green)
             HabitMetric(value: "0", label: "Week Streak\n0 / 3 this week", color: .green)
+            }
         }
-        .frame(width: 600, height: 180)
+        .frame(width: 331)
         .background(Color.black)
         .environment(\.colorScheme, .dark)
         let renderer = ImageRenderer(content: view)

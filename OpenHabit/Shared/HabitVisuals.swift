@@ -173,58 +173,53 @@ struct LabeledHistoryGrid: View {
         return max(tileSide, ceil((2 * monthWidth + 8 - 4 * spacing) / 5))
     }
 
-    static func contentWidth(in width: CGFloat, fontSize: CGFloat, data: Dataset, end: Date) -> CGFloat {
-        let inset = leadingInset(fontSize: fontSize, data: data)
-        let side = minimumTileSide(fontSize: fontSize, data: data, tileSide: 11, spacing: 3)
-        return inset + CompactHistoryLayout(width: max(0, width - inset), end: end,
-                                             calendar: historyCalendar(for: data), tileSide: side).width
-    }
-
     var body: some View {
         let side = Self.minimumTileSide(fontSize: labelFontSize, data: data, tileSide: tileSide, spacing: spacing)
         let gridY = labelFontSize + 10
         let gridX = Self.leadingInset(fontSize: labelFontSize, data: data)
-        Canvas { context, size in
-            let availableWidth = max(0, size.width - gridX)
-            let layout = CompactHistoryLayout(width: availableWidth, end: end, calendar: calendar,
-                                              tileSide: side, spacing: spacing)
-            let dates = layout.dates
-            let pitch = layout.tileSide + spacing
+        HistoryCanvasLayout(leadingInset: gridX, labelFontSize: labelFontSize, minimumTileSide: side,
+                            spacing: spacing, calendar: calendar, end: end) {
+            Canvas { context, size in
+                let availableWidth = max(0, size.width - gridX)
+                let layout = CompactHistoryLayout(width: availableWidth, end: end, calendar: calendar,
+                                                  tileSide: side, spacing: spacing)
+                let dates = layout.dates
+                let pitch = layout.tileSide + spacing
 
-            for month in layout.months {
-                let label = context.resolve(Text(calendar.shortMonthSymbols[calendar.component(.month, from: month) - 1])
-                    .font(.system(size: labelFontSize)).foregroundStyle(.secondary))
-                let labelSize = label.measure(in: CGSize(width: CGFloat.infinity, height: CGFloat.infinity))
-                context.draw(label, at: CGPoint(x: gridX + layout.labelX(for: month, width: labelSize.width), y: 0), anchor: .topLeading)
-            }
-            for row in 0..<7 {
-                let y = gridY + CGFloat(row) * pitch
-                let weekday = weekdayLabel(for: row)
-                if !weekday.isEmpty {
-                    context.draw(Text(weekday).font(.system(size: labelFontSize)).foregroundStyle(.secondary),
-                                 at: CGPoint(x: 0, y: y + layout.tileSide / 2), anchor: .leading)
+                for month in layout.months {
+                    let label = context.resolve(Text(calendar.shortMonthSymbols[calendar.component(.month, from: month) - 1])
+                        .font(.system(size: labelFontSize)).foregroundStyle(.secondary))
+                    let labelSize = label.measure(in: CGSize(width: CGFloat.infinity, height: CGFloat.infinity))
+                    context.draw(label, at: CGPoint(x: gridX + layout.labelX(for: month, width: labelSize.width), y: 0), anchor: .topLeading)
                 }
-                for week in 0..<layout.weeks {
-                    let date = dates[week * 7 + row]
-                    let key = LocalDay.string(date)
-                    let isFuture = key > LocalDay.string(end)
-                    let day = isFuture ? HabitDay(count: 0) : data.day(habit.id, key)
-                    let rect = CGRect(x: gridX + CGFloat(week) * pitch, y: y, width: layout.tileSide, height: layout.tileSide)
-                    let shape = Path(roundedRect: rect, cornerRadius: layout.tileSide * 0.22)
-                    let opacity = day.count == 0 ? 0.10 : 0.25 + 0.75 * day.progress(target: habit.target)
-                    context.fill(shape, with: .color(habit.tint.opacity(opacity)))
-                    if key == LocalDay.string(end) {
-                        context.stroke(Path(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerRadius: layout.tileSide * 0.20),
-                                       with: .color(.primary.opacity(0.8)), lineWidth: 1)
+                for row in 0..<7 {
+                    let y = gridY + CGFloat(row) * pitch
+                    let weekday = weekdayLabel(for: row)
+                    if !weekday.isEmpty {
+                        context.draw(Text(weekday).font(.system(size: labelFontSize)).foregroundStyle(.secondary),
+                                     at: CGPoint(x: 0, y: y + layout.tileSide / 2), anchor: .leading)
                     }
-                    if !isFuture && !day.note.isEmpty {
-                        let dot = CGRect(x: rect.maxX - 2, y: rect.minY - 1, width: 3, height: 3)
-                        context.fill(Path(ellipseIn: dot), with: .color(.primary))
+                    for week in 0..<layout.weeks {
+                        let date = dates[week * 7 + row]
+                        let key = LocalDay.string(date)
+                        let isFuture = key > LocalDay.string(end)
+                        let day = isFuture ? HabitDay(count: 0) : data.day(habit.id, key)
+                        let rect = CGRect(x: gridX + CGFloat(week) * pitch, y: y, width: layout.tileSide, height: layout.tileSide)
+                        let shape = Path(roundedRect: rect, cornerRadius: layout.tileSide * 0.22)
+                        let opacity = day.count == 0 ? 0.10 : 0.25 + 0.75 * day.progress(target: habit.target)
+                        context.fill(shape, with: .color(habit.tint.opacity(opacity)))
+                        if key == LocalDay.string(end) {
+                            context.stroke(Path(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerRadius: layout.tileSide * 0.20),
+                                           with: .color(.primary.opacity(0.8)), lineWidth: 1)
+                        }
+                        if !isFuture && !day.note.isEmpty {
+                            let dot = CGRect(x: rect.maxX - 2, y: rect.minY - 1, width: 3, height: 3)
+                            context.fill(Path(ellipseIn: dot), with: .color(.primary))
+                        }
                     }
                 }
             }
         }
-        .frame(height: gridY + 7 * side + 6 * spacing)
         .accessibilityHidden(true)
     }
 
@@ -235,7 +230,28 @@ struct LabeledHistoryGrid: View {
     }
 }
 
-/// The longest month-aligned history that fits without squeezing the day squares.
+/// Size the canvas from its actual width so full-width day squares stay square.
+private struct HistoryCanvasLayout: Layout {
+    let leadingInset: CGFloat
+    let labelFontSize: CGFloat
+    let minimumTileSide: CGFloat
+    let spacing: CGFloat
+    let calendar: Calendar
+    let end: Date
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = max(leadingInset, proposal.replacingUnspecifiedDimensions().width)
+        let history = CompactHistoryLayout(width: width - leadingInset, end: end, calendar: calendar,
+                                           tileSide: minimumTileSide, spacing: spacing)
+        return CGSize(width: width, height: labelFontSize + 10 + 7 * history.tileSide + 6 * spacing)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews[0].place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(bounds.size))
+    }
+}
+
+/// Choose whole months at the preferred density, then fill the available width.
 struct CompactHistoryLayout {
     let calendar: Calendar
     let months: [Date]
@@ -262,7 +278,7 @@ struct CompactHistoryLayout {
         }
         months = (0..<monthCount).map { calendar.date(byAdding: .month, value: $0 + 1 - monthCount, to: currentMonth)! }
         dates = historyDates(weeks: weekCount, end: calendar.startOfDay(for: end), calendar: calendar)
-        self.tileSide = min(tileSide, max(0, (width - CGFloat(weekCount - 1) * spacing) / CGFloat(weekCount)))
+        self.tileSide = max(0, (width - CGFloat(weekCount - 1) * spacing) / CGFloat(weekCount))
     }
 
     func labelX(for month: Date, width labelWidth: CGFloat) -> CGFloat {

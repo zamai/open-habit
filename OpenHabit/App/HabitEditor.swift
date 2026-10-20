@@ -37,7 +37,7 @@ struct HabitEditor: View {
                         .onChange(of: habit.detail) { _, value in habit.detail = String(value.replacingOccurrences(of: "\n", with: " ").prefix(160)) }
                 }
                 Section("Color") {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 14) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 48), spacing: 8)], spacing: 14) {
                         ForEach(HabitColor.allCases, id: \.self) { color in
                             Button { habit.color = color; habit.customColorRGB = nil } label: {
                                 Circle().fill(color.tint).frame(width: 40, height: 40)
