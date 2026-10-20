@@ -214,8 +214,10 @@ final class HabitDetailUITests: XCTestCase {
         app.launch()
         let compact = app.buttons["overview-compact"]
         XCTAssertTrue(compact.waitForExistence(timeout: 5))
-        compact.tap()
+        compact.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
         XCTAssertTrue(compact.isSelected)
+        XCTAssertGreaterThan(app.scrollViews.firstMatch.frame.maxY, compact.frame.maxY,
+                             "Habit content should extend behind the floating switcher")
         let completion = app.buttons["complete-00000000-0000-0000-0000-000000000001"]
         makeHittable(completion)
         let original = completion.label

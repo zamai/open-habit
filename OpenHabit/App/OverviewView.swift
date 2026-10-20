@@ -65,22 +65,14 @@ struct OverviewView: View {
                         }
                         }
                         Text("Small steps. Your own pace.").font(.footnote).foregroundStyle(.tertiary).frame(maxWidth: .infinity).padding(.vertical, 12)
-                    }.padding(.horizontal, 20).padding(.bottom, 24).frame(maxWidth: compact && !typeSize.isAccessibilitySize ? 600 : 1100)
+                    }.padding(.horizontal, 20).padding(.bottom, 92).frame(maxWidth: compact && !typeSize.isAccessibilitySize ? 600 : 1100)
                         .frame(maxWidth: .infinity)
                 }
                 .background(Color(.systemGroupedBackground))
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                HStack(spacing: 4) {
-                    layoutButton("Details", icon: "rectangle.grid.1x2", selected: !compact) { compact = false }
-                    layoutButton("Compact", icon: "square.grid.2x2", selected: compact) { compact = true }
-                }
-                .padding(6)
-                .background(.regularMaterial, in: Capsule())
-                .overlay { Capsule().strokeBorder(.primary.opacity(0.08), lineWidth: 1) }
-                .padding(.vertical, 8)
-                .frame(maxWidth: .infinity)
-                .background(Color(.systemGroupedBackground))
+            .overlay(alignment: .bottom) {
+                OverviewLayoutSwitcher(compact: $compact)
+                    .padding(.bottom, 8)
             }
             .navigationTitle("").navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -137,20 +129,6 @@ struct OverviewView: View {
                       complete: { model.update { try $0.toggle(habit.id) } })
         }
     }
-    private func layoutButton(_ title: String, icon: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button {
-            withAnimation(reduceMotion ? nil : .snappy(duration: 0.25), action)
-        } label: {
-            Label(title, systemImage: icon).labelStyle(.iconOnly)
-                .font(.system(size: 19, weight: .semibold))
-                .frame(width: 56, height: 44)
-                .foregroundStyle(selected ? Color.primary : Color.secondary)
-                .background(selected ? Color(.secondarySystemGroupedBackground) : .clear, in: Capsule())
-        }.buttonStyle(.plain)
-            .accessibilityIdentifier("overview-" + title.lowercased())
-            .accessibilityAddTraits(selected ? .isSelected : [])
-    }
-
     private var habitTransition: AnyTransition {
         .asymmetric(insertion: reduceMotion ? .identity : .move(edge: .top).combined(with: .opacity), removal: .opacity)
     }
@@ -182,6 +160,62 @@ struct OverviewView: View {
         } completion: {
             delete(habit)
         }
+    }
+}
+
+struct OverviewLayoutSwitcher: View {
+    @Binding var compact: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var glassSelection
+
+    var body: some View {
+        if #available(iOS 26, *) {
+            GlassEffectContainer(spacing: 12) {
+                buttons
+            }
+        } else {
+            buttons.padding(6)
+                .background(.regularMaterial, in: Capsule())
+        }
+    }
+
+    private var buttons: some View {
+        HStack(spacing: 4) {
+            layoutButton("Details", icon: "rectangle.grid.1x2", selected: !compact) { compact = false }
+            layoutButton("Compact", icon: "square.grid.2x2", selected: compact) { compact = true }
+        }
+    }
+
+    private func layoutButton(_ title: String, icon: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button {
+            withAnimation(reduceMotion ? nil : .smooth(duration: 0.3), action)
+        } label: {
+            if #available(iOS 26, *) {
+                if selected {
+                    label(title, icon: icon, selected: true)
+                        .glassEffect(.regular.tint(Color.primary.opacity(0.12)).interactive(), in: .capsule)
+                        .glassEffectID("selection", in: glassSelection)
+                        .glassEffectTransition(reduceMotion ? .materialize : .matchedGeometry)
+                } else {
+                    label(title, icon: icon, selected: false)
+                        .glassEffect(.regular.interactive(), in: .capsule)
+                        .glassEffectID(title, in: glassSelection)
+                }
+            } else {
+                label(title, icon: icon, selected: selected)
+                    .background(selected ? Color.primary.opacity(0.08) : .clear, in: Capsule())
+            }
+        }.buttonStyle(.plain)
+            .accessibilityIdentifier("overview-" + title.lowercased())
+            .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    private func label(_ title: String, icon: String, selected: Bool) -> some View {
+        Label(title, systemImage: icon).labelStyle(.iconOnly)
+            .font(.system(size: 19, weight: .semibold))
+            .frame(width: 56, height: 44)
+            .contentShape(Capsule())
+            .foregroundStyle(selected ? Color.primary : Color.secondary)
     }
 }
 
