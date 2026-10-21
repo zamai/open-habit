@@ -25,6 +25,21 @@ final class OpenHabitCoreTests: XCTestCase {
         XCTAssertEqual(otherDevice.dataset.active.map(\.id), expected)
     }
 
+    func testOrderEditWithRepeatedIDUsesFirstPosition() throws {
+        var journal = Journal()
+        journal.seedIfEmpty(now: now)
+        let ids = journal.dataset.habits.map(\.id)
+        XCTAssertGreaterThanOrEqual(ids.count, 2)
+
+        // Order edits arrive unvalidated from iCloud and the Watch.
+        var incoming = Journal()
+        incoming.append(.order([ids[1], ids[0], ids[1]]))
+        journal.merge(incoming.edits)
+
+        XCTAssertEqual(Array(journal.dataset.habits.map(\.id).prefix(2)), [ids[1], ids[0]])
+        XCTAssertEqual(Set(journal.dataset.habits.map(\.id)), Set(ids))
+    }
+
     func testCustomColorPersistsAndLegacyHabitStillDecodes() throws {
         var habit = Habit(name: "Water")
         let legacy = try JSONEncoder().encode(habit)

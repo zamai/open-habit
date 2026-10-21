@@ -16,6 +16,8 @@ settings:
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: 539QCPHM7F
     ENABLE_USER_SCRIPT_SANDBOXING: YES
+    # Set on the command line for local device builds, so Settings can tell them apart.
+    OPEN_HABIT_BUILD_STAMP: ''
     SWIFT_EMIT_LOC_STRINGS: YES
 targets:
   OpenHabit:
@@ -41,6 +43,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleDisplayName: Open Habit
+        OpenHabitBuildStamp: $(OPEN_HABIT_BUILD_STAMP)
         UILaunchScreen: {}
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true

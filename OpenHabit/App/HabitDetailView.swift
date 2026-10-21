@@ -5,6 +5,7 @@ import OpenHabitCore
 struct HabitDetailView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.dismiss) private var dismiss
     let habitID: UUID
     var onDelete: ((Habit) -> Void)?
     @State private var selected = LocalDay.string()
@@ -99,7 +100,12 @@ struct HabitDetailView: View {
     private func finishDeletion() {
         guard let habit = pendingDeletion else { return }
         pendingDeletion = nil
-        onDelete?(habit)
+        if let onDelete {
+            onDelete(habit)
+        } else {
+            dismiss()
+            model.delete(habit.id)
+        }
     }
     private func selectedDay(_ habit: Habit) -> some View {
         let day = model.data.day(habitID, selected)

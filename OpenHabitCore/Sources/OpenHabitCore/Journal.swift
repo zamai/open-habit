@@ -116,7 +116,7 @@ public struct Journal: Codable, Sendable {
                 if let index = result.habits.firstIndex(where: { $0.id == id }) { result.habits[index].archived = archived }
             case .delete: break
             case .order(let ids):
-                let positions = Dictionary(uniqueKeysWithValues: ids.enumerated().map { ($1, $0) })
+                let positions = Dictionary(ids.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
                 result.habits = result.habits.enumerated().sorted {
                     let a = positions[$0.element.id] ?? (ids.count + $0.offset)
                     let b = positions[$1.element.id] ?? (ids.count + $1.offset)

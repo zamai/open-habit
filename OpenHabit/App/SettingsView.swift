@@ -138,7 +138,9 @@ struct SettingsView: View {
     private var appVersion: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
-        return build.map { "Version \(version) (\($0))" } ?? "Version \(version)"
+        let stamp = (Bundle.main.object(forInfoDictionaryKey: "OpenHabitBuildStamp") as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let base = build.map { "Version \(version) (\($0))" } ?? "Version \(version)"
+        return stamp.map { "\(base)\nLocal build \($0)" } ?? base
     }
 }
 private struct ImportConfirmation: View {
@@ -307,7 +309,13 @@ private struct RecoveryBackupsView: View {
             do { files = try sharedStore().recoveryBackups() }
             catch { problem = error.localizedDescription }
         }
-        .sheet(item: $pending) { item in ImportConfirmation(plan: item.plan, source: item.source, mode: .replaceAllData) }
+        .sheet(item: $pending) { item in
+            ImportConfirmation(plan: item.plan, source: item.source, mode: .replaceAllData) {
+                pending = nil
+                do { files = try sharedStore().recoveryBackups() }
+                catch { problem = error.localizedDescription }
+            }
+        }
         .alert("Backup problem", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
             Button("OK") { problem = nil }
         } message: { Text(problem ?? "") }

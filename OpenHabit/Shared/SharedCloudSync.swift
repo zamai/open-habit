@@ -219,8 +219,20 @@ actor SharedCloudSync {
 
     func accept(_ metadata: CKShare.Metadata) async throws -> SharedHabitJoinOffer {
         let container = try await availableContainer()
+        let newlyAccepted = metadata.participantStatus == .pending
         let accepted = try await container.accept([metadata])
         guard let share = try accepted[metadata]?.get() else { throw SharedHabitCloudError.invalidResponse }
+        do {
+            return try await joinOffer(for: metadata, share: share, container: container)
+        } catch let error where newlyAccepted && (error is HabitError || error as? SharedHabitCloudError == .full) {
+            // CloudKit only shows the records after acceptance. Leave a share that turns out to be
+            // full or invalid, so it doesn't keep this person as a participant holding a place.
+            try? await container.sharedCloudDatabase.deleteRecord(withID: share.recordID)
+            throw error
+        }
+    }
+
+    private func joinOffer(for metadata: CKShare.Metadata, share: CKShare, container: CKContainer) async throws -> SharedHabitJoinOffer {
         guard let rootID = metadata.hierarchicalRootRecordID else { throw SharedHabitCloudError.invalidResponse }
         let zoneID = rootID.zoneID
         let records = try await fetchAll(in: zoneID, database: container.sharedCloudDatabase)
@@ -311,15 +323,25 @@ actor SharedCloudSync {
         let zoneID = CKRecordZone.ID(zoneName: state.membership.zoneName, ownerName: state.membership.zoneOwnerName)
         let database = container.sharedCloudDatabase
         let memberID = state.membership.memberID
+        // Each step tolerates records already deleted, so retrying after a partial failure can
+        // finish leaving instead of getting stuck on the records the first attempt removed.
         let result = try await database.modifyRecords(
             saving: [],
             deleting: [memberRecordID(memberID, zoneID: zoneID), progressRecordID(memberID, zoneID: zoneID)],
             savePolicy: .allKeys,
-            atomically: true
+            atomically: false
         )
-        for value in result.deleteResults.values { _ = try value.get() }
+        for value in result.deleteResults.values { try ignoringMissingRecord { try value.get() } }
         let shareID = CKRecord.ID(recordName: state.membership.shareRecordName, zoneID: zoneID)
-        _ = try await database.deleteRecord(withID: shareID)
+        try await ignoringMissingRecord { _ = try await database.deleteRecord(withID: shareID) }
+    }
+
+    private func ignoringMissingRecord(_ operation: () throws -> Void) throws {
+        do { try operation() } catch let error as CKError where error.code == .unknownItem {}
+    }
+
+    private func ignoringMissingRecord(_ operation: () async throws -> Void) async throws {
+        do { try await operation() } catch let error as CKError where error.code == .unknownItem {}
     }
 
     func stopSharing(_ state: SharedHabitState) async throws {

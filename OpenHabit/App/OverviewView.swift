@@ -19,10 +19,15 @@ struct OverviewView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("overviewCompact") private var compact = false
     @State private var sheet: AppSheet?
     @State private var path: [UUID] = []
     @State private var dragging: UUID?
+    /// Card order while a drag is in progress, saved once when the drop finishes.
+    @State private var draftOrder: [UUID]?
+    /// Reorder mode: cards show drag handles and ignore taps, like the Home Screen's edit mode.
+    @State private var reordering = false
     @State private var pendingCreatedHabitID: UUID?
     @State private var layoutSwitcherVisible = true
     var body: some View {
@@ -54,12 +59,12 @@ struct OverviewView: View {
                         }
                         GlassGroup {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: !typeSize.isAccessibilitySize && (compact || sizeClass == .regular) ? 2 : 1), spacing: 16) {
-                            ForEach(model.data.active.filter { $0.id != pendingCreatedHabitID }) { habit in
+                            ForEach(displayedHabits) { habit in
                                 habitCard(habit, now: timeline.date)
                                 .transition(habitTransition)
-                                .onDrag { dragging = habit.id; UIImpactFeedbackGenerator(style: .medium).impactOccurred(); return NSItemProvider(object: habit.id.uuidString as NSString) }
-                                .onDrop(of: [.text], delegate: HabitDrop(target: habit.id, dragging: $dragging, model: model))
-                                .contextMenu { quickMenu(habit) }
+                                .onDrag { commitDraftOrder(); dragging = habit.id; UIImpactFeedbackGenerator(style: .medium).impactOccurred(); return NSItemProvider(object: habit.id.uuidString as NSString) }
+                                .onDrop(of: [.text], delegate: HabitDrop(target: habit.id, dragging: $dragging, draftOrder: $draftOrder, commit: commitDraftOrder, model: model))
+                                .contextMenu(menuItems: { if !reordering { quickMenu(habit) } })
                                 .accessibilityAction(named: "Move earlier") { move(habit.id, offset: -1) }
                                 .accessibilityAction(named: "Move later") { move(habit.id, offset: 1) }
                             }
@@ -68,12 +73,14 @@ struct OverviewView: View {
                         Text("Small steps. Your own pace.").font(.footnote).foregroundStyle(.tertiary).frame(maxWidth: .infinity).padding(.vertical, 12)
                     }.padding(.horizontal, 20).padding(.bottom, 92).frame(maxWidth: compact && !typeSize.isAccessibilitySize ? 600 : 1100)
                         .frame(maxWidth: .infinity)
+                        // A drop in a gap between cards still ends the reorder.
+                        .onDrop(of: [.text], isTargeted: nil) { _ in dragging = nil; commitDraftOrder(); return true }
                 }
                 .modifier(OverviewScrollVisibility(visible: $layoutSwitcherVisible))
                 .background(Color(.systemGroupedBackground))
             }
             .overlay(alignment: .bottom) {
-                if layoutSwitcherVisible {
+                if layoutSwitcherVisible && !reordering {
                     OverviewLayoutSwitcher(compact: $compact)
                         .padding(.bottom, 8)
                         .transition(reduceMotion ? .opacity : .offset(y: 28).combined(with: .opacity)
@@ -81,11 +88,19 @@ struct OverviewView: View {
                 }
             }
             .animation(reduceMotion ? .linear(duration: 0.15) : .smooth(duration: 0.24), value: layoutSwitcherVisible)
-            .onChange(of: path) { _, _ in layoutSwitcherVisible = true }
+            .onChange(of: path) { _, _ in layoutSwitcherVisible = true; commitDraftOrder() }
+            .onChange(of: scenePhase) { _, phase in if phase != .active { commitDraftOrder() } }
+            .onChange(of: model.data.active.count) { _, count in if count < 2 { setReordering(false) } }
             .navigationTitle("").navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Button("Settings", systemImage: "gearshape") { sheet = .settings } }
-                ToolbarItem(placement: .topBarTrailing) { Button("Add Habit", systemImage: "plus") { sheet = .create }.accessibilityIdentifier("add-habit") }
+                if reordering {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { setReordering(false) }.accessibilityIdentifier("done-reordering")
+                    }
+                } else {
+                    ToolbarItem(placement: .topBarLeading) { Button("Settings", systemImage: "gearshape") { sheet = .settings } }
+                    ToolbarItem(placement: .topBarTrailing) { Button("Add Habit", systemImage: "plus") { sheet = .create }.accessibilityIdentifier("add-habit") }
+                }
             }
             .navigationDestination(for: UUID.self) { id in
                 HabitDetailView(habitID: id, onDelete: deleteFromDetail)
@@ -129,11 +144,13 @@ struct OverviewView: View {
         let memberCount = model.sharedHabit(for: habit.id)?.snapshot.members.count
         if compact && !typeSize.isAccessibilitySize {
             CompactHabitCard(habit: habit, data: model.data, now: now, sharedMemberCount: memberCount,
-                             open: { path.append(habit.id) },
+                             reordering: reordering,
+                             open: { if !reordering { path.append(habit.id) } },
                              complete: { model.update { try $0.toggle(habit.id) } })
         } else {
             HabitCard(habit: habit, data: model.data, now: now, sharedMemberCount: memberCount,
-                      open: { path.append(habit.id) },
+                      reordering: reordering,
+                      open: { if !reordering { path.append(habit.id) } },
                       complete: { model.update { try $0.toggle(habit.id) } })
         }
     }
@@ -153,11 +170,30 @@ struct OverviewView: View {
         if model.sharedHabit(for: habit.id)?.membership.role != .member {
             Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) }
         }
+        if model.data.active.count > 1 {
+            Divider()
+            Button("Reorder Habits", systemImage: "arrow.up.arrow.down") { setReordering(true) }
+        }
+    }
+    private func setReordering(_ value: Bool) {
+        if !value { commitDraftOrder() }
+        withAnimation(reduceMotion ? nil : .smooth(duration: 0.25)) { reordering = value }
     }
     private func move(_ id: UUID, offset: Int) {
         var ids = model.data.habits.map(\.id)
         guard let index = ids.firstIndex(of: id), ids.indices.contains(index + offset) else { return }
         ids.swapAt(index, index + offset); model.update { $0.append(.order(ids)) }
+    }
+    private var displayedHabits: [Habit] {
+        let habits = model.data.active.filter { $0.id != pendingCreatedHabitID }
+        guard let draftOrder else { return habits }
+        let positions = Dictionary(draftOrder.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+        return habits.sorted { (positions[$0.id] ?? .max) < (positions[$1.id] ?? .max) }
+    }
+    private func commitDraftOrder() {
+        guard let ids = draftOrder else { return }
+        draftOrder = nil
+        if ids != model.data.habits.map(\.id) { model.update { $0.append(.order(ids)) } }
     }
     private func delete(_ habit: Habit) {
         withAnimation(reduceMotion ? nil : .smooth) { model.delete(habit.id) }
@@ -240,6 +276,7 @@ struct HabitCard: View {
     let data: Dataset
     let now: Date
     let sharedMemberCount: Int?
+    var reordering = false
     let open: () -> Void
     let complete: () -> Void
     @ScaledMetric(relativeTo: .caption) private var historyLabelFontSize: CGFloat = 12
@@ -273,8 +310,12 @@ struct HabitCard: View {
                         }.padding(.top, 3).frame(maxWidth: .infinity, alignment: .leading)
                     }.contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityHint("Open Habit Detail")
-                CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count,
-                                 action: complete, alignment: .trailing)
+                if reordering {
+                    ReorderHandle(size: 48)
+                } else {
+                    CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count,
+                                     action: complete, alignment: .trailing)
+                }
             }
             Button(action: open) {
                 LabeledHistoryGrid(habit: habit, data: data, end: now)
@@ -314,19 +355,34 @@ struct HabitCard: View {
     }
 }
 
+/// Shown in place of the Completion Button while reordering, so the card reads as movable.
+private struct ReorderHandle: View {
+    let size: CGFloat
+    var body: some View {
+        Image(systemName: "line.3.horizontal")
+            .font(.system(size: size * 0.42, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .frame(width: max(44, size + 8), height: max(44, size + 8), alignment: .trailing)
+            .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            .accessibilityHidden(true)
+    }
+}
+
 private struct HabitDrop: DropDelegate {
     let target: UUID
     @Binding var dragging: UUID?
+    @Binding var draftOrder: [UUID]?
+    let commit: () -> Void
     let model: AppModel
     func dropEntered(info: DropInfo) {
         guard let dragging, dragging != target else { return }
-        var ids = model.data.habits.map(\.id)
+        var ids = draftOrder ?? model.data.habits.map(\.id)
         guard let from = ids.firstIndex(of: dragging), let to = ids.firstIndex(of: target) else { return }
         ids.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
-        withAnimation(.snappy) { model.update { $0.append(.order(ids)) } }
+        withAnimation(.snappy) { draftOrder = ids }
     }
     func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
-    func performDrop(info: DropInfo) -> Bool { dragging = nil; return true }
+    func performDrop(info: DropInfo) -> Bool { dragging = nil; commit(); return true }
 }
 
 /// Geometry shared by every Compact Habit Card, independent of its content.
@@ -351,6 +407,7 @@ struct CompactHabitCard: View {
     let data: Dataset
     let now: Date
     let sharedMemberCount: Int?
+    var reordering = false
     let open: () -> Void
     let complete: () -> Void
 
@@ -407,8 +464,12 @@ struct CompactHabitCard: View {
                     .contentShape(Rectangle())
             }.buttonStyle(.plain).frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityHint("Open Habit Detail")
-            CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count,
-                             action: complete, alignment: .trailing, size: 32)
+            if reordering {
+                ReorderHandle(size: 32)
+            } else {
+                CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count,
+                                 action: complete, alignment: .trailing, size: 32)
+            }
         }
     }
 

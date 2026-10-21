@@ -1,5 +1,6 @@
 import Foundation
 import CloudKit
+import OSLog
 import OpenHabitCore
 
 // Identified records are fetched with zone change enumeration (no query indexes required).
@@ -9,6 +10,7 @@ actor CloudSync {
     static let shared = CloudSync()
     private var running = false
     private let zoneID = CKRecordZone.ID(zoneName: "OpenHabit", ownerName: CKCurrentUserDefaultName)
+    private static let logger = Logger(subsystem: "com.alex.openhabit", category: "CloudSync")
 
     nonisolated static func isHabitEditRecordName(_ name: String) -> Bool {
         UUID(uuidString: name) != nil
@@ -97,6 +99,10 @@ actor CloudSync {
                         guard record.recordType == "HabitEdit" else { return }
                         guard let asset = record["payload"] as? CKAsset, let file = asset.fileURL else { throw HabitError.invalidBackup("iCloud record has no payload.") }
                         edits.append(try JSONDecoder().decode(Edit.self, from: Data(contentsOf: file)))
+                    } catch let error as DecodingError {
+                        // An edit written by a newer version can't be read here. Skip it rather than
+                        // blocking every other edit from syncing.
+                        Self.logger.error("Skipped unreadable iCloud edit \(recordID.recordName, privacy: .public): \(String(describing: error), privacy: .public)")
                     } catch { failure = error }
                 }
                 operation.recordZoneFetchResultBlock = { _, result in

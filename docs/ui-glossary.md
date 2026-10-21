@@ -44,7 +44,7 @@ Habit Settings (screen title: Edit Habit)
 | Overview | The screen titled Open Habit | Lists active Habits. |
 | App Settings button | Gear at the top left | Opens settings for the whole app. |
 | Add Habit button | Plus at the top right | Opens New Habit. |
-| Habit Card | A rounded container in Details or Compact layout | Contains one Habit's header, quick logging control, and history. Touch and hold anywhere on it for Quick Actions. Hold and drag to reorder. Avoid “habit widget” or “pill” for this container. |
+| Habit Card | A rounded container in Details or Compact layout | Contains one Habit's header, quick logging control, and history. Touch and hold anywhere on it for Quick Actions. Hold and drag to reorder, or choose Reorder Habits in Quick Actions to show drag handles until you tap Done. Avoid “habit widget” or “pill” for this container. |
 | Habit Header | Emoji, Habit name, and description at the top of the card | Tap to open Habit Detail. |
 | Streak Badge | Optional flame and day/week count below the description | Shows Current Streak when a Streak Goal is enabled. It is not a Completion count. |
 | Members Badge | Optional people icon and Member count | Identifies a Shared Habit. |

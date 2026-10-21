@@ -35,6 +35,8 @@
 	<false/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>OpenHabitBuildStamp</key>
+	<string>$(OPEN_HABIT_BUILD_STAMP)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

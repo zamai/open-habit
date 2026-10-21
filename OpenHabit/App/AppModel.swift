@@ -90,8 +90,21 @@ final class AppModel {
             Task { await sync() }
         } catch { self.error = error.localizedDescription }
     }
+    /// A sync requested while another is running; `true` when any request included Shared Habits.
+    @ObservationIgnored private var queuedSync: Bool?
     func sync(sharedHabits synchronizeSharedHabits: Bool = true) async {
-        guard !syncing else { return }
+        guard !syncing else {
+            queuedSync = queuedSync == true || synchronizeSharedHabits
+            return
+        }
+        var next: Bool? = synchronizeSharedHabits
+        while let sharedHabits = next {
+            queuedSync = nil
+            await runSync(sharedHabits: sharedHabits)
+            next = queuedSync
+        }
+    }
+    private func runSync(sharedHabits synchronizeSharedHabits: Bool) async {
         syncing = true; syncStatus = "Syncing"
         do {
             syncStatus = try await CloudSync.shared.synchronize()
