@@ -52,13 +52,13 @@ if (demoToggle) {
       });
       document.querySelector(".widget-description").textContent = widgetDescriptions[size];
       widgetPreview.pause();
-      widgetPreview.poster = `assets/widget-${size}-demo.png?v=2`;
+      widgetPreview.poster = `assets/widget-${size}-demo.png?v=3`;
       widgetPreview.setAttribute("aria-label", `${widgetDescriptions[size]} An iPhone Home Screen demo showing taps to record progress.`);
       widgetPreview.querySelectorAll("source").forEach((source) => {
         const extension = source.type === "video/webm" ? "webm" : "mp4";
-        source.src = `assets/widget-${size}-demo.${extension}?v=2`;
+        source.src = `assets/widget-${size}-demo.${extension}?v=3`;
       });
-      widgetPreview.querySelector("a").href = `assets/widget-${size}-demo.mp4?v=2`;
+      widgetPreview.querySelector("a").href = `assets/widget-${size}-demo.mp4?v=3`;
       widgetPreview.autoplay = !demosPaused;
       widgetPreview.load();
       if (!demosPaused) widgetPreview.play().catch(() => { widgetPreview.controls = true; });
