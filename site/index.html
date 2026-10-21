@@ -20,7 +20,7 @@
   <link rel="icon" href="assets/app-icon.png">
   <link rel="apple-touch-icon" href="assets/app-icon.png">
   <link rel="stylesheet" href="assets/base.css">
-  <link rel="stylesheet" href="assets/home.css?v=habitkit-faq-1">
+  <link rel="stylesheet" href="assets/home.css?v=apple-watch-1">
   <script src="assets/main.js?v=widget-selector-2" defer></script>
   <script type="application/ld+json">
   {
@@ -31,7 +31,7 @@
     "url": "https://getopenhabit.com/",
     "image": "https://getopenhabit.com/assets/app-icon.png",
     "screenshot": "https://getopenhabit.com/assets/iphone-overview-light.png?v=segmented-control-1",
-    "operatingSystem": "iOS 17 or later; iPadOS 17 or later",
+    "operatingSystem": "iOS 17 or later; iPadOS 17 or later; watchOS 10 or later",
     "applicationCategory": "HealthApplication",
     "isAccessibleForFree": true,
     "offers": {
@@ -117,7 +117,7 @@
           <figure><div class="demo-stage shortcuts-stage"><div class="demo-device"><video class="demo-screen" poster="assets/shortcuts-demo.png?v=2" width="780" height="1696" autoplay muted loop playsinline preload="metadata" aria-label="Searching for Open Habit in Apple Shortcuts reveals Add Completions, Remove Completions, Get Today's Progress, and Set Day Note."><source src="assets/shortcuts-demo.webm?v=2" type="video/webm"><source src="assets/shortcuts-demo.mp4?v=2" type="video/mp4"><a href="assets/shortcuts-demo.mp4?v=2">Watch the demo</a></video></div></div><figcaption>Four actions, ready for your Shortcuts.</figcaption></figure>
         </article>
         <article id="notes-demo" class="feature-demo reveal">
-          <div class="feature-copy"><p class="kicker">Day Notes</p><h3>Keep the story behind the day.</h3><p>Open a day in your Habit calendar and add a private note. Keep the small details alongside your progress, even in a Shared Habit.</p></div>
+          <div class="feature-copy"><p class="kicker">Day Notes</p><h3>Keep the story behind the day.</h3><p>Open a day in your Habit calendar and add a private note. Keep the small details alongside your progress.</p></div>
           <figure><div class="demo-stage notes-stage"><div class="demo-device"><video class="demo-screen" poster="assets/notes-demo.png?v=2" width="780" height="1696" autoplay muted loop playsinline preload="metadata" aria-label="Adding a Day Note to Walk, saving it, and selecting calendar dates to see each day’s progress and note."><source src="assets/notes-demo.webm?v=2" type="video/webm"><source src="assets/notes-demo.mp4?v=2" type="video/mp4"><a href="assets/notes-demo.mp4?v=2">Watch the Day Notes demo</a></video></div></div><figcaption>Your progress. Your words. Just for you.</figcaption></figure>
         </article>
       </div>
@@ -135,9 +135,9 @@
       <a class="text-link" href="privacy/">Read the full privacy policy →</a>
     </section>
 
-    <section class="shared section reveal">
-      <div class="shared-card"><p class="kicker">Shared Habits</p><h2>Together, without the social network.</h2><p>Invite up to nine other people to practise the same Habit. Everyone records only their own progress and can see the group’s Completion counts. Day Notes, categories, settings, ordering, widgets, and unrelated Habits stay private.</p><ul><li>Private, single-use invitations</li><li>Up to ten Members in total</li><li>No leaderboard, feed, comments, or reactions</li></ul><small>Creating or accepting invitations requires iOS or iPadOS 18 or later and an Apple Account with iCloud available.</small></div>
-      <div class="people" aria-hidden="true"><span>AM</span><span>JN</span><span>SK</span><span>+</span></div>
+    <section class="watch section reveal" id="watch">
+      <div class="watch-copy"><p class="kicker">Apple Watch</p><h2>Check in from your wrist.</h2><p>Open Habit on Apple Watch shows each Habit with its recent history. Tap to record today’s Completion, turn the Digital Crown to move between Habits, or open the list to see them all at once.</p><ul><li>Personal Habits sync with your iPhone</li><li>Works offline and catches up later</li><li>Create and edit Habits on iPhone</li></ul><small>Requires watchOS 10 or later and a paired iPhone with Open Habit.</small></div>
+      <figure class="watch-figure"><div class="watch-device"><video class="watch-screen" poster="assets/watch-demo.png?v=1" width="416" height="496" autoplay muted loop playsinline preload="metadata" aria-label="Open Habit on Apple Watch. Three taps complete Drink water, a swipe moves to Read five pages, and the Habit list shows today’s progress."><source src="assets/watch-demo.webm?v=1" type="video/webm"><source src="assets/watch-demo.mp4?v=1" type="video/mp4"><a href="assets/watch-demo.mp4?v=1">Watch the Apple Watch demo</a></video></div></figure>
     </section>
 
     <section class="open-source" id="data">
@@ -161,12 +161,12 @@
           </ol>
           <p>Supported habits bring their completion history, notes, categories, and current daily or weekly goals. The standard import preserves existing Open Habit habits and skips matching IDs. Reminders and historical goal changes do not transfer; icons and colors may change. Inverse habits and custom-value tracking are not supported. Keep your original export.</p>
           <p><a href="https://apps.apple.com/app/id6443918070">HabitKit</a> is free to download with optional paid Pro upgrades. See its <a href="https://habitkit.app/help/data-backup-and-sync/export-and-import-your-data">export guide</a> for more help saving your file.</p></details>
-        <details><summary>Does Open Habit require an account?</summary><p>No Open Habit account is required. An Apple Account is needed only for iCloud synchronization and Shared Habits.</p></details>
+        <details><summary>Does Open Habit require an account?</summary><p>No Open Habit account is required. An Apple Account is needed only for iCloud synchronization.</p></details>
         <details><summary>Where is my data stored?</summary><p>On your devices and, when iCloud is available, in your private iCloud database. The developer does not receive your Habit data through the app.</p></details>
         <details><summary>Does tracking work offline?</summary><p>Yes. Changes save locally first and synchronize later when iCloud becomes available.</p></details>
         <details><summary>Is iCloud sync a backup?</summary><p>It can help restore data after reinstalling, but edits and deletions also synchronize. Export JSON when you want a backup file you control.</p></details>
-        <details><summary>Which devices are supported?</summary><p>Version 1.0 supports iPhone and iPad on iOS and iPadOS 17 or later. Shared Habit invitations require version 18 or later.</p></details>
-        <details><summary>Is there an Android, Apple Watch, Mac, or web app?</summary><p>Not currently. Version 1.0 is for iPhone and iPad.</p></details>
+        <details><summary>Which devices are supported?</summary><p>Open Habit supports iPhone and iPad on iOS and iPadOS 17 or later, and Apple Watch on watchOS 10 or later with a paired iPhone.</p></details>
+        <details><summary>Is there an Android, Mac, or web app?</summary><p>Not currently. Open Habit is for iPhone, iPad, and Apple Watch.</p></details>
       </div>
     </section>
 

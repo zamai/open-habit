@@ -1,8 +1,8 @@
 # Open Habit
 
-> Open Habit is a free, private, open-source habit tracker for iPhone and iPad.
+> Open Habit is a free, private, open-source habit tracker for iPhone, iPad, and Apple Watch.
 
-Open Habit works offline and records progress locally first. It offers interactive Home Screen widgets, Apple Shortcuts actions, personal synchronization through the user's private iCloud database, and portable JSON export and restore. Shared Habits use CloudKit Sharing: invited members can see the common Habit definition, Member Names, Member Colors, and Completion counts. Day Notes, categories, app settings, and unrelated Habits stay private. The source code is available under the MIT license.
+Open Habit works offline and records progress locally first. It offers interactive Home Screen widgets, Apple Shortcuts actions, personal synchronization through the user's private iCloud database, and portable JSON export and restore. An Apple Watch app shows recent history and records today’s Completions, syncing personal Habits with the paired iPhone. The source code is available under the MIT license.
 
 ## Official links
 
@@ -14,8 +14,7 @@ Open Habit works offline and records progress locally first. It offers interacti
 
 ## Important details
 
-- Version 1.0 supports iPhone and iPad on iOS and iPadOS 17 or later.
+- Open Habit supports iPhone and iPad on iOS and iPadOS 17 or later, and Apple Watch on watchOS 10 or later with a paired iPhone.
 - iCloud synchronization requires an Apple Account; personal tracking works offline.
-- Shared Habit invitations require iOS or iPadOS 18 or later and an Apple Account with iCloud available.
-- Open Habit has no Android, Apple Watch, Mac, or web app.
+- Open Habit has no Android, Mac, or web app.
 - There are no ads, analytics, in-app purchases, or subscriptions.
