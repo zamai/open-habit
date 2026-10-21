@@ -31,7 +31,7 @@ if (demoToggle) {
   let demosPaused = reducedMotion.matches;
   const updateDemos = () => {
     demoVideos.forEach((video) => {
-      if (demosPaused) video.pause();
+      if (demosPaused || video.closest("[hidden]")) video.pause();
       else video.play().catch(() => { video.controls = true; });
     });
     demoToggle.textContent = demosPaused ? "Play demos" : "Pause demos";
@@ -41,8 +41,12 @@ if (demoToggle) {
   const widgetDescriptions = {
     single: "One habit, with a month of history.",
     three: "Three habits, with ten days of progress.",
-    six: "Six habits, with ten days of progress."
+    six: "Six habits, with ten days of progress.",
+    watch: "Apple Watch: tap to record today, swipe between habits. Requires a paired iPhone."
   };
+  const phoneDevice = widgetPreview?.closest(".demo-device");
+  const watchDevice = document.querySelector(".watch-device");
+  const watchPreview = document.querySelector("#watch-preview");
   document.querySelectorAll("[data-widget]").forEach((button) => {
     button.addEventListener("click", () => {
       const size = button.dataset.widget;
@@ -51,7 +55,16 @@ if (demoToggle) {
         item.setAttribute("aria-pressed", String(item === button));
       });
       document.querySelector(".widget-description").textContent = widgetDescriptions[size];
+      const showWatch = size === "watch";
+      phoneDevice.hidden = showWatch;
+      watchDevice.hidden = !showWatch;
       widgetPreview.pause();
+      watchPreview.pause();
+      if (showWatch) {
+        watchPreview.currentTime = 0;
+        if (!demosPaused) watchPreview.play().catch(() => { watchPreview.controls = true; });
+        return;
+      }
       widgetPreview.poster = `assets/widget-${size}-demo.png?v=3`;
       widgetPreview.setAttribute("aria-label", `${widgetDescriptions[size]} An iPhone Home Screen demo showing taps to record progress.`);
       widgetPreview.querySelectorAll("source").forEach((source) => {
