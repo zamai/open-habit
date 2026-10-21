@@ -1,5 +1,6 @@
 import SwiftUI
 import OpenHabitCore
+import WidgetKit
 
 @MainActor private func previewModel(empty: Bool = false) -> AppModel {
     let model = AppModel()
@@ -80,12 +81,14 @@ import OpenHabitCore
     var journal = Journal()
     journal.seedIfEmpty()
     // Three more Habits fill the six-Habit widget; the starter Habits stay first.
-    for habit in [Habit(name: "Meditate", emoji: "🧘", color: .pink),
-                  Habit(name: "Stretch", emoji: "🤸", color: .teal),
-                  Habit(name: "Practice guitar", emoji: "🎸", color: .yellow)] {
+    // Fixed IDs keep configured widgets pointing at the same Habits across reseeds.
+    let id = { (n: Int) in UUID(uuidString: "00000000-0000-0000-0000-00000000000\(n)")! }
+    for habit in [Habit(id: id(4), name: "Meditate", emoji: "🧘", color: .pink),
+                  Habit(id: id(5), name: "Stretch", emoji: "🤸", color: .teal),
+                  Habit(id: id(6), name: "Practice guitar", emoji: "🎸", color: .yellow)] {
         try! journal.save(habit)
     }
-    let starters = Set((1...3).map { UUID(uuidString: "00000000-0000-0000-0000-00000000000\($0)")! })
+    let starters = Set((1...3).map(id))
     let ids = journal.dataset.habits.map(\.id)
     journal.append(.order(ids.filter(starters.contains).sorted { $0.uuidString < $1.uuidString } + ids.filter { !starters.contains($0) }))
     var seed: UInt64 = 70
@@ -102,6 +105,7 @@ import OpenHabitCore
     settings.examplesDismissed = true
     journal.append(.settings(settings))
     try! sharedStore().transaction { $0 = journal }
+    WidgetCenter.shared.reloadAllTimelines()
     let model = AppModel()
     model.reload()
     model.loading = false
