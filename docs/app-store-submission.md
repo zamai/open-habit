@@ -43,7 +43,7 @@ Settings contains JSON export and import, recovery backups, iCloud status, and D
 - [x] Declare that Open Habit is **not** a regulated medical device in any country or region.
 - [x] Configure the app as free and available in all 175 current territories, including new territories automatically.
 - [x] Set Health & Fitness as the primary category and Productivity as the secondary category.
-- [x] Generate and upload current 6.9-inch iPhone and 13-inch iPad screenshots from [`app-store-assets`](app-store-assets).
+- [x] Generate and upload current 6.9-inch iPhone and 13-inch iPad screenshots.
 - [x] Upload build 38, verify it is assigned to both TestFlight groups and in external beta testing, and select it for App Store version 1.0.
 - [x] Complete App Review contact details and save the prepared review notes.
 - [x] Declare the individual seller as a **non-trader** for EU Digital Services Act compliance.
