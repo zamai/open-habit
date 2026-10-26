@@ -32,6 +32,10 @@ struct WatchHabitsView: View {
             if phase == .active { date = Date() }
         }
         .onChange(of: model.data.active.map(\.id), initial: true) { _, ids in
+            #if DEBUG && targetEnvironment(simulator)
+            // Opens on the Habit list, for layout checks without simulator input.
+            if ProcessInfo.processInfo.arguments.contains("--watch-list") { return }
+            #endif
             guard selection.map(ids.contains) != true || !ids.contains(page) else { return }
             selection = UUID(uuidString: selectedHabit).flatMap { ids.contains($0) ? $0 : nil } ?? ids.first
             if let selection { page = selection }
@@ -91,7 +95,9 @@ private struct WatchHabitPage: View {
                 HStack {
                     Text("Today").foregroundStyle(.secondary)
                     Spacer()
-                    Text("\(data.day(habit.id, LocalDay.string(date)).count) / \(habit.target)").monospacedDigit()
+                    Text(habit.counter == nil ? "\(data.day(habit.id, LocalDay.string(date)).count) / \(habit.target)"
+                         : habit.progressText(data.day(habit.id, LocalDay.string(date)).count))
+                        .monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
                 }.font(.caption)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -104,6 +110,7 @@ private struct WatchHabitRow: View {
     let habit: Habit
     let data: Dataset
     let date: Date
+    @Environment(\.counterScales) private var counterScales
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -117,13 +124,16 @@ private struct WatchHabitRow: View {
                 HStack(spacing: 2) {
                     ForEach(0..<7, id: \.self) { offset in
                         let day = Calendar.current.date(byAdding: .day, value: offset - 6, to: date)!
-                        DayTile(day: data.day(habit.id, LocalDay.string(day)), target: habit.target,
-                                color: habit.tint, today: offset == 6, emptyColor: .white.opacity(0.28))
+                        let tile = data.day(habit.id, LocalDay.string(day))
+                        DayTile(day: tile, target: habit.target,
+                                color: habit.tint, today: offset == 6, emptyColor: .white.opacity(0.28),
+                                intensity: habit.counter == nil ? nil : habit.intensity(tile.count, reference: counterScales[habit.id]?.reference))
                             .frame(width: 7, height: 7)
                     }
                 }.accessibilityHidden(true)
                 Spacer(minLength: 4)
-                Text("\(data.day(habit.id, LocalDay.string(date)).count)/\(habit.target)")
+                let count = data.day(habit.id, LocalDay.string(date)).count
+                Text(habit.counter == nil ? "\(count)/\(habit.target)" : Counter.compact(count))
                     .font(.system(size: 11)).foregroundStyle(.secondary).monospacedDigit()
                     .fixedSize(horizontal: true, vertical: false)
                     .frame(minWidth: 44, alignment: .trailing)
@@ -142,14 +152,14 @@ private struct WatchCompletionButton: View {
 
     var body: some View {
         Button { model.complete(habit.id) } label: {
-            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size)
+            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size, counterStep: habit.counter?.step)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(CompletionStyle())
         .completionFeedback(count: count)
-        .accessibilityLabel("\(habit.name), \(count) of \(habit.target) Completions today")
-        .accessibilityHint(count >= habit.target ? "Clear today's Completions" : "Add one Completion")
+        .accessibilityLabel(habit.counter == nil ? "\(habit.name), \(count) of \(habit.target) Completions today" : "\(habit.name), \(habit.progressText(count)) today")
+        .accessibilityHint(habit.completionHint(count: count))
         .accessibilityIdentifier("watch-complete-\(habit.id.uuidString)")
     }
 }

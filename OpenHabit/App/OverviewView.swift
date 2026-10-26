@@ -158,14 +158,15 @@ struct OverviewView: View {
         .asymmetric(insertion: reduceMotion ? .identity : .move(edge: .top).combined(with: .opacity), removal: .opacity)
     }
     @ViewBuilder private func quickMenu(_ habit: Habit) -> some View {
-        Button("Mark yesterday complete", systemImage: "clock.arrow.circlepath") {
-            let day = LocalDay.string(Calendar.current.date(byAdding: .day, value: -1, to: Date())!)
-            let previousCount = model.data.day(habit.id, day).count
-            model.update { try $0.setCount(habit.id, day: day, count: habit.target) }
-            if model.error == nil && previousCount < habit.target {
-                UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.8)
-            }
+        if let counter = habit.counter {
+            let today = LocalDay.string()
+            Button("Undo \(counter.step)\(counter.unit.isEmpty ? "" : " \(counter.unit)")", systemImage: "minus.circle") {
+                model.update { try $0.remove(habit.id, day: today, amount: counter.step) }
+            }.disabled(model.data.day(habit.id, today).count == 0)
+            Button("Set today’s amount", systemImage: "number") { sheet = .day(DaySelection(habitID: habit.id, date: today)) }
+            Divider()
         }
+        if habit.counter == nil { markYesterdayComplete(habit) }
         Button("Add today’s note", systemImage: "note.text") { sheet = .day(DaySelection(habitID: habit.id, date: LocalDay.string())) }
         if model.sharedHabit(for: habit.id)?.membership.role != .member {
             Button("Edit Habit", systemImage: "slider.horizontal.3") { sheet = .edit(habit) }
@@ -173,6 +174,16 @@ struct OverviewView: View {
         if model.data.active.count > 1 {
             Divider()
             Button("Reorder Habits", systemImage: "arrow.up.arrow.down") { setReordering(true) }
+        }
+    }
+    private func markYesterdayComplete(_ habit: Habit) -> some View {
+        Button("Mark yesterday complete", systemImage: "clock.arrow.circlepath") {
+            let day = LocalDay.string(Calendar.current.date(byAdding: .day, value: -1, to: Date())!)
+            let previousCount = model.data.day(habit.id, day).count
+            model.update { try $0.setCount(habit.id, day: day, count: habit.target) }
+            if model.error == nil && previousCount < habit.target {
+                UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.8)
+            }
         }
     }
     private func setReordering(_ value: Bool) {
@@ -286,7 +297,7 @@ struct HabitCard: View {
     }
 
     private var hasDescription: Bool { !habit.detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-    private var hasSupportingText: Bool { hasDescription || habit.streakGoal != nil || sharedMemberCount != nil }
+    private var hasSupportingText: Bool { hasDescription || habit.streakGoal != nil || sharedMemberCount != nil || habit.counter != nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: hasSupportingText ? 18 : 8) {
@@ -300,6 +311,11 @@ struct HabitCard: View {
                             if hasDescription {
                                 Text(habit.detail).font(.caption).foregroundStyle(.secondary)
                                     .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
+                            }
+                            if habit.counter != nil {
+                                Text("Today: \(habit.progressText(data.day(habit.id, LocalDay.string(now)).count))")
+                                    .font(.caption.monospacedDigit().weight(.semibold)).foregroundStyle(habit.tint)
+                                    .contentTransition(.numericText())
                             }
                             if habit.streakGoal != nil || sharedMemberCount != nil {
                                 ViewThatFits(in: .horizontal) {
@@ -318,7 +334,8 @@ struct HabitCard: View {
                 }
             }
             Button(action: open) {
-                LabeledHistoryGrid(habit: habit, data: data, end: now)
+                // Counter Habits trade months of history for tiles large enough to read their amounts.
+                LabeledHistoryGrid(habit: habit, data: data, tileSide: habit.counter == nil ? 11 : 16, end: now)
                     .contentShape(Rectangle())
             }.buttonStyle(.plain)
                 .accessibilityLabel("View \(habit.name) history")
@@ -403,6 +420,7 @@ struct CompactHabitCardLayout {
 }
 
 struct CompactHabitCard: View {
+    @Environment(\.counterScales) private var counterScales
     let habit: Habit
     let data: Dataset
     let now: Date
@@ -460,6 +478,15 @@ struct CompactHabitCard: View {
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .lineLimit(1).minimumScaleFactor(0.85)
                         .frame(height: 18, alignment: .leading)
+                        .overlay(alignment: .topLeading) {
+                            // Compact tiles are too small for amounts, so today's amount rides under the name.
+                            if habit.counter != nil {
+                                Text("Today \(Counter.compact(data.day(habit.id, LocalDay.string(now)).count))")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded).monospacedDigit())
+                                    .foregroundStyle(habit.tint).fixedSize()
+                                    .offset(y: 16)
+                            }
+                        }
                 }.frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
             }.buttonStyle(.plain).frame(maxWidth: .infinity, alignment: .leading)
@@ -493,6 +520,7 @@ struct CompactHabitCard: View {
             }
             let start = calendar.dateInterval(of: .weekOfYear, for: now)!.start
             let side = max(0, (size.width - CGFloat(weeks - 1) * 3) / CGFloat(weeks))
+            let reference = counterScales[habit.id]?.reference
             for column in 0..<weeks {
                 for row in 0..<7 {
                     let offset = (column - weeks + 1) * 7 + row
@@ -501,7 +529,11 @@ struct CompactHabitCard: View {
                     let day = key > LocalDay.string(now) ? HabitDay() : data.day(habit.id, key)
                     let rect = CGRect(x: CGFloat(column) * (side + 3), y: CGFloat(row) * (side + 3), width: side, height: side)
                     let path = Path(roundedRect: rect, cornerRadius: side * 0.22)
-                    context.fill(path, with: .color(habit.tint.opacity(day.count == 0 ? 0.10 : 0.25 + 0.75 * day.progress(target: habit.target))))
+                    let intensity = habit.intensity(day.count, reference: reference)
+                    context.fill(path, with: .color(habit.tint.opacity(day.count == 0 ? 0.10 : 0.25 + 0.75 * intensity)))
+                    if habit.counter != nil {
+                        TileAmount.draw(day.count, in: rect, intensity: intensity, color: habit.tint, context: context)
+                    }
                     if !day.note.isEmpty {
                         context.fill(Path(ellipseIn: CGRect(x: rect.maxX - 2, y: rect.minY - 1, width: 3, height: 3)),
                                      with: .color(.primary))

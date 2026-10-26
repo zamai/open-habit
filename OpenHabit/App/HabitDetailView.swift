@@ -150,8 +150,13 @@ struct HabitDetailView: View {
     @ViewBuilder private func metricCards(for habit: Habit) -> some View {
         let streak = model.data.currentStreak(for: habit)
         let monthTotal = model.data.completionTotal(for: habit.id, inMonthContaining: month)
-        HabitMetric(value: "\(habit.target)", label: "Daily Target", color: habit.tint)
-        HabitMetric(value: "\(monthTotal)", label: "\(month.formatted(.dateTime.month(.abbreviated))) Total", color: habit.tint)
+        if let counter = habit.counter {
+            let best = model.counterScales[habit.id]?.best ?? 0
+            HabitMetric(value: best.formatted(), label: counter.unit.isEmpty ? "Best Day" : "Best Day, \(counter.unit)", color: habit.tint)
+        } else {
+            HabitMetric(value: "\(habit.target)", label: "Daily Target", color: habit.tint)
+        }
+        HabitMetric(value: monthTotal.formatted(), label: "\(month.formatted(.dateTime.month(.abbreviated))) Total", color: habit.tint)
         if let goal = habit.streakGoal {
             let weeklyProgress = model.data.completedDays(for: habit, inWeekContaining: Date())
             let label = goal.period == .daily ? "Day Streak" : "Week Streak\n\(weeklyProgress) / \(goal.target) this week"
@@ -168,6 +173,7 @@ struct HabitDetailView: View {
         noteFocused = false
         selected = date
         let count = model.data.day(habitID, date).count
+        if habit.counter != nil { model.update { try $0.add(habitID, day: date, amount: habit.step) }; return }
         model.update { try $0.setCount(habitID, day: date, count: count >= habit.target ? 0 : count + 1) }
     }
 
@@ -201,6 +207,7 @@ struct HabitMetric: View {
 }
 
 private struct MonthCalendar: View {
+    @Environment(\.counterScales) private var counterScales
     let habit: Habit
     let data: Dataset
     @Binding var month: Date
@@ -233,12 +240,21 @@ private struct MonthCalendar: View {
                         let date = calendar.date(byAdding: .day, value: index - offset, to: start)!
                         let key = LocalDay.string(date)
                         let day = data.day(habit.id, key)
+                        let intensity = habit.intensity(day.count, reference: counterScales[habit.id]?.reference)
                         let canSelect = key <= LocalDay.string()
                         Button { if canSelect { select(key) } } label: {
-                            Text("\(index - offset + 1)").font(.body.monospacedDigit())
-                                .foregroundStyle(key > LocalDay.string() ? .secondary : .primary)
+                            VStack(spacing: 0) {
+                                Text("\(index - offset + 1)").font(habit.counter == nil ? .body.monospacedDigit() : .caption2.monospacedDigit())
+                                    .foregroundStyle(key > LocalDay.string() ? .secondary : habit.counter == nil ? .primary : .secondary)
+                                if habit.counter != nil && day.count > 0 {
+                                    Text(Counter.compact(day.count))
+                                        .font(.system(.subheadline, design: .rounded, weight: .bold).monospacedDigit())
+                                        .foregroundStyle(intensity >= 0.6 ? .white : .primary)
+                                        .lineLimit(1).minimumScaleFactor(0.6)
+                                }
+                            }
                                 .frame(maxWidth: .infinity, minHeight: 44)
-                                .background(habit.tint.opacity(day.count == 0 ? 0.05 : 0.15 + day.progress(target: habit.target) * 0.55), in: RoundedRectangle(cornerRadius: 12))
+                                .background(habit.tint.opacity(day.count == 0 ? 0.05 : 0.15 + intensity * 0.55), in: RoundedRectangle(cornerRadius: 12))
                                 .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(key == selected ? habit.tint : key == LocalDay.string() ? Color.primary.opacity(0.5) : .clear, lineWidth: key == selected ? 2 : 1) }
                                 .overlay(alignment: .bottom) { if !day.note.isEmpty { Circle().fill(.primary).frame(width: 4, height: 4).padding(.bottom, 3) } }
                         }.buttonStyle(CompletionStyle())
@@ -247,8 +263,8 @@ private struct MonthCalendar: View {
                             .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
                                 if canSelect { edit(key) }
                             })
-                            .accessibilityLabel("\(key), \(day.count) Completions, target \(habit.target)\(day.note.isEmpty ? "" : ", has Day Note")")
-                            .accessibilityHint(canSelect ? "Tap to add a Completion. Touch and hold to edit the Day Note." : "Future dates are read-only")
+                            .accessibilityLabel("\(key), \(habit.counter == nil ? "\(day.count) Completions, target \(habit.target)" : habit.progressText(day.count))\(day.note.isEmpty ? "" : ", has Day Note")")
+                            .accessibilityHint(canSelect ? "Tap to add \(habit.counter == nil ? "a Completion" : "\(habit.step)"). Touch and hold to edit the Day Note." : "Future dates are read-only")
                             .accessibilityAddTraits(key == selected ? .isSelected : [])
                             .accessibilityAction(named: "Edit Habit Day") { if key <= LocalDay.string() { edit(key) } }
                     }
@@ -275,9 +291,22 @@ struct DayEditor: View {
             Form {
                 Section {
                     Text(LocalDay.date(selection.date)?.formatted(date: .complete, time: .omitted) ?? selection.date).font(.headline)
-                    Stepper(value: $count, in: 0...max(99, count)) {
-                        Text("Completions: \(count)")
-                            .completionFeedback(count: count)
+                    if let counter = model.data.habit(selection.habitID)?.counter {
+                        LabeledContent("Amount\(counter.unit.isEmpty ? "" : " (\(counter.unit))")") {
+                            HStack {
+                                TextField("0", value: $count, format: .number)
+                                    .keyboardType(.numberPad).multilineTextAlignment(.trailing)
+                                    .font(.body.monospacedDigit()).frame(maxWidth: 90)
+                                    .accessibilityIdentifier("day-amount")
+                                Stepper("Amount", value: $count, in: 0...Counter.maximumAmount, step: counter.step).labelsHidden()
+                            }
+                        }
+                        .onChange(of: count) { _, value in count = min(Counter.maximumAmount, max(0, value)) }
+                    } else {
+                        Stepper(value: $count, in: 0...max(99, count)) {
+                            Text("Completions: \(count)")
+                                .completionFeedback(count: count)
+                        }
                     }
                 }
                 Section {

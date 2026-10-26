@@ -5,12 +5,22 @@ struct OpenHabitWatchApp: App {
     @State private var model = WatchModel()
     @Environment(\.scenePhase) private var scenePhase
 
-    init() { WatchSync.shared.start() }
+    init() {
+        #if DEBUG && targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--counter-demo") {
+            seedWatchCounterDemo(into: watchStore())
+            _model = State(initialValue: WatchModel())
+            return
+        }
+        #endif
+        WatchSync.shared.start()
+    }
 
     var body: some Scene {
         WindowGroup {
             WatchHabitsView()
                 .environment(model)
+                .environment(\.counterScales, model.counterScales)
                 .preferredColorScheme(.dark)
                 .tint(.green)
                 .task { model.reload(); WatchSync.shared.publish(force: true) }

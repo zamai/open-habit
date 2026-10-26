@@ -14,6 +14,27 @@ public struct StreakGoal: Codable, Equatable, Sendable {
         self.target = period == .daily ? 1 : target
     }
 }
+/// Turns a Habit into a Counter Habit: each tap adds `step` to the Habit Day and the tile shows the
+/// recorded amount. A Counter Habit has no Daily Target: more is better, and any amount completes the day.
+public struct Counter: Codable, Equatable, Sendable {
+    public static let maximumAmount = 99_999
+    public static let maximumStep = 9_999
+    public var step: Int
+    public var unit: String
+    public init(step: Int = 1, unit: String = "") { self.step = step; self.unit = unit }
+    public func validate() throws {
+        guard (1...Self.maximumStep).contains(step), unit.count <= 12, !unit.contains("\n") else { throw HabitError.invalidHabit }
+    }
+    /// Fits an amount into a small tile: 999, 1.2k, 12k.
+    public static func compact(_ amount: Int) -> String {
+        if amount < 1_000 { return "\(amount)" }
+        if amount < 10_000 {
+            let tenths = amount / 100
+            return tenths % 10 == 0 ? "\(tenths / 10)k" : "\(tenths / 10).\(tenths % 10)k"
+        }
+        return "\(amount / 1_000)k"
+    }
+}
 public struct Settings: Codable, Equatable, Sendable {
     public var appearance: Appearance = .system
     public var weekStart: WeekStart = .system
@@ -39,18 +60,37 @@ public struct Habit: Codable, Identifiable, Equatable, Sendable {
     public var target: Int
     public var streakGoal: StreakGoal? = nil
     public var categoryIDs: [UUID]? = nil
+    public var counter: Counter? = nil
     public var createdAt: Date
     public var archived: Bool
-    public init(id: UUID = UUID(), name: String = "", emoji: String = "🌱", detail: String = "", color: HabitColor = .green, target: Int = 1, streakGoal: StreakGoal? = nil, createdAt: Date = Date(), archived: Bool = false) {
+    public init(id: UUID = UUID(), name: String = "", emoji: String = "🌱", detail: String = "", color: HabitColor = .green, target: Int = 1, streakGoal: StreakGoal? = nil, counter: Counter? = nil, createdAt: Date = Date(), archived: Bool = false) {
         self.id = id; self.name = name; self.emoji = emoji; self.detail = detail
-        self.color = color; self.target = target; self.streakGoal = streakGoal; self.createdAt = createdAt; self.archived = archived
+        self.color = color; self.target = target; self.streakGoal = streakGoal; self.counter = counter; self.createdAt = createdAt; self.archived = archived
+    }
+    /// The amount one tap adds.
+    public var step: Int { counter?.step ?? 1 }
+    /// A Counter Habit keeps a Daily Target of 1, so streaks count any recorded amount.
+    public var targetRange: ClosedRange<Int> { counter == nil ? 1...99 : 1...1 }
+    /// "45 pushups" for Counter Habits, "1 of 3 Completions" otherwise.
+    public func progressText(_ count: Int) -> String {
+        guard let counter else { return "\(count) of \(target) Completions" }
+        return counter.unit.isEmpty ? count.formatted() : "\(count.formatted()) \(counter.unit)"
+    }
+    /// How strongly a Habit Day's tile is colored, from 0 to 1. Counter Habits have no target, so
+    /// they are scaled against `reference`, a typical strong day from `Dataset.counterScales()`.
+    public func intensity(_ count: Int, reference: Int?) -> Double {
+        guard count > 0 else { return 0 }
+        guard counter != nil else { return min(1, Double(count) / Double(target)) }
+        guard let reference, reference > 0 else { return 1 }
+        return min(1, Double(count) / Double(reference))
     }
     public func validate() throws {
+        try counter?.validate()
         guard customColorRGB.map({ $0 <= 0xFFFFFF }) ?? true else { throw HabitError.invalidHabit }
         guard streakGoal.map({ $0.period == .daily ? $0.target == 1 : (1...7).contains($0.target) }) ?? true else { throw HabitError.invalidHabit }
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.count <= 60,
               emoji.count == 1, emoji.unicodeScalars.contains(where: { $0.properties.isEmojiPresentation || $0.value == 0xFE0F || ($0.properties.isEmoji && $0.value > 0x238C) }),
-              detail.count <= 160, !detail.contains("\n"), (1...99).contains(target), createdAt.timeIntervalSince1970.isFinite else {
+              detail.count <= 160, !detail.contains("\n"), targetRange.contains(target), createdAt.timeIntervalSince1970.isFinite else {
             throw HabitError.invalidHabit
         }
     }
@@ -60,6 +100,11 @@ public struct HabitDay: Codable, Equatable, Sendable {
     public var note: String = ""
     public init(count: Int = 0, note: String = "") { self.count = count; self.note = note }
     public func progress(target: Int) -> Double { min(1, Double(count) / Double(target)) }
+}
+public struct CounterScale: Equatable, Sendable {
+    /// The 90th-percentile amount: days at or above it get full color, so one outlier can't wash out the rest.
+    public var reference: Int
+    public var best: Int
 }
 public struct Dataset: Codable, Equatable, Sendable {
     public var initialized = false
@@ -72,6 +117,19 @@ public struct Dataset: Codable, Equatable, Sendable {
     public func habit(_ id: UUID) -> Habit? { habits.first { $0.id == id } }
     public static func key(_ id: UUID, _ day: String) -> String { "\(id.uuidString)/\(day)" }
     public func day(_ id: UUID, _ date: String) -> HabitDay { days[Self.key(id, date)] ?? HabitDay() }
+    /// One pass over all Habit Days. Callers compute this once per data change, never per tile.
+    public func counterScales() -> [UUID: CounterScale] {
+        let counters = Dictionary(uniqueKeysWithValues: habits.filter { $0.counter != nil }.map { ($0.id.uuidString, $0.id) })
+        guard !counters.isEmpty else { return [:] }
+        var amounts: [UUID: [Int]] = [:]
+        for (key, day) in days where day.count > 0 {
+            if let id = counters[String(key.prefix(36))] { amounts[id, default: []].append(day.count) }
+        }
+        return amounts.mapValues { values in
+            let sorted = values.sorted()
+            return CounterScale(reference: sorted[Int(Double(sorted.count - 1) * 0.9)], best: sorted.last!)
+        }
+    }
     public func validate() throws {
         guard Set(habits.map(\.id)).count == habits.count else { throw HabitError.invalidBackup("Duplicate Habit identifiers.") }
         let categoryIDs = Set((categories ?? []).map(\.id))

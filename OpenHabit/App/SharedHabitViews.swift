@@ -721,7 +721,7 @@ struct SharedMemberRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .trailing, spacing: 3) {
                 let today = member.counts[LocalDay.string()] ?? 0
-                Text("\(today) / \(definition.target)").font(.subheadline.monospacedDigit().weight(.semibold))
+                Text(definition.counter == nil ? "\(today) / \(definition.target)" : today.formatted()).font(.subheadline.monospacedDigit().weight(.semibold))
                 if definition.streakGoal != nil {
                     Label("\(dataset.currentStreak(for: habit))", systemImage: "flame.fill")
                         .labelStyle(.titleAndIcon).font(.caption2).foregroundStyle(member.tint)
@@ -804,7 +804,7 @@ struct SharedMemberDetailView: View {
                 }
                 Grid(horizontalSpacing: 10) {
                     GridRow {
-                    SharedMetric(value: "\(displayedMember.counts[LocalDay.string()] ?? 0) / \(definition.target)", label: "Today", color: displayedMember.tint)
+                    SharedMetric(value: definition.counter == nil ? "\(displayedMember.counts[LocalDay.string()] ?? 0) / \(definition.target)" : (displayedMember.counts[LocalDay.string()] ?? 0).formatted(), label: "Today", color: displayedMember.tint)
                     if habit.streakGoal != nil {
                         SharedMetric(value: "\(dataset.currentStreak(for: habit))", label: "Current Streak", color: displayedMember.tint)
                     }

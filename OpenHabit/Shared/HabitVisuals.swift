@@ -27,14 +27,33 @@ extension Habit {
     }
 }
 
+extension EnvironmentValues {
+    /// Per-Habit intensity references for Counter Habits, computed once when the data changes.
+    @Entry var counterScales: [UUID: CounterScale] = [:]
+}
+
 struct CompletionGlyph: View {
     let count: Int
     let target: Int
     let color: Color
     var size: CGFloat = 48
+    /// Set for a Counter Habit: the glyph shows the amount a tap adds, filled once today has any amount.
+    var counterStep: Int? = nil
+    /// Where no other view shows today's amount (compact widgets), a recorded amount replaces "+step".
+    var showsAmount = false
     var body: some View {
         ZStack {
-            if count >= target || target == 1 {
+            if let counterStep {
+                let recorded = count > 0
+                let shape = RoundedRectangle(cornerRadius: size * 0.29)
+                shape.fill(recorded ? color : .clear)
+                shape.strokeBorder(color.opacity(recorded ? 1 : 0.65), lineWidth: 2.5)
+                Text(showsAmount && recorded ? Counter.compact(count) : "+\(Counter.compact(counterStep))")
+                    .font(.system(size: size * 0.32, weight: .bold, design: .rounded))
+                    .lineLimit(1).minimumScaleFactor(0.5)
+                    .padding(.horizontal, size * 0.1)
+                    .foregroundStyle(recorded ? .white : color)
+            } else if count >= target || target == 1 {
                 RoundedRectangle(cornerRadius: size * 0.29)
                     .fill(count >= target ? color : .clear)
                 RoundedRectangle(cornerRadius: size * 0.29)
@@ -76,16 +95,39 @@ struct CompletionButton: View {
     var size: CGFloat = 48
     var body: some View {
         Button(action: action) {
-            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size)
+            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size, counterStep: habit.counter?.step)
                 .frame(width: max(44, size + 8), height: max(44, size + 8), alignment: alignment)
         }
             .buttonStyle(CompletionStyle())
             .completionFeedback(count: count)
-            .accessibilityLabel("\(habit.name), \(count) Completions today, Daily Target \(habit.target)")
-            .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
+            .accessibilityLabel(habit.counter == nil ? "\(habit.name), \(count) Completions today, Daily Target \(habit.target)"
+                                : "\(habit.name), \(habit.progressText(count)) today")
+            .accessibilityHint(habit.completionHint(count: count))
             .accessibilityIdentifier("complete-\(habit.id.uuidString)")
     }
 }
+extension Habit {
+    func completionHint(count: Int) -> String {
+        if let counter { return "Add \(counter.step)\(counter.unit.isEmpty ? "" : " \(counter.unit)")" }
+        return count >= target ? "Clear today’s Completions" : "Add one Completion"
+    }
+}
+
+/// Draws a Counter Habit's recorded amount inside a history tile, when the tile is large enough to read.
+struct TileAmount {
+    static let minimumSide: CGFloat = 13
+
+    static func draw(_ count: Int, in rect: CGRect, intensity: Double, color: Color, context: GraphicsContext) {
+        guard count > 0, rect.width >= minimumSide else { return }
+        let text = Counter.compact(count)
+        let scale: CGFloat = switch text.count { case 1, 2: 0.52; case 3: 0.42; default: 0.34 }
+        let label = context.resolve(Text(text)
+            .font(.system(size: rect.width * scale, weight: .semibold, design: .rounded).monospacedDigit())
+            .foregroundStyle(intensity >= 0.6 ? Color.white : Color.primary.opacity(0.85)))
+        context.draw(label, at: CGPoint(x: rect.midX, y: rect.midY), anchor: .center)
+    }
+}
+
 struct CompletionStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
@@ -133,10 +175,22 @@ struct DayTile: View {
     let color: Color
     let today: Bool
     var emptyColor: Color? = nil
+    var showsAmount = false
+    /// Overrides target-based progress, for Counter Habits scaled against their history.
+    var intensity: Double? = nil
     var body: some View {
+        let intensity = intensity ?? day.progress(target: target)
         GeometryReader { geometry in
             RoundedRectangle(cornerRadius: geometry.size.width * 0.22)
-                .fill(day.count == 0 ? (emptyColor ?? color.opacity(0.10)) : color.opacity(0.25 + 0.75 * day.progress(target: target)))
+                .fill(day.count == 0 ? (emptyColor ?? color.opacity(0.10)) : color.opacity(0.25 + 0.75 * intensity))
+                .overlay {
+                    if showsAmount {
+                        Canvas { context, size in
+                            TileAmount.draw(day.count, in: CGRect(origin: .zero, size: size),
+                                            intensity: intensity, color: color, context: context)
+                        }
+                    }
+                }
                 .overlay(alignment: .topTrailing) {
                     if !day.note.isEmpty { Circle().fill(.primary).frame(width: 3, height: 3).offset(x: 1, y: -1) }
                 }
@@ -154,6 +208,7 @@ struct LabeledHistoryGrid: View {
     var tileSide: CGFloat = 11
     var end: Date = Date()
     @ScaledMetric(relativeTo: .caption) private var labelFontSize: CGFloat = 12
+    @Environment(\.counterScales) private var counterScales
 
     private var calendar: Calendar { historyCalendar(for: data) }
 
@@ -178,6 +233,7 @@ struct LabeledHistoryGrid: View {
         let side = Self.minimumTileSide(fontSize: labelFontSize, data: data, tileSide: tileSide, spacing: spacing)
         let gridY = labelFontSize + 10
         let gridX = Self.leadingInset(fontSize: labelFontSize, data: data)
+        let reference = counterScales[habit.id]?.reference
         HistoryCanvasLayout(leadingInset: gridX, labelFontSize: labelFontSize, minimumTileSide: side,
                             spacing: spacing, calendar: calendar, end: end) {
             Canvas { context, size in
@@ -207,8 +263,12 @@ struct LabeledHistoryGrid: View {
                         let day = isFuture ? HabitDay(count: 0) : data.day(habit.id, key)
                         let rect = CGRect(x: gridX + CGFloat(week) * pitch, y: y, width: layout.tileSide, height: layout.tileSide)
                         let shape = Path(roundedRect: rect, cornerRadius: layout.tileSide * 0.22)
-                        let opacity = day.count == 0 ? 0.10 : 0.25 + 0.75 * day.progress(target: habit.target)
+                        let intensity = habit.intensity(day.count, reference: reference)
+                        let opacity = day.count == 0 ? 0.10 : 0.25 + 0.75 * intensity
                         context.fill(shape, with: .color(habit.tint.opacity(opacity)))
+                        if habit.counter != nil {
+                            TileAmount.draw(day.count, in: rect, intensity: intensity, color: habit.tint, context: context)
+                        }
                         if key == LocalDay.string(end) {
                             context.stroke(Path(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerRadius: layout.tileSide * 0.20),
                                            with: .color(.primary.opacity(0.8)), lineWidth: 1)
@@ -299,6 +359,7 @@ struct HistoryGrid: View {
     var emptyColor: Color? = nil
     var onSelect: ((String) -> Void)?
     var onEdit: ((String) -> Void)?
+    @Environment(\.counterScales) private var counterScales
     private var calendar: Calendar { historyCalendar(for: data) }
     private var dates: [Date] {
         historyDates(weeks: weeks, end: end, calendar: calendar)
@@ -313,12 +374,14 @@ struct HistoryGrid: View {
                         let key = LocalDay.string(date)
                         let isFuture = key > LocalDay.string(end)
                         let day = isFuture ? HabitDay() : data.day(habit.id, key)
-                        DayTile(day: day, target: habit.target, color: habit.tint, today: key == LocalDay.string(end), emptyColor: emptyColor)
+                        DayTile(day: day, target: habit.target, color: habit.tint, today: key == LocalDay.string(end), emptyColor: emptyColor,
+                                showsAmount: habit.counter != nil,
+                                intensity: habit.counter == nil ? nil : habit.intensity(day.count, reference: counterScales[habit.id]?.reference))
                             .frame(maxWidth: maxTileSide, maxHeight: maxTileSide)
                             .contentShape(Rectangle())
                             .onTapGesture { if !isFuture { onSelect?(key) } }
                             .onLongPressGesture { if !isFuture && key <= LocalDay.string() { onEdit?(key) } }
-                            .accessibilityLabel("\(key), \(day.count) of \(habit.target) Completions\(day.note.isEmpty ? "" : ", has Day Note")")
+                            .accessibilityLabel("\(key), \(habit.counter == nil ? "\(day.count) of \(habit.target) Completions" : habit.progressText(day.count))\(day.note.isEmpty ? "" : ", has Day Note")")
                             .accessibilityHidden(onSelect == nil || isFuture)
                     }
                 }

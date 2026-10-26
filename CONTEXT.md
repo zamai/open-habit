@@ -58,6 +58,10 @@ _Avoid_: Check-in, tick
 The current Habit-level threshold used to interpret every Habit Day and cap new Completions. Changing it re-evaluates all past and present Habit Days.
 _Avoid_: Historical target, streak goal
 
+**Counter Habit**:
+A Habit that records an amount, such as pushups, glasses, kilometres or minutes, instead of checking off. Each quick log adds the Habit's step (1 by default), there is no Daily Target, and any amount completes the Habit Day. History tiles show the amount, shaded against the Habit's own 90th-percentile day.
+_Avoid_: Quantity goal, numeric target
+
 **Daily Progress**:
 The comparison between a Habit Day's Completion count and the Habit’s current Daily Target: empty, in progress, or complete. It is derived from those values rather than recorded independently; there is no separate overachievement or failure state.
 _Avoid_: Stored status, failed day

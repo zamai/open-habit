@@ -124,7 +124,9 @@ public struct Journal: Codable, Sendable {
                 }.map(\.element)
             case .add(let id, let date, let amount, let ceiling):
                 let key = Dataset.key(id, date); var day = result.days[key] ?? HabitDay()
-                let limit = min(ceiling, result.habit(id)?.target ?? ceiling)
+                // Counter Habits keep counting past the Daily Target; the ceiling bounds the amount.
+                let habit = result.habit(id)
+                let limit = habit?.counter != nil ? ceiling : min(ceiling, habit?.target ?? ceiling)
                 if day.count < limit { day.count += min(amount, limit - day.count) }
                 result.days[key] = day
             case .remove(let id, let date, let amount):
@@ -166,7 +168,7 @@ public struct Journal: Codable, Sendable {
         guard amount > 0 else { throw HabitError.invalidAmount }
         guard let habit = dataset.habit(id) else { throw HabitError.missingHabit }
         guard !habit.archived else { throw HabitError.archivedHabit }
-        append(.add(id, day, amount, habit.target), now: now)
+        append(.add(id, day, amount, habit.counter == nil ? habit.target : Counter.maximumAmount), now: now)
     }
     public mutating func remove(_ id: UUID, day: String, amount: Int = 1, now: Date = Date()) throws {
         try LocalDay.validatePast(day, now: now)
@@ -176,7 +178,7 @@ public struct Journal: Codable, Sendable {
     }
     public mutating func setCount(_ id: UUID, day: String, count: Int, now: Date = Date()) throws {
         try LocalDay.validatePast(day, now: now)
-        guard count >= 0 else { throw HabitError.invalidAmount }
+        guard (0...Counter.maximumAmount).contains(count) else { throw HabitError.invalidAmount }
         guard dataset.habit(id) != nil else { throw HabitError.missingHabit }
         append(.count(id, day, count), now: now)
     }
@@ -189,7 +191,9 @@ public struct Journal: Codable, Sendable {
     public mutating func toggle(_ id: UUID, day: String = LocalDay.string(), now: Date = Date()) throws {
         guard let habit = dataset.habit(id) else { throw HabitError.missingHabit }
         guard !habit.archived else { throw HabitError.archivedHabit }
-        if dataset.day(id, day).count >= habit.target { try setCount(id, day: day, count: 0, now: now) }
+        // A Counter Habit never clears on tap: overshooting the target is still progress.
+        if habit.counter != nil { try add(id, day: day, amount: habit.step, now: now) }
+        else if dataset.day(id, day).count >= habit.target { try setCount(id, day: day, count: 0, now: now) }
         else { try add(id, day: day, now: now) }
     }
     var unavailableImportIDs: Set<UUID> {

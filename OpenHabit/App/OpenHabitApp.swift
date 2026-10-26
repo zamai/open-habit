@@ -80,6 +80,8 @@ struct OpenHabitApp: App {
             _model = State(initialValue: layoutAuditModel())
         } else if ProcessInfo.processInfo.arguments.contains("--website-demo") {
             _model = State(initialValue: websiteDemoModel())
+        } else if ProcessInfo.processInfo.arguments.contains("--counter-demo") {
+            _model = State(initialValue: counterDemoModel())
         } else if SharedHabitJoinPreview.isEnabled {
             _model = State(initialValue: SharedHabitJoinPreview.makeModel(
                 withPrivateHabit: !ProcessInfo.processInfo.arguments.contains("--preview-join-empty")
@@ -94,11 +96,12 @@ struct OpenHabitApp: App {
         WindowGroup {
             OverviewView()
                 .environment(model)
+                .environment(\.counterScales, model.counterScales)
                 .preferredColorScheme(model.colorScheme)
                 .tint(.green)
                 .task {
                     #if DEBUG && targetEnvironment(simulator)
-                    if ProcessInfo.processInfo.arguments.contains("--layout-audit") || ProcessInfo.processInfo.arguments.contains("--website-demo") || SharedHabitJoinPreview.isEnabled || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
+                    if ProcessInfo.processInfo.arguments.contains("--layout-audit") || ProcessInfo.processInfo.arguments.contains("--website-demo") || ProcessInfo.processInfo.arguments.contains("--counter-demo") || SharedHabitJoinPreview.isEnabled || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
                     #endif
                     model.reload()
                     await model.preparePendingShare()
@@ -111,7 +114,7 @@ struct OpenHabitApp: App {
                 }
                 .onChange(of: scenePhase) { _, phase in
                     #if DEBUG && targetEnvironment(simulator)
-                    if ProcessInfo.processInfo.arguments.contains("--layout-audit") || ProcessInfo.processInfo.arguments.contains("--website-demo") || SharedHabitJoinPreview.isEnabled || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
+                    if ProcessInfo.processInfo.arguments.contains("--layout-audit") || ProcessInfo.processInfo.arguments.contains("--website-demo") || ProcessInfo.processInfo.arguments.contains("--counter-demo") || SharedHabitJoinPreview.isEnabled || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
                     #endif
                     if phase == .active { model.reload(); Task { await model.preparePendingShare(); await model.sync() } }
                 }

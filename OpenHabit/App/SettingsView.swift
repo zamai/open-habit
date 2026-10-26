@@ -256,6 +256,7 @@ private struct ImportConfirmation: View {
     }
 
     private func habitSummary(_ habit: Habit) -> String {
+        if let counter = habit.counter { return "Counter: +\(counter.step)\(counter.unit.isEmpty ? "" : " \(counter.unit)") per tap" }
         guard let goal = habit.streakGoal, goal.period == .weekly else {
             return "Daily Target: \(habit.target)"
         }

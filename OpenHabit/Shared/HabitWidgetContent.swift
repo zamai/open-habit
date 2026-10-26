@@ -31,16 +31,26 @@ struct HabitWidgetContent: View {
     let compactRows: Int?
 
     var body: some View {
+        // One pass per timeline entry, shared by every row and history grid in this widget.
+        let scales = entry.data.counterScales()
         GeometryReader { geometry in
             Group {
                 if let compactRows {
-                    compactWidget(rows: compactRows, size: geometry.size)
+                    compactWidget(rows: compactRows, size: geometry.size, scales: scales)
                 } else if let id = entry.ids.first ?? nil, let habit = entry.data.habit(id), !habit.archived {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 6) {
                             Text(habit.emoji).font(.system(size: 18)).frame(width: 20)
-                            Text(habit.name).font(.system(size: 18, weight: .semibold)).lineLimit(2).minimumScaleFactor(0.85)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(habit.name).font(.system(size: 18, weight: .semibold))
+                                    .lineLimit(habit.counter == nil ? 2 : 1).minimumScaleFactor(0.7)
+                                if habit.counter != nil {
+                                    Text(habit.progressText(entry.data.day(habit.id, LocalDay.string(entry.date)).count))
+                                        .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
+                                        .foregroundStyle(habit.tint).lineLimit(1).minimumScaleFactor(0.6)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             widgetButton(habit, size: 36)
                         }.frame(height: 44)
                         WidgetHistory(habit: habit, data: entry.data, weeks: 10, spacing: 4, end: entry.date)
@@ -55,9 +65,10 @@ struct HabitWidgetContent: View {
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)
         .containerBackground(for: .widget) { Color.black }
+        .environment(\.counterScales, scales)
     }
 
-    private func compactWidget(rows: Int, size: CGSize) -> some View {
+    private func compactWidget(rows: Int, size: CGSize, scales: [UUID: CounterScale]) -> some View {
         let dates = recentDates
         let columnSpacing: CGFloat = 4
         let iconGap: CGFloat = 8
@@ -77,7 +88,7 @@ struct HabitWidgetContent: View {
                 let id = entry.ids.indices.contains(row) ? entry.ids[row] : nil
                 if let id, let habit = entry.data.habit(id), !habit.archived {
                     compactRow(habit, dates: dates, tileSide: tileSide, iconSide: iconSide,
-                               iconGap: iconGap, columnSpacing: columnSpacing)
+                               iconGap: iconGap, columnSpacing: columnSpacing, reference: scales[habit.id]?.reference)
                 } else {
                     compactPlaceholder(row: row, height: iconSide)
                 }
@@ -87,7 +98,7 @@ struct HabitWidgetContent: View {
     }
 
     private func compactRow(_ habit: Habit, dates: [Date], tileSide: CGFloat, iconSide: CGFloat,
-                            iconGap: CGFloat, columnSpacing: CGFloat) -> some View {
+                            iconGap: CGFloat, columnSpacing: CGFloat, reference: Int?) -> some View {
         HStack(spacing: iconGap) {
             Text(habit.emoji).font(.system(size: tileSide * 0.7))
                 .frame(width: iconSide, height: iconSide)
@@ -96,17 +107,19 @@ struct HabitWidgetContent: View {
             HStack(spacing: columnSpacing) {
                 ForEach(dates, id: \.self) { date in
                     let today = LocalDay.string(date) == LocalDay.string(entry.date)
-                    let tile = RecentDayTile(day: entry.data.day(habit.id, LocalDay.string(date)), target: habit.target,
-                                             color: habit.tint, today: today, size: tileSide)
+                    let day = entry.data.day(habit.id, LocalDay.string(date))
+                    let tile = RecentDayTile(day: day, target: habit.target, color: habit.tint, today: today, size: tileSide,
+                                             intensity: habit.counter == nil ? nil : habit.intensity(day.count, reference: reference))
                     if today {
                         let count = entry.data.day(habit.id, LocalDay.string(date)).count
                         Button(intent: ToggleHabitIntent(id: habit.id)) {
-                            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: tileSide)
+                            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: tileSide,
+                                            counterStep: habit.counter?.step, showsAmount: true)
                                 .modifier(WidgetCompletionTransition(count: count))
                         }
                             .buttonStyle(CompletionStyle())
-                            .accessibilityLabel("\(habit.name), \(count) Completions, Daily Target \(habit.target)")
-                            .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
+                            .accessibilityLabel(habit.counter == nil ? "\(habit.name), \(count) Completions, Daily Target \(habit.target)" : "\(habit.name), \(habit.progressText(count)) today")
+                            .accessibilityHint(habit.completionHint(count: count))
                     } else {
                         Link(destination: URL(string: "openhabit://habit/\(habit.id.uuidString)")!) { tile }
                             .buttonStyle(.plain)
@@ -142,12 +155,12 @@ struct HabitWidgetContent: View {
     private func widgetButton(_ habit: Habit, size: CGFloat) -> some View {
         let count = entry.data.day(habit.id, LocalDay.string(entry.date)).count
         return Button(intent: ToggleHabitIntent(id: habit.id)) {
-            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size)
+            CompletionGlyph(count: count, target: habit.target, color: habit.tint, size: size, counterStep: habit.counter?.step)
                 .modifier(WidgetCompletionTransition(count: count))
                 .frame(minWidth: 44, minHeight: 44)
         }.buttonStyle(CompletionStyle())
-            .accessibilityLabel("\(habit.name), \(count) Completions, Daily Target \(habit.target)")
-            .accessibilityHint(count >= habit.target ? "Clear today’s Completions" : "Add one Completion")
+            .accessibilityLabel(habit.counter == nil ? "\(habit.name), \(count) Completions, Daily Target \(habit.target)" : "\(habit.name), \(habit.progressText(count)) today")
+            .accessibilityHint(habit.completionHint(count: count))
     }
 }
 
@@ -171,9 +184,33 @@ private struct RecentDayTile: View {
     let color: Color
     let today: Bool
     let size: CGFloat
+    /// Set for Counter Habits: the tile shows the amount, shaded against the Habit's history.
+    var intensity: Double? = nil
 
     var body: some View {
         ZStack {
+            if let intensity {
+                RoundedRectangle(cornerRadius: size * 0.22)
+                    .fill(color.opacity(day.count == 0 ? 0.20 : 0.28 + 0.72 * intensity))
+                if day.count > 0 {
+                    Text(Counter.compact(day.count))
+                        .font(.system(size: size * 0.42, weight: .semibold, design: .rounded).monospacedDigit())
+                        .lineLimit(1).minimumScaleFactor(0.5).padding(.horizontal, 1)
+                        .foregroundStyle(.white)
+                }
+            } else {
+                classicTile
+            }
+        }
+        .frame(width: size, height: size)
+        .overlay {
+            if today {
+                RoundedRectangle(cornerRadius: size * 0.22).strokeBorder(.white.opacity(0.85), lineWidth: 1.3)
+            }
+        }
+    }
+
+    @ViewBuilder private var classicTile: some View {
             RoundedRectangle(cornerRadius: size * 0.22)
                 .fill(color.opacity(day.count == 0 ? 0.20 : day.count >= target ? 1 : 0.28))
             if day.count > 0 && day.count < target {
@@ -186,13 +223,6 @@ private struct RecentDayTile: View {
                     .font(.system(size: max(7, size * 0.36), weight: .bold))
                     .foregroundStyle(.white)
             }
-        }
-        .frame(width: size, height: size)
-        .overlay {
-            if today {
-                RoundedRectangle(cornerRadius: size * 0.22).strokeBorder(.white.opacity(0.85), lineWidth: 1.3)
-            }
-        }
     }
 }
 
@@ -204,9 +234,11 @@ struct WidgetHistory: View {
     let weeks: Int
     let spacing: CGFloat
     let end: Date
+    @Environment(\.counterScales) private var counterScales
 
     var body: some View {
         let cells = cells
+        let reference = counterScales[habit.id]?.reference
         Canvas { context, size in
             let side = max(0, min((size.width - CGFloat(weeks - 1) * spacing) / CGFloat(weeks),
                                   (size.height - 6 * spacing) / 7))
@@ -216,8 +248,12 @@ struct WidgetHistory: View {
                 let rect = CGRect(x: CGFloat(index / 7) * (side + spacing),
                                   y: top + CGFloat(index % 7) * (side + spacing), width: side, height: side)
                 let path = Path(roundedRect: rect, cornerRadius: side * 0.25)
-                let opacity = cell.day.count == 0 ? 0.22 : 0.35 + 0.65 * cell.day.progress(target: habit.target)
+                let intensity = habit.intensity(cell.day.count, reference: reference)
+                let opacity = cell.day.count == 0 ? 0.22 : 0.35 + 0.65 * intensity
                 context.fill(path, with: .color(habit.tint.opacity(opacity)))
+                if habit.counter != nil {
+                    TileAmount.draw(cell.day.count, in: rect, intensity: intensity, color: .white, context: context)
+                }
                 if cell.today {
                     context.stroke(Path(roundedRect: rect.insetBy(dx: 0.6, dy: 0.6), cornerRadius: side * 0.22),
                                    with: .color(.white.opacity(0.9)), lineWidth: 1.2)

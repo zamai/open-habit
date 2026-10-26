@@ -55,17 +55,48 @@ struct HabitEditor: View {
                     }.padding(.vertical, 4)
                 }
                 Section {
-                    Stepper("Daily Target: \(habit.target)", value: $habit.target, in: 1...99)
-                        .accessibilityIdentifier("daily-target")
+                    Picker("Tracking", selection: counting) {
+                        Text("Check off").tag(false)
+                        Text("Count").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("tracking-mode")
+                    if let counter = habit.counter {
+                        StepWheel(step: counterStep, tint: habit.tint)
+                        HStack(spacing: 8) {
+                            ForEach([1, 5, 10, 25, 100], id: \.self) { value in
+                                Button("+\(value)") { counterStep.wrappedValue = value }
+                                    .buttonStyle(.bordered).tint(counter.step == value ? habit.tint : .secondary)
+                                    .font(.subheadline.monospacedDigit().weight(.semibold))
+                            }
+                        }
+                        TextField("Unit, like pushups, glasses, km or min", text: counterUnit)
+                            .accessibilityIdentifier("counter-unit")
+                    } else {
+                        Stepper("Daily Target: \(habit.target)", value: $habit.target, in: 1...99)
+                            .accessibilityIdentifier("daily-target")
+                    }
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Try it out").font(.subheadline.weight(.medium))
-                            Text("\(previewCount) of \(habit.target) Completions").font(.caption).foregroundStyle(.secondary)
+                            Text(habit.progressText(previewCount)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        CompletionButton(habit: habit, count: previewCount) { previewCount = previewCount >= habit.target ? 0 : previewCount + 1 }
+                        if habit.counter != nil && previewCount > 0 {
+                            Button("Reset") { previewCount = 0 }.font(.caption).buttonStyle(.borderless)
+                        }
+                        CompletionButton(habit: habit, count: previewCount) {
+                            if habit.counter != nil { previewCount = min(Counter.maximumAmount, previewCount + habit.step) }
+                            else { previewCount = previewCount >= habit.target ? 0 : previewCount + 1 }
+                        }
                     }.padding(.vertical, 8)
-                } footer: { Text("Your current Daily Target also applies to all past Habit Days. Changing it may change how your history looks.") }
+                } header: { Text(habit.counter == nil ? "Daily Target" : "Counting") } footer: {
+                    if habit.counter != nil {
+                        Text("There’s no target: more is better. Each tap adds the chosen amount, and history tiles get darker on your stronger days. Touch and hold a Habit on the overview to undo a tap or set an exact amount.")
+                    } else {
+                        Text("Your current Daily Target also applies to all past Habit Days. Changing it may change how your history looks.")
+                    }
+                }
                 Section {
                     Toggle("Track a streak", isOn: streakEnabled)
                     if habit.streakGoal != nil {
@@ -80,9 +111,9 @@ struct HabitEditor: View {
                     }
                 } header: { Text("Streak Goal") } footer: {
                     if habit.streakGoal?.period == .weekly {
-                        Text("A week extends the streak when this Habit reaches its Daily Target on the chosen number of days.")
+                        Text("A week extends the streak when this Habit \(habit.counter == nil ? "reaches its Daily Target" : "records any amount") on the chosen number of days.")
                     } else {
-                        Text("A day extends the streak when this Habit reaches its Daily Target.")
+                        Text("A day extends the streak when this Habit \(habit.counter == nil ? "reaches its Daily Target" : "records any amount").")
                     }
                 }
                 if !isNew && model.sharedHabit(for: habit.id) == nil {
@@ -180,6 +211,32 @@ struct HabitEditor: View {
                 let blue = UInt32((min(1, max(0, resolved.blue)) * 255).rounded())
                 habit.customColorRGB = (red << 16) | (green << 8) | blue
             }
+        )
+    }
+
+    private var counting: Binding<Bool> {
+        Binding(
+            get: { habit.counter != nil },
+            set: { enabled in
+                previewCount = 0
+                if enabled {
+                    habit.counter = habit.counter ?? Counter()
+                    habit.target = 1
+                } else {
+                    habit.counter = nil
+                }
+            }
+        )
+    }
+
+    private var counterStep: Binding<Int> {
+        Binding(get: { habit.step }, set: { habit.counter?.step = $0 })
+    }
+
+    private var counterUnit: Binding<String> {
+        Binding(
+            get: { habit.counter?.unit ?? "" },
+            set: { habit.counter?.unit = String($0.replacingOccurrences(of: "\n", with: " ").prefix(12)) }
         )
     }
 
@@ -358,5 +415,41 @@ private final class EmojiTextField: UITextField {
 
     override var textInputMode: UITextInputMode? {
         UITextInputMode.activeInputModes.first { $0.primaryLanguage == "emoji" } ?? super.textInputMode
+    }
+}
+
+/// "Each tap adds" row that expands into a wheel, like the date rows in Calendar.
+private struct StepWheel: View {
+    @Binding var step: Int
+    let tint: Color
+    @State private var expanded = false
+
+    /// Fine steps where amounts are small, coarser ones above, so the wheel stays short.
+    private static let choices = Array(1...50) + Array(stride(from: 55, through: 200, by: 5))
+        + Array(stride(from: 250, through: 1_000, by: 50)) + Array(stride(from: 1_100, through: 5_000, by: 100))
+        + Array(stride(from: 6_000, through: Counter.maximumStep, by: 1_000))
+
+    var body: some View {
+        Button {
+            withAnimation(.snappy) { expanded.toggle() }
+        } label: {
+            LabeledContent("Each tap adds") {
+                Text("+\(step.formatted())")
+                    .font(.body.monospacedDigit())
+                    .foregroundStyle(expanded ? tint : .secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("counter-step")
+        if expanded {
+            // Keep an amount typed elsewhere, such as an imported Habit's, selectable.
+            let values = Self.choices.contains(step) ? Self.choices : (Self.choices + [step]).sorted()
+            Picker("Each tap adds", selection: $step) {
+                ForEach(values, id: \.self) { Text("+\($0.formatted())").tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(height: 150)
+        }
     }
 }

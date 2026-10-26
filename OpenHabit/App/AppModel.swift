@@ -5,7 +5,11 @@ import CloudKit
 
 @MainActor @Observable
 final class AppModel {
-    var data = Dataset()
+    var data = Dataset() {
+        // One pass over Habit Days per data change, so history tiles never compute their own scale.
+        didSet { counterScales = data.counterScales() }
+    }
+    private(set) var counterScales: [UUID: CounterScale] = [:]
     var sharedHabits: [UUID: SharedHabitState] = [:]
     var pendingJoin: SharedHabitJoinOffer?
     var preparingShare = false

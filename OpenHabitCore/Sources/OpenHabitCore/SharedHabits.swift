@@ -18,6 +18,7 @@ public struct SharedHabitDefinition: Codable, Equatable, Sendable {
     public var customColorRGB: UInt32?
     public var target: Int
     public var streakGoal: StreakGoal?
+    public var counter: Counter? = nil
     public var weekStart: WeekStart
 
     public init(habit: Habit, weekStart: WeekStart) {
@@ -29,6 +30,7 @@ public struct SharedHabitDefinition: Codable, Equatable, Sendable {
         customColorRGB = habit.customColorRGB
         target = habit.target
         streakGoal = habit.streakGoal
+        counter = habit.counter
         self.weekStart = weekStart
     }
 
@@ -41,6 +43,7 @@ public struct SharedHabitDefinition: Codable, Equatable, Sendable {
         result.customColorRGB = customColorRGB
         result.target = target
         result.streakGoal = streakGoal
+        result.counter = counter
         result.archived = false
         return result
     }
@@ -48,6 +51,7 @@ public struct SharedHabitDefinition: Codable, Equatable, Sendable {
     public func validate() throws {
         var habit = Habit(name: name, emoji: emoji, detail: detail, color: color, target: target, streakGoal: streakGoal)
         habit.customColorRGB = customColorRGB
+        habit.counter = counter
         try habit.validate()
         guard weekStart != .system else { throw HabitError.invalidSharedHabit }
     }

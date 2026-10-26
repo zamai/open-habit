@@ -215,6 +215,51 @@ final class WidgetLayoutTests: XCTestCase {
         }
     }
 
+    @MainActor func testCounterWidgetsFitMaximumAmounts() throws {
+        let habits = [
+            Habit(name: "Steps walked every single day", emoji: "👟", color: .indigo,
+                  counter: Counter(step: Counter.maximumStep, unit: "steps walked")),
+            Habit(name: "Pushups", emoji: "💪", color: .orange, counter: Counter(step: 10, unit: "pushups")),
+            Habit(name: "Drink water", emoji: "💧", color: .blue, counter: Counter(step: 1, unit: "glasses")),
+            Habit(name: "Read", emoji: "📖", color: .teal)
+        ]
+        var data = Dataset()
+        data.habits = habits
+        let amounts = [Counter.maximumAmount, 12_345, 999, 1, 0, 9_999, 50, 100, 1_050, 7]
+        for (index, habit) in habits.enumerated() {
+            for offset in 0..<70 {
+                let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date())!
+                let amount = habit.counter == nil ? offset % 2 : amounts[(offset + index) % amounts.count]
+                data.days[Dataset.key(habit.id, LocalDay.string(date))] = HabitDay(count: amount)
+            }
+            data.days[Dataset.key(habit.id, LocalDay.string())] = HabitDay(count: habit.counter == nil ? 1 : Counter.maximumAmount)
+        }
+        let ids = habits.map { Optional($0.id) }
+        let cases: [(name: String, size: CGSize, rows: Int?)] = [
+            ("counter-small-widget", CGSize(width: 164, height: 164), nil),
+            ("counter-medium-widget", CGSize(width: 350, height: 164), 3),
+            ("counter-large-widget", CGSize(width: 350, height: 354), 6)
+        ]
+        for item in cases {
+            let entry = HabitEntry(date: Date(), data: data, ids: ids)
+            let view = HabitWidgetContent(entry: entry, compactRows: item.rows)
+                .frame(width: item.size.width, height: item.size.height)
+                .background(Color.black)
+            let renderer = ImageRenderer(content: view)
+            renderer.scale = 3
+            let image = try XCTUnwrap(renderer.uiImage)
+            XCTAssertEqual(image.size, item.size, "\(item.name) must not grow to fit its content")
+            try assertVisibleContent(image, minimumHabitRows: min(item.rows ?? 1, habits.count))
+            let attachment = XCTAttachment(image: image)
+            attachment.name = item.name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(item.name).png")
+            try image.pngData()!.write(to: url)
+            print("WIDGET_RENDER: \(url.path)")
+        }
+    }
+
     @MainActor func testSingleHabitWidgetDrawsEmptyCellsThroughTheEndOfTheCurrentWeek() throws {
         let habit = Habit(name: "Exercise", emoji: "🏃", color: .yellow)
         var data = Dataset()

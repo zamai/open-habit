@@ -111,6 +111,49 @@ import WidgetKit
     model.loading = false
     return model
 }
+
+/// Counter Habits with varied amounts, to try the counter tiles. Replaces the Simulator's local data.
+@MainActor func counterDemoModel() -> AppModel {
+    var journal = Journal()
+    // A typical day's amount for each Counter Habit; the Read Habit stays a classic check-off.
+    let seeds: [(Habit, Int)] = [
+        (Habit(name: "Pushups", emoji: "💪", detail: "Sets of ten whenever there’s a minute.", color: .orange,
+               streakGoal: StreakGoal(period: .daily), counter: Counter(step: 10, unit: "pushups")), 60),
+        (Habit(name: "Drink water", emoji: "💧", color: .blue, counter: Counter(step: 1, unit: "glasses")), 6),
+        (Habit(name: "Run", emoji: "🏃", color: .green, streakGoal: StreakGoal(period: .weekly, target: 3),
+               counter: Counter(step: 1, unit: "km")), 5),
+        (Habit(name: "Training", emoji: "⏱️", color: .purple, counter: Counter(step: 5, unit: "min")), 30),
+        (Habit(name: "Read", emoji: "📖", color: .teal), 1),
+        // The largest step and amount, to check that nothing overflows.
+        (Habit(name: "Steps walked every single day", emoji: "👟", color: .indigo,
+               counter: Counter(step: Counter.maximumStep, unit: "steps walked")), 20_000)
+    ]
+    for (habit, _) in seeds.reversed() { try! journal.save(habit) }
+    var seed: UInt64 = 42
+    func random() -> Double {
+        seed = seed &* 6364136223846793005 &+ 1442695040888963407
+        return Double(seed >> 11) / Double(1 << 53)
+    }
+    for (habit, typical) in seeds {
+        for offset in 1..<120 where random() < 0.75 {
+            let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date())!
+            let taps = max(1, Int((random() * 2 * Double(typical) / Double(habit.step)).rounded()))
+            try! journal.setCount(habit.id, day: LocalDay.string(date), count: min(habit.counter == nil ? habit.target : .max, taps * habit.step))
+        }
+    }
+    let habits = seeds.map(\.0)
+try! journal.setCount(habits[0].id, day: LocalDay.string(), count: 40)
+    try! journal.setCount(habits[1].id, day: LocalDay.string(), count: 3)
+    try! journal.setCount(habits[5].id, day: LocalDay.string(), count: Counter.maximumAmount)
+    var settings = journal.dataset.settings
+    settings.examplesDismissed = true
+    journal.append(.settings(settings))
+    try! sharedStore().transaction { $0 = journal }
+    let model = AppModel()
+    model.reload()
+    model.loading = false
+    return model
+}
 #endif
 #Preview("Starter Habits") { OverviewView().environment(previewModel()) }
 #Preview("Empty dataset") { OverviewView().environment(previewModel(empty: true)) }

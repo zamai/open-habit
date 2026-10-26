@@ -77,8 +77,9 @@ struct ProgressEntity: AppEntity {
     @Property(title: "Count") var count: Int
     @Property(title: "Daily Target") var dailyTarget: Int
     @Property(title: "Target Met") var targetMet: Bool
-    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(count) of \(dailyTarget) Completions", subtitle: "\(targetMet ? "Complete" : count == 0 ? "Empty" : "In progress")") }
-    init(habit: Habit, count: Int) { id = habit.id; self.count = count; dailyTarget = habit.target; targetMet = count >= habit.target }
+    var progressText = ""
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(progressText)", subtitle: "\(targetMet ? "Complete" : count == 0 ? "Empty" : "In progress")") }
+    init(habit: Habit, count: Int) { id = habit.id; self.count = count; dailyTarget = habit.target; targetMet = count >= habit.target; progressText = habit.progressText(count) }
 }
 struct ProgressQuery: EntityQuery {
     func entities(for identifiers: [UUID]) async throws -> [ProgressEntity] {
