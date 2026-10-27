@@ -67,7 +67,7 @@ The comparison between a Habit Day's Completion count and the Habit’s current 
 _Avoid_: Stored status, failed day
 
 **Streak Goal**:
-An optional rule for deriving a Current Streak. A Daily Streak Goal requires one completed Habit Day per day; a Weekly Streak Goal requires one through seven completed Habit Days in each calendar week, using one common first day of week for all Members of a Shared Habit.
+An optional rule for deriving a Current Streak. A Daily Streak Goal requires one completed Habit Day per day; a Weekly Streak Goal requires one through seven completed Habit Days in each calendar week, using one common first day of week for all Members of a Shared Habit. For a Counter Habit the goal is an amount instead: a Daily Streak Goal requires each day to reach it, and a Weekly Streak Goal requires the week's total to reach it. It starts at one step and the person can set any amount.
 _Avoid_: Stored streak, Completion Target
 
 **Current Streak**:

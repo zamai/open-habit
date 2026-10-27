@@ -19,11 +19,11 @@ public extension Dataset {
             return result
         case .weekly:
             var week = startOfWeek(containing: date, calendar: calendar)
-            if completedDays(for: habit, inWeekContaining: week) < goal.target {
+            if !meetsWeeklyGoal(habit, goal, inWeekContaining: week) {
                 week = calendar.date(byAdding: .weekOfYear, value: -1, to: week)!
             }
             var result = 0
-            while completedDays(for: habit, inWeekContaining: week) >= goal.target {
+            while meetsWeeklyGoal(habit, goal, inWeekContaining: week) {
                 result += 1
                 week = calendar.date(byAdding: .weekOfYear, value: -1, to: week)!
             }
@@ -37,6 +37,15 @@ public extension Dataset {
         return (0..<7).reduce(into: 0) { total, offset in
             let day = calendar.date(byAdding: .day, value: offset, to: start)!
             if isCompleted(habit, on: day) { total += 1 }
+        }
+    }
+
+    /// The sum of a Habit's amounts in the week containing `date`, for Counter Habit weekly goals.
+    func weekTotal(for habit: Habit, inWeekContaining date: Date) -> Int {
+        let calendar = trackingCalendar
+        let start = startOfWeek(containing: date, calendar: calendar)
+        return (0..<7).reduce(into: 0) { total, offset in
+            total += day(habit.id, LocalDay.string(calendar.date(byAdding: .day, value: offset, to: start)!)).count
         }
     }
 
@@ -69,7 +78,17 @@ public extension Dataset {
         return calendar.date(byAdding: .day, value: -offset, to: calendar.startOfDay(for: date))!
     }
 
+    private func meetsWeeklyGoal(_ habit: Habit, _ goal: StreakGoal, inWeekContaining week: Date) -> Bool {
+        // A Counter Habit's week counts by its total amount, not by completed days.
+        if habit.counter != nil { return weekTotal(for: habit, inWeekContaining: week) >= max(1, goal.amount ?? 1) }
+        return completedDays(for: habit, inWeekContaining: week) >= goal.target
+    }
+
     private func isCompleted(_ habit: Habit, on date: Date) -> Bool {
-        day(habit.id, LocalDay.string(date)).count >= habit.target
+        let count = day(habit.id, LocalDay.string(date)).count
+        if habit.counter != nil, let goal = habit.streakGoal, goal.period == .daily {
+            return count >= max(1, goal.amount ?? 1)
+        }
+        return count >= habit.target
     }
 }

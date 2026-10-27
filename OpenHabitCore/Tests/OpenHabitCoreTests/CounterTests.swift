@@ -19,6 +19,48 @@ final class CounterTests: XCTestCase {
         XCTAssertEqual(journal.dataset.currentStreak(for: habit, asOf: now), 1)
     }
 
+    func testDailyStreakNeedsTheGoalAmountEachDay() throws {
+        let habit = Habit(name: "Read", streakGoal: StreakGoal(period: .daily, amount: 25), counter: Counter(step: 5, unit: "pages"))
+        var journal = try journal(with: habit)
+        let days = (0..<4).map { LocalDay.string(now.addingTimeInterval(Double(-$0) * 86_400)) }
+        // Today is unfinished at 10 pages; the three days before reach 25, 40 and 20.
+        for (day, amount) in zip(days, [10, 25, 40, 20]) { try journal.setCount(habit.id, day: day, count: amount, now: now) }
+        XCTAssertEqual(journal.dataset.currentStreak(for: habit, asOf: now), 2, "An unfinished today keeps yesterday's streak")
+        try journal.setCount(habit.id, day: days[0], count: 25, now: now)
+        XCTAssertEqual(journal.dataset.currentStreak(for: habit, asOf: now), 3)
+    }
+
+    func testWeeklyStreakSumsAmountsAcrossTheWeek() throws {
+        var habit = Habit(name: "Read", streakGoal: StreakGoal(period: .weekly, target: 3, amount: 100), counter: Counter(step: 5, unit: "pages"))
+        var journal = Journal()
+        var settings = Settings(); settings.weekStart = .monday
+        journal.append(.settings(settings))
+        try journal.save(habit)
+        let monday = try XCTUnwrap(LocalDay.date("2026-10-19"))
+        func day(_ offset: Int) -> String { LocalDay.string(monday.addingTimeInterval(Double(offset) * 86_400)) }
+        let sunday = monday.addingTimeInterval(6 * 86_400)
+        // Previous week: one big day of 100. This week: 30 + 30 + 40 spread over three days.
+        try journal.setCount(habit.id, day: day(-3), count: 100, now: sunday)
+        for (offset, amount) in [(0, 30), (2, 30), (5, 30)] { try journal.setCount(habit.id, day: day(offset), count: amount, now: sunday) }
+        XCTAssertEqual(journal.dataset.weekTotal(for: habit, inWeekContaining: sunday), 90)
+        XCTAssertEqual(journal.dataset.currentStreak(for: habit, asOf: sunday), 1, "The unfinished week keeps last week's streak")
+        try journal.setCount(habit.id, day: day(6), count: 10, now: sunday)
+        XCTAssertEqual(journal.dataset.currentStreak(for: habit, asOf: sunday), 2)
+        habit.streakGoal?.amount = 101
+        try journal.save(habit)
+        XCTAssertEqual(journal.dataset.currentStreak(for: habit, asOf: sunday), 0)
+    }
+
+    func testStreakAmountValidation() {
+        XCTAssertNoThrow(try Habit(name: "Read", streakGoal: StreakGoal(period: .weekly, target: 3, amount: 7 * Counter.maximumAmount),
+                                   counter: Counter()).validate())
+        XCTAssertThrowsError(try Habit(name: "Read", streakGoal: StreakGoal(period: .daily, amount: Counter.maximumAmount + 1),
+                                       counter: Counter()).validate())
+        XCTAssertThrowsError(try Habit(name: "Read", streakGoal: StreakGoal(period: .daily, amount: 0), counter: Counter()).validate())
+        XCTAssertThrowsError(try Habit(name: "Classic", streakGoal: StreakGoal(period: .daily, amount: 5)).validate(),
+                             "Only Counter Habits have amount goals")
+    }
+
     func testScaleUsesNinetiethPercentileSoOutliersDoNotWashOutHistory() throws {
         let habit = Habit(name: "Pushups", counter: Counter(step: 10))
         var journal = try journal(with: habit)

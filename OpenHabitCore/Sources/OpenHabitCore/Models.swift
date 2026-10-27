@@ -9,10 +9,15 @@ public enum StreakPeriod: String, Codable, CaseIterable, Sendable { case daily, 
 public struct StreakGoal: Codable, Equatable, Sendable {
     public var period: StreakPeriod
     public var target: Int
-    public init(period: StreakPeriod, target: Int = 1) {
+    /// Counter Habits only: the amount a day (daily) or a week's total (weekly) must reach.
+    /// Missing means any recorded amount counts.
+    public var amount: Int? = nil
+    public init(period: StreakPeriod, target: Int = 1, amount: Int? = nil) {
         self.period = period
         self.target = period == .daily ? 1 : target
+        self.amount = amount
     }
+    public var amountRange: ClosedRange<Int> { 1...(period == .daily ? Counter.maximumAmount : 7 * Counter.maximumAmount) }
 }
 /// Turns a Habit into a Counter Habit: each tap adds `step` to the Habit Day and the tile shows the
 /// recorded amount. A Counter Habit has no Daily Target: more is better, and any amount completes the day.
@@ -88,6 +93,9 @@ public struct Habit: Codable, Identifiable, Equatable, Sendable {
         try counter?.validate()
         guard customColorRGB.map({ $0 <= 0xFFFFFF }) ?? true else { throw HabitError.invalidHabit }
         guard streakGoal.map({ $0.period == .daily ? $0.target == 1 : (1...7).contains($0.target) }) ?? true else { throw HabitError.invalidHabit }
+        if let goal = streakGoal, let amount = goal.amount {
+            guard counter != nil, goal.amountRange.contains(amount) else { throw HabitError.invalidHabit }
+        }
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.count <= 60,
               emoji.count == 1, emoji.unicodeScalars.contains(where: { $0.properties.isEmojiPresentation || $0.value == 0xFE0F || ($0.properties.isEmoji && $0.value > 0x238C) }),
               detail.count <= 160, !detail.contains("\n"), targetRange.contains(target), createdAt.timeIntervalSince1970.isFinite else {

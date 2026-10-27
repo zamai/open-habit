@@ -124,7 +124,8 @@ struct SharedHabitJoinView: View {
             LabeledContent("Members", value: "\(offer.snapshot.members.count) of 10")
             LabeledContent("Daily Target", value: "\(offer.snapshot.definition.target)")
             if let goal = offer.snapshot.definition.streakGoal {
-                LabeledContent("Streak Goal", value: goal.period == .daily ? "Daily" : "\(goal.target) days each week")
+                LabeledContent("Streak Goal", value: goal.amount.map { "\($0.formatted()) each \(goal.period == .daily ? "day" : "week")" }
+                               ?? (goal.period == .daily ? "Daily" : "\(goal.target) days each week"))
             }
         }
 

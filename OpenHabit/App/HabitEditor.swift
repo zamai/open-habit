@@ -105,12 +105,20 @@ struct HabitEditor: View {
                             Text("Weekly").tag(StreakPeriod.weekly)
                         }
                         .pickerStyle(.segmented)
-                        if habit.streakGoal?.period == .weekly {
+                        if let goal = habit.streakGoal, let counter = habit.counter {
+                            StreakAmountField(title: goal.period == .daily ? "Daily goal" : "Weekly goal", unit: counter.unit,
+                                              value: streakAmount, range: goal.amountRange, step: counter.step)
+                        } else if habit.streakGoal?.period == .weekly {
                             Stepper("Weekly Goal: \(habit.streakGoal?.target ?? 3) days", value: weeklyStreakTarget, in: 1...7)
                         }
                     }
                 } header: { Text("Streak Goal") } footer: {
-                    if habit.streakGoal?.period == .weekly {
+                    if let counter = habit.counter, let goal = habit.streakGoal {
+                        let amount = "\((goal.amount ?? 1).formatted())\(counter.unit.isEmpty ? "" : " \(counter.unit)")"
+                        Text(goal.period == .weekly
+                             ? "A week extends the streak when its total reaches \(amount)."
+                             : "A day extends the streak when it reaches \(amount).")
+                    } else if habit.streakGoal?.period == .weekly {
                         Text("A week extends the streak when this Habit \(habit.counter == nil ? "reaches its Daily Target" : "records any amount") on the chosen number of days.")
                     } else {
                         Text("A day extends the streak when this Habit \(habit.counter == nil ? "reaches its Daily Target" : "records any amount").")
@@ -222,8 +230,10 @@ struct HabitEditor: View {
                 if enabled {
                     habit.counter = habit.counter ?? Counter()
                     habit.target = 1
+                    if habit.streakGoal != nil { habit.streakGoal?.amount = habit.streakGoal?.amount ?? habit.step }
                 } else {
                     habit.counter = nil
+                    habit.streakGoal?.amount = nil
                 }
             }
         )
@@ -243,15 +253,22 @@ struct HabitEditor: View {
     private var streakEnabled: Binding<Bool> {
         Binding(
             get: { habit.streakGoal != nil },
-            set: { enabled in habit.streakGoal = enabled ? StreakGoal(period: .daily) : nil }
+            // A Counter Habit's goal starts at one tap's amount; the person can raise it.
+            set: { enabled in habit.streakGoal = enabled ? StreakGoal(period: .daily, amount: habit.counter.map(\.step)) : nil }
         )
     }
 
     private var streakPeriod: Binding<StreakPeriod> {
         Binding(
             get: { habit.streakGoal?.period ?? .daily },
-            set: { period in habit.streakGoal = StreakGoal(period: period, target: period == .weekly ? 3 : 1) }
+            set: { period in
+                habit.streakGoal = StreakGoal(period: period, target: period == .weekly ? 3 : 1, amount: habit.counter.map(\.step))
+            }
         )
+    }
+
+    private var streakAmount: Binding<Int> {
+        Binding(get: { habit.streakGoal?.amount ?? habit.step }, set: { habit.streakGoal?.amount = $0 })
     }
 
     private var weeklyStreakTarget: Binding<Int> {
@@ -451,5 +468,32 @@ private struct StepWheel: View {
             .pickerStyle(.wheel)
             .frame(height: 150)
         }
+    }
+}
+
+/// A free amount for a Counter Habit's Streak Goal: type any number, or step by one tap's amount.
+private struct StreakAmountField: View {
+    let title: String
+    let unit: String
+    @Binding var value: Int
+    let range: ClosedRange<Int>
+    let step: Int
+
+    var body: some View {
+        // One line at every width: the footer names the unit, so the row carries only the number.
+        HStack(spacing: 10) {
+            Text(title).lineLimit(1).layoutPriority(1)
+            TextField(title, value: clamped, format: .number)
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .font(.body.monospacedDigit())
+                .accessibilityLabel(unit.isEmpty ? title : "\(title), \(unit)")
+                .accessibilityIdentifier("streak-amount")
+            Stepper(title, value: clamped, in: range, step: step).labelsHidden().fixedSize()
+        }
+    }
+
+    private var clamped: Binding<Int> {
+        Binding(get: { value }, set: { value = min(range.upperBound, max(range.lowerBound, $0)) })
     }
 }

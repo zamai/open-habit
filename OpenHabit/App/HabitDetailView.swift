@@ -158,8 +158,10 @@ struct HabitDetailView: View {
         }
         HabitMetric(value: monthTotal.formatted(), label: "\(month.formatted(.dateTime.month(.abbreviated))) Total", color: habit.tint)
         if let goal = habit.streakGoal {
-            let weeklyProgress = model.data.completedDays(for: habit, inWeekContaining: Date())
-            let label = goal.period == .daily ? "Day Streak" : "Week Streak\n\(weeklyProgress) / \(goal.target) this week"
+            let weeklyProgress = habit.counter == nil
+                ? "\(model.data.completedDays(for: habit, inWeekContaining: Date())) / \(goal.target)"
+                : "\(Counter.compact(model.data.weekTotal(for: habit, inWeekContaining: Date()))) / \(Counter.compact(goal.amount ?? 1))"
+            let label = goal.period == .daily ? "Day Streak" : "Week Streak\n\(weeklyProgress) this week"
             HabitMetric(value: "\(streak)", label: label, color: habit.tint)
         }
     }
