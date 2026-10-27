@@ -92,7 +92,7 @@ struct HabitEditor: View {
                     }.padding(.vertical, 8)
                 } header: { Text(habit.counter == nil ? "Daily Target" : "Counting") } footer: {
                     if habit.counter != nil {
-                        Text("There’s no target: more is better. Each tap adds the chosen amount, and history tiles get darker on your stronger days. Touch and hold a Habit on the overview to undo a tap or set an exact amount.")
+                        Text("There’s no target: more is better. Each tap adds the chosen amount, and history tiles get darker on your stronger days. Touch and hold a Habit on the overview to undo a tap.")
                     } else {
                         Text("Your current Daily Target also applies to all past Habit Days. Changing it may change how your history looks.")
                     }

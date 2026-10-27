@@ -163,7 +163,6 @@ struct OverviewView: View {
             Button("Undo \(counter.step)\(counter.unit.isEmpty ? "" : " \(counter.unit)")", systemImage: "minus.circle") {
                 model.update { try $0.remove(habit.id, day: today, amount: counter.step) }
             }.disabled(model.data.day(habit.id, today).count == 0)
-            Button("Set today’s amount", systemImage: "number") { sheet = .day(DaySelection(habitID: habit.id, date: today)) }
             Divider()
         }
         if habit.counter == nil { markYesterdayComplete(habit) }

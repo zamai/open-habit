@@ -98,9 +98,12 @@ import WidgetKit
             seed = seed &* 6364136223846793005 &+ 1442695040888963407
             guard Double(seed >> 11) / Double(1 << 53) < density else { continue }
             let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date())!
-            try! journal.setCount(habit.id, day: LocalDay.string(date), count: habit.target)
+            // Counter Habits record a varied number of steps, so their tiles show real amounts.
+            let steps = Int(seed >> 33) % 8 + 1
+            try! journal.setCount(habit.id, day: LocalDay.string(date), count: habit.counter == nil ? habit.target : steps * habit.step)
         }
     }
+    try! journal.setCount(id(3), day: LocalDay.string(), count: 15)
     var settings = journal.dataset.settings
     settings.examplesDismissed = true
     journal.append(.settings(settings))
