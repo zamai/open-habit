@@ -348,10 +348,18 @@ final class HabitDetailUITests: XCTestCase {
         makeHittable(exercise)
         exercise.tap()
 
-        let day = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " Completions, target ")).firstMatch
+        let day = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " together. ")).firstMatch
         let note = app.descendants(matching: .any)["Day Note"].firstMatch
         let members = app.staticTexts["Members"].firstMatch
         makeHittable(day)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", " Completions, target ")).firstMatch.exists,
+                       "Shared Habits show the Together Chart instead of the Month Calendar")
+        let editDay = app.buttons["Edit My Day"]
+        makeHittable(editDay)
+        editDay.tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForExistence(timeout: 3), app.debugDescription)
+        app.navigationBars["Edit Habit Day"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForNonExistence(timeout: 5))
         makeHittable(note)
         if ProcessInfo.processInfo.environment["GENERATE_UI_GLOSSARY"] == "1" {
             capture("glossary-inline-note")

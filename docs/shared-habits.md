@@ -107,9 +107,20 @@ Member Name and row position remain visible, so color is never the only identifi
 
 ## Presentation
 
-The overview keeps the normal Habit card and adds a small people indicator with the current Member count.
+The overview keeps the normal Habit card, your own Completion Grid, and a small people indicator with the current Member count. Details cards add a **Today Strip**: each Member's initial with today's amount, followed by the group's total for today.
 
-Habit Detail gains a `Members` section. It uses one labeled row per Member at every group size, ordered as:
+Habit Detail replaces the Month Calendar with the **Together Chart** (issue #5; design exploration in `docs/design/shared-habits-2026-11-24/`):
+
+- Week, Month, and Year tabs. **Week is the default and shows a rolling seven days ending today**, so it never looks empty early in a calendar week. Month and Year follow calendar months. Chevrons move by one period, back to the earliest shared day.
+- Each day (each month in Year) is one stacked column with one segment per Member in Member order, colored by Member Color. Heights use the raw recorded amounts, so the stack's height is the group total. Columns carry no numeric labels.
+- Above the chart: the period's group total, and in Week, the change against the seven days before. Below it: one row per Member with their period total and active days.
+- Tapping a column selects that day (or month). Selection never records a Completion.
+- The **Share Bar** card shows the selected day's total, one horizontal bar split by Member, and a legend with each Member's amount. **Edit My Day** opens the Day Note Sheet for that date, which is how a Member corrects past amounts now that Shared Habits have no Month Calendar. The Inline Note Editor follows the selected day.
+- The current Member's own amounts come from the local journal, so a new Completion appears in the chart, the Today Strip, and the Members section before synchronization.
+
+The group total and per-Member totals are progress summaries, not rankings: Members always appear in Member order and are never sorted by amount.
+
+Below the Share Bar and the Inline Note Editor, Habit Detail keeps a `Members` section. It uses one labeled row per Member at every group size, ordered as:
 
 1. The current Member.
 2. The Owner, when different.
@@ -124,7 +135,7 @@ There is no separate Sharing tab. Management lives behind the Members section:
 - Owners see Invite, pending Invitations, Remove Member, and Stop Sharing.
 - Other Members see Leave Shared Habit.
 
-The first version has no leaderboard, group score, podium, competition mode, feed, events, chat, comments, reactions, or Completion notifications.
+The first version has no leaderboard, ranking, podium, competition mode, feed, events, chat, comments, reactions, or Completion notifications.
 
 ## Leaving, removal, and stopping sharing
 

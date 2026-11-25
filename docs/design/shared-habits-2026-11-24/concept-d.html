@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Together Chart Prototype</title>
+<style>
+:root{--habit:#6E5BD8;--habitSoft:#ebe7fb;--bg:#F2F2F7;--ink2:#6b6b70;--ink3:#a7a7ad;--sep:#e3e3e8}
+*{box-sizing:border-box}
+body{margin:0;background:transparent;color:var(--foreground,#000);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto;padding:8px 0 40px}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+.lede{color:var(--muted-foreground,#6b6b70);font-size:14px;line-height:1.45;margin:0 0 20px;max-width:900px}
+.layout{display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap}
+.side{flex:1;min-width:300px}
+.panel{background:#fff;color:#000;border-radius:16px;padding:14px 16px;margin-bottom:16px}
+.panel h3{margin:0 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:#6b6b70}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:0;font:inherit;font-size:13px;font-weight:600;border-radius:999px;padding:6px 12px;background:#f1f1f4;color:#000;cursor:pointer}
+.opt.on{background:var(--habit);color:#fff}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.gitem{background:#fff;color:#000;border-radius:18px;padding:12px;cursor:pointer;box-shadow:inset 0 0 0 2px transparent}
+.gitem.on{box-shadow:inset 0 0 0 2px var(--habit)}
+.gitem .gt{font-weight:700;font-size:14px}
+.gitem .gd{font-size:12px;color:#6b6b70;margin:2px 0 10px;line-height:1.4}
+.gitem .gbody{background:var(--bg);border-radius:14px;padding:10px}
+
+/* phone */
+.phone{width:390px;height:844px;flex:none;background:var(--bg);color:#000;border-radius:48px;border:10px solid #1c1c1e;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.18);position:relative}
+.status{position:absolute;top:0;left:0;right:0;height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 30px;font-weight:600;font-size:15px;background:var(--bg);z-index:3}
+.screen{position:absolute;top:44px;bottom:0;left:0;right:0;overflow-y:auto;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:130px;height:5px;border-radius:3px;background:#111;z-index:3}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:4px 14px 8px}
+.navbtn{width:40px;height:40px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.06);font-size:20px;color:#222;cursor:pointer;border:0}
+.navbtn.tint{color:var(--habit)}
+.navtitle{font-weight:600;font-size:16px}
+.content{padding:4px 16px 40px}
+.card{background:#fff;border-radius:20px;padding:14px}
+.sect{font-size:20px;font-weight:700;margin:22px 2px 8px;display:flex;justify-content:space-between;align-items:baseline}
+.sect small{font-size:13px;font-weight:500;color:var(--ink2)}
+.av{width:28px;height:28px;border-radius:50%;color:#fff;font-weight:700;font-size:13px;display:grid;place-items:center;flex:none}
+.av.sm{width:20px;height:20px;font-size:10px}
+.av.xs{width:16px;height:16px;font-size:9px}
+
+/* detail */
+.hdr{display:flex;align-items:center;gap:14px;margin:6px 0 4px}
+.hdr .emoji{font-size:44px}.hdr .name{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.desc{color:var(--ink2);font-size:15px;margin:0 0 10px}
+.badges{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:600;color:var(--habit);background:var(--habitSoft);border-radius:999px;padding:4px 9px}
+.seg{display:flex;background:#e9e9ee;border-radius:10px;padding:2px;margin:0 0 10px}
+.seg button{flex:1;border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;padding:6px 0;border-radius:8px;color:#333;cursor:pointer}
+.seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.range{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;margin:2px 2px 8px}
+.chev{color:var(--habit);font-size:22px;font-weight:600;border:0;background:none;cursor:pointer;padding:0 6px;line-height:1}
+.chev:disabled{color:#d6d6dc;cursor:default}
+.tot{display:flex;align-items:baseline;gap:8px;margin:0 2px 4px}
+.tot b{font-size:30px;letter-spacing:-.02em;color:var(--habit)}
+.tot span{font-size:13px;color:var(--ink2)}
+.tot .delta{white-space:nowrap;margin-left:auto;font-size:12px;font-weight:600;color:#2FA36B;background:#e6f5ed;padding:2px 7px;border-radius:999px}
+.tot .delta.down{color:#b3412b;background:#fbeae6}
+
+.chartwrap{position:relative;margin-top:28px}
+.chart{display:flex;align-items:flex-end;height:170px;border-bottom:1px solid var(--sep);position:relative}
+.colw{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer;border-radius:10px;position:relative}
+.colw.sel{background:#f1eefc}
+.colw.fut{cursor:default}
+.stack{display:flex;flex-direction:column-reverse;gap:2px;width:var(--bw);align-items:stretch}
+.stack i{display:grid;place-items:center;border-radius:4px;color:#fff;font-size:10px;font-weight:700;font-style:normal;font-variant-numeric:tabular-nums;overflow:hidden}
+.colw:not(.sel) .stack{opacity:.55}
+.chart.nosel .colw .stack{opacity:1}
+.ghost{width:var(--bw);height:18px;border-radius:4px;border:1.5px dashed #d5d1df}
+.ctot{font-size:11px;font-weight:700;color:#333;margin-bottom:3px;font-variant-numeric:tabular-nums}
+.colw:not(.sel) .ctot{color:#999}
+.xl{display:flex;margin-top:4px}
+.xl div{flex:1;text-align:center;font-size:11px;color:var(--ink2);line-height:1.25}
+.xl div.tday{color:#000;font-weight:700}
+.xl div.sel{color:var(--habit);font-weight:700}
+.grid50{position:absolute;left:0;right:0;border-top:1px dashed #eee;pointer-events:none}
+
+.rows .row{display:flex;align-items:center;gap:10px;padding:7px 0}
+.rows .row + .row{border-top:1px solid var(--sep)}
+.row .who{flex:1;font-weight:600;font-size:15px}
+.row .sub{font-size:11px;color:var(--ink2);font-weight:500}
+.row .num{font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+.row .num.zero{color:var(--ink3);font-weight:500;font-size:14px}
+.row .mbar{width:90px;height:8px;border-radius:4px;background:#f0f0f3;overflow:hidden}
+.row .mbar i{display:block;height:100%;border-radius:4px}
+.tag{font-size:10px;font-weight:700;color:#a3620a;background:#fdf0d9;border-radius:5px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+
+/* day variants */
+.dhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.dhead b{font-size:17px}.dhead small{font-size:13px;color:var(--ink2)}
+.share{display:flex;height:30px;border-radius:9px;overflow:hidden;gap:2px;margin:8px 0}
+.share i{display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;font-style:normal}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend .z{color:var(--ink3)}
+.rings{display:flex;justify-content:space-around;padding:4px 0 2px}
+.ring{text-align:center;font-size:12px}
+.ring svg{display:block;margin:0 auto 4px}
+.ring b{display:block;font-size:13px}
+.ring span{color:var(--ink2);font-size:11px}
+.sentence{font-size:16px;line-height:1.5}
+.sentence .hl{font-weight:700}
+.bubble{position:absolute;bottom:calc(100% + 10px);transform:translateX(-50%);background:#1c1c1e;color:#fff;border-radius:12px;padding:8px 10px;font-size:12px;white-space:nowrap;z-index:2;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.bubble:after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1c1c1e}
+.bubble .bt{font-weight:700;margin-bottom:4px}
+.bubble .br{display:flex;align-items:center;gap:6px;margin:2px 0}
+.bubble .br .n{margin-left:auto;font-weight:700;padding-left:10px;font-variant-numeric:tabular-nums}
+.bubble.static{position:relative;bottom:auto;transform:none;display:inline-block;margin-left:50%;translate:-50% 0}
+.chartwrap.callout{margin-top:112px}
+
+/* calendar */
+.dow,.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.dow{text-align:center;font-size:11px;color:var(--ink2);margin-bottom:5px}
+.t{border-radius:10px;background:#efeaf3;height:44px;position:relative;font-size:10px;font-weight:600;color:#333;cursor:pointer;border:2px solid transparent}
+.t.blank{background:transparent;cursor:default}
+.t.fut{opacity:.45;cursor:default}
+.t.today{border-color:#1c1c1e}.t.sel{border-color:var(--habit)}
+.t .d{position:absolute;top:3px;left:6px}
+.t .a{position:absolute;inset:0;display:grid;place-items:center;font-size:14px;font-weight:700;padding-top:6px}
+.note{background:#fff;border-radius:16px;padding:12px 14px;margin-top:10px}
+.note b{font-size:15px}
+.note .f{margin-top:8px;background:#f3f3f6;border-radius:10px;padding:10px;color:var(--ink3);font-size:14px}
+.hint{font-size:12px;color:var(--ink2);margin:8px 2px 0;line-height:1.4}
+.strip{display:flex;gap:3px}
+.strip i{width:9px;height:9px;border-radius:2px;display:block}
+
+/* overview */
+.kicker{font-size:12px;letter-spacing:.12em;color:#888;font-weight:600;margin:6px 2px 4px}
+.big{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 2px 14px}
+.hcard{background:#fff;border-radius:26px;padding:16px;margin-bottom:14px}
+.hcard .top{display:flex;gap:12px;align-items:center;cursor:pointer}
+.hcard .top .emoji{font-size:30px}
+.hcard .top .tt{flex:1;min-width:0}
+.hcard .top .tt b{font-size:18px;display:flex;align-items:center;gap:6px}
+.hcard .top .tt span{font-size:13px;color:var(--ink2);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ppl{font-size:11px;font-weight:700;color:var(--habit);background:var(--habitSoft);border-radius:999px;padding:2px 7px}
+.cbtn{width:62px;height:62px;border-radius:18px;background:var(--habit);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px;line-height:1;cursor:pointer;border:0;font-family:inherit;flex:none;transition:transform .08s}
+.cbtn:active{transform:scale(.93)}
+.cbtn small{font-size:10px;font-weight:600;opacity:.85;display:block;margin-top:3px}
+.cbtn.empty{background:#fff;color:var(--habit);box-shadow:inset 0 0 0 3px var(--habit)}
+.cbtn.sm{width:46px;height:46px;border-radius:14px;font-size:16px}
+.todayp{display:flex;gap:6px;margin:12px 0 10px;flex-wrap:wrap}
+.todayp .p{display:flex;align-items:center;gap:5px;background:#f5f5f8;border-radius:999px;padding:3px 9px 3px 3px;font-size:13px;font-weight:600}
+.todayp .z{color:var(--ink3)}
+.cg{display:grid;grid-template-rows:repeat(7,10px);grid-auto-flow:column;grid-auto-columns:10px;gap:3px;justify-content:end;margin-top:12px;cursor:pointer}
+.cg i{border-radius:2.5px;display:block}
+.mweek{display:flex;gap:8px;align-items:flex-end;height:64px;margin-top:14px;cursor:pointer}
+.mweek .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.mweek .st{display:flex;flex-direction:column-reverse;gap:1.5px;width:100%;max-width:26px}
+.mweek .st i{display:block;border-radius:3px}
+.mweek .gh{width:100%;max-width:26px;height:6px;border-radius:3px;background:#eee}
+.mwl{display:flex;gap:8px;margin-top:4px}
+.mwl div{flex:1;text-align:center;font-size:10px;color:var(--ink2)}
+.mwl div.td{color:#000;font-weight:700}
+.mrow{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:var(--ink2)}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{background:#fff;border-radius:24px;padding:12px;min-height:170px;display:flex;flex-direction:column}
+.tile .r1{display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer}
+.tile .nm{font-weight:700;font-size:15px;margin:6px 0 0;cursor:pointer;display:flex;gap:5px;align-items:center}
+.tile .mweek{height:46px;gap:4px;margin-top:auto}
+.tile .mweek .st,.tile .mweek .gh{max-width:16px}
+.sbadge{font-size:11px;font-weight:700;color:#d9480f;background:#fff0e6;border-radius:999px;padding:2px 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Concept D: Together chart prototype</h1>
+<p class="lede">The Pull-ups habit is shared by You, Taylor and Marta, and each tap adds 5. Today is Fri, Nov 27 (so you can see a mostly full week). In the phone, tap the Pull-ups card header or its chart to open Habit Detail, and tap the purple button to add 5 to your own count. In Detail, <b>Week</b> is the default view: tap any bar to select that day, and use the chevrons to move between weeks. Use the controls on the right to switch how the selected day is shown and how the Overview card looks. You can also click any card in the gallery.</p>
+<div class="layout">
+  <div class="phone"><div class="status"><span>9:41</span><span>●●● ◔ ▮</span></div><div class="screen" id="screen"></div><div class="homebar"></div></div>
+  <div class="side">
+    <div class="panel"><h3>Selected day: how it’s shown</h3><div class="opts" id="optDay"></div></div>
+    <div class="panel"><h3>Overview card</h3><div class="opts" id="optOv"></div></div>
+    <div class="panel"><h3>Segment labels in Week view</h3><div class="opts" id="optLbl"></div></div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</div>
+</div>
+
+<script>
+// ---------- data ----------
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const D=(y,m,d)=>new Date(y,m,d);
+const key=d=>`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const monday=d=>add(d,-((d.getDay()+6)%7));
+const TODAY=D(2026,10,27), TK=key(TODAY);
+const START=D(2026,6,27); // Monday, ~17 weeks back
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const M=[
+ {id:'you',name:'You',ini:'Y',color:'#3F7BE0',skip:.2,lo:2,hi:8,seed:7},
+ {id:'tay',name:'Taylor',ini:'T',color:'#E8735A',skip:.33,lo:1,hi:5,seed:21},
+ {id:'mar',name:'Marta',ini:'M',color:'#2FA36B',skip:.45,lo:5,hi:12,seed:99},
+];
+const v={}; // v[member][key]
+M.forEach(m=>{const r=rng(m.seed);v[m.id]={};for(let d=new Date(START);d<=D(2026,11,31);d=add(d,1)){const k=key(d);
+  if(d>TODAY){v[m.id][k]=null;continue} v[m.id][k]=r()<m.skip?0:5*Math.round(m.lo+r()*(m.hi-m.lo))}});
+v.you[TK]=30;v.tay[TK]=15;v.mar[TK]=0;
+// yesterday: a personal best for Marta
+v.mar[key(add(TODAY,-1))]=65;
+M.forEach(m=>{const s=Object.values(v[m.id]).filter(x=>x>0).sort((a,b)=>a-b);m.p90=s[Math.floor(s.length*.9)];m.med=s[Math.floor(s.length*.5)];m.best=s[s.length-1];
+  const yr=rng(m.seed+5);m.months=MON.map((_,i)=>{if(i>10)return null;if(i>=7)return null;return Math.round((m.med*(1-m.skip)*30)*(.7+yr()*.6)/5)*5});});
+const val=(m,d)=>v[m.id][key(d)];
+const monthSum=(m,mi)=>{if(m.months[mi]!=null)return m.months[mi];let s=0;for(let d=D(2026,mi,1);d.getMonth()===mi;d=add(d,1))s+=val(m,d)||0;return s};
+const allDayMax=Math.max(...Object.keys(v.you).map(k=>M.reduce((a,m)=>a+(v[m.id][k]||0),0)));
+
+// ---------- state ----------
+const S={screen:'overview',period:'Week',week:monday(TODAY),month:10,sel:TK,selMonth:10,day:'share',ov:'strip',lbl:'none'};
+const DAYV={list:'Breakdown list',share:'Share bar',rings:'Rings vs usual',callout:'Chart callout',sentence:'Sentence'};
+const DAYD={
+ list:'One row per Member with the amount and a short bar measured against their own usual day. Exact and easy to scan, and it scales to 10 Members.',
+ share:'Total first, then one bar split by who contributed. The most “together” option, but it’s really a share of the total, so the biggest contributor dominates.',
+ rings:'Each ring fills against that person’s usual (median) day. Taylor’s 15 can close a ring just like Marta’s 50, which keeps it cooperative.',
+ callout:'There’s no card. A bubble floats over the selected bar. This is the most compact option, but it only fits about 5 Members.',
+ sentence:'Plain language: “45 together. Taylor’s right on their usual, and Marta hasn’t logged yet.” Warm and readable. Numbers are less scannable.'};
+const OVV={week:'Mini week bars',strip:'Today strip + your grid',group:'Group grid',compact:'Compact layout'};
+const LBL={num:'Numbers in segments',none:'No labels',tot:'Totals only'};
+
+// ---------- helpers ----------
+const av=(m,c='')=>`<div class="av ${c}" style="background:${m.color}">${m.ini}</div>`;
+const alpha=(h,a)=>{const n=parseInt(h.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`};
+function unitFor(){ // selected unit data
+  if(S.period==='Year'){const mi=S.selMonth;return{title:`${MON[mi]} 2026`,sub:'month',vals:M.map(m=>monthSum(m,mi)),typ:M.map(m=>m.med*(1-m.skip)*30),today:mi===10,fut:mi>10,unit:'month'}}
+  const [y,mo,d]=S.sel.split('-').map(Number);const dt=D(y,mo,d);
+  return{title:`${WD[dt.getDay()]}, ${MON[mo]} ${d}`,date:dt,vals:M.map(m=>val(m,dt)),typ:M.map(m=>m.p90),med:M.map(m=>m.med),today:S.sel===TK,fut:dt>TODAY,unit:'day'}}
+const sum=a=>a.reduce((x,y)=>x+(y||0),0);
+
+// ---------- day variants ----------
+function dayHead(u){return`<div class="dhead"><b>${u.title}${u.today?' · Today':''}</b><small>${u.fut?'Not yet':sum(u.vals)+' together'}</small></div>`}
+const VAR={
+ list(u){return `<div class="card">${dayHead(u)}<div class="rows">${M.map((m,i)=>{const x=u.vals[i];const best=u.unit==='day'&&x&&x>=m.best;
+   return`<div class="row">${av(m)}<div class="who">${m.name}${best?'<span class="tag">BEST</span>':''}<div class="sub">${x?`usual ${u.unit==='day'?m.med:Math.round(u.typ[i]/5)*5}`:u.today?'hasn’t logged yet':u.fut?'':'rest day'}</div></div>
+   <div class="mbar"><i style="width:${x?Math.min(100,x/u.typ[i]*100):0}%;background:${m.color}"></i></div><div class="num ${x?'':'zero'}">${x||'–'}</div></div>`}).join('')}</div></div>`},
+ share(u){const t=sum(u.vals);return`<div class="card">${dayHead(u)}
+   <div class="share">${t?M.map((m,i)=>u.vals[i]?`<i style="flex:${u.vals[i]};background:${m.color}">${u.vals[i]}</i>`:'').join(''):'<i style="flex:1;background:#eee"></i>'}</div>
+   <div class="legend">${M.map((m,i)=>`<span class="${u.vals[i]?'':'z'}">${av(m,'xs')}${m.name} ${u.vals[i]||'–'}</span>`).join('')}</div></div>`},
+ rings(u){return`<div class="card">${dayHead(u)}<div class="rings">${M.map((m,i)=>{const x=u.vals[i]||0,us=u.unit==='day'?m.med:u.typ[i],raw=x/us,f=Math.min(1,raw),r=27,c=2*Math.PI*r;
+   return`<div class="ring"><svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="36" r="${r}" fill="none" stroke="${alpha(m.color,.15)}" stroke-width="8"/>
+   <circle cx="36" cy="36" r="${r}" fill="none" stroke="${m.color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c*f} ${c}" ${f?'':'opacity="0"'} transform="rotate(-90 36 36)"/>
+   <text x="36" y="41" text-anchor="middle" font-size="16" font-weight="700" fill="#000" font-family="-apple-system,system-ui">${x||'–'}</text></svg><b>${m.name}</b><span>${x?Math.round(raw*100)+'% of usual':u.today?'not yet':'rest'}</span></div>`}).join('')}</div></div>`},
+ callout(u,inline){const b=`<div class="bt">${u.title} · ${sum(u.vals)}</div>${M.map((m,i)=>`<div class="br">${av(m,'xs')}${m.name}<span class="n">${u.vals[i]||'–'}</span></div>`).join('')}`;
+   return inline?b:`<div style="padding:4px 0 8px"><div class="bubble static">${b}</div></div>`},
+ sentence(u){const t=sum(u.vals);const parts=M.map((m,i)=>{const x=u.vals[i];const me=m.id==='you';const n=me?'You':m.name;
+   if(!x)return u.today?`${n} ${me?'haven’t':'hasn’t'} logged yet`:`${n} rested`;
+   if(u.unit==='month')return`${n} did <span class="hl" style="color:${m.color}">${x}</span>`;
+   const tone=x>=m.best?'a personal best':x>=m.p90?'a big day':x>=m.med?'above '+(me?'your':'their')+' usual':'a lighter day';
+   return`${n} did <span class="hl" style="color:${m.color}">${x}</span> (${tone})`});
+   return`<div class="card">${dayHead(u)}<div class="sentence"><span class="hl" style="color:var(--habit)">${t} pull-ups together.</span> ${parts.slice(0,-1).join(', ')}, and ${parts.at(-1)}.</div></div>`},
+};
+
+// ---------- chart ----------
+function columns(){
+  if(S.period==='Week'){return Array.from({length:7},(_,i)=>{const d=add(S.week,i);return{id:key(d),l1:'MTWTFSS'[i],l2:d.getDate(),vals:M.map(m=>val(m,d)),fut:d>TODAY,today:key(d)===TK}})}
+  if(S.period==='Month'){const out=[];for(let d=D(2026,S.month,1);d.getMonth()===S.month;d=add(d,1))out.push({id:key(d),l1:'',l2:d.getDay()===1?d.getDate():'',vals:M.map(m=>val(m,d)),fut:d>TODAY,today:key(d)===TK});return out}
+  return MON.map((n,i)=>({id:i,l1:n[0],l2:'',vals:M.map(m=>i>10?null:monthSum(m,i)),fut:i>10,today:i===10}))}
+function chart(){
+  const cols=columns();const per=S.period;const max=per==='Year'?Math.max(...cols.map(c=>sum(c.vals))):allDayMax;
+  const H=per==='Week'?136:150;const bw=per==='Week'?'34px':per==='Month'?'70%':'72%';
+  const selId=per==='Year'?S.selMonth:S.sel;let bubbleAt=-1;
+  const html=cols.map((c,idx)=>{const sel=c.id===selId;if(sel)bubbleAt=idx;
+    if(c.fut)return`<div class="colw fut"><div class="ghost"></div></div>`;
+    const segs=M.map((m,i)=>{const x=c.vals[i];if(!x)return'';const h=Math.max(3,x/max*H);
+      const lab=per==='Week'&&S.lbl==='num'&&h>=15?x:'';return`<i style="height:${h}px;background:${m.color}">${lab}</i>`}).join('');
+    const t=sum(c.vals);const showT=(per!=='Month'&&S.lbl!=='none')||(per==='Month'&&sel);
+    return`<div class="colw ${sel?'sel':''}" data-col="${c.id}">${showT&&t?`<div class="ctot">${t}</div>`:''}<div class="stack">${segs||`<i style="height:2px;background:#ddd"></i>`}</div></div>`}).join('');
+  const xl=cols.map(c=>`<div class="${c.today?'tday':''} ${c.id===selId?'sel':''}">${c.l1}${c.l1&&c.l2!==''?'<br>':''}${c.l2}</div>`).join('');
+  let bubble='';
+  if(S.day==='callout'&&bubbleAt>=0&&!cols[bubbleAt].fut){const pct=(bubbleAt+.5)/cols.length*100;const clamp=Math.min(Math.max(pct,22),78);
+    bubble=`<div class="bubble" style="left:${clamp}%">${VAR.callout(unitFor(),true)}</div>`}
+  return`<div class="chartwrap ${S.day==='callout'?'callout':''}" style="--bw:${bw}">${bubble}<div class="chart">${html}</div><div class="xl">${xl}</div></div>`}
+
+function periodInfo(){
+  if(S.period==='Week'){const a=S.week,b=add(a,6);const label=key(a)===key(monday(TODAY))?'This week':`${MON[a.getMonth()]} ${a.getDate()} – ${a.getMonth()!==b.getMonth()?MON[b.getMonth()]+' ':''}${b.getDate()}`;
+    const tot=M.map(m=>{let s=0;for(let i=0;i<7;i++)s+=val(m,add(a,i))||0;return s});
+    const prev=sum(M.map(m=>{let s=0;for(let i=1;i<=7;i++){const d=add(a,-i);if(d>=START)s+=val(m,d)||0}return s}));
+    // compare to the same weekday span last week for fairness
+    const span=key(a)===key(monday(TODAY))?((TODAY.getDay()+6)%7)+1:7;
+    const prevSpan=sum(M.map(m=>{let s=0;for(let i=0;i<span;i++)s+=val(m,add(a,i-7))||0;return s}));
+    return{label,tot,prev:prevSpan,canPrev:add(a,-7)>=START,canNext:add(a,7)<=TODAY,cmp:'vs last week'}}
+  if(S.period==='Month'){const mi=S.month;return{label:`${MON[mi]} 2026`,tot:M.map(m=>monthSum(m,mi)),prev:null,canPrev:mi>7,canNext:mi<10}}
+  return{label:'2026',tot:M.map(m=>sum(m.months.map((_,i)=>i>10?0:monthSum(m,i)))),prev:null,canPrev:false,canNext:false}}
+
+// ---------- screens ----------
+function detail(){const P=periodInfo();const u=unitFor();const T=sum(P.tot);
+  const delta=P.prev?Math.round((T-P.prev)/P.prev*100):null;
+  const activeDays=m=>{if(S.period!=='Week')return'';let n=0,k=0;for(let i=0;i<7;i++){const d=add(S.week,i);if(d<=TODAY){k++;if(val(m,d))n++}}return`${n} of ${k} days`};
+  const ydays=M.map(m=>{let n=0;for(let i=0;i<7;i++){const d=add(TODAY,-i);if(val(m,d))n++}return n});
+  // your calendar for the selected month
+  const cm=S.period==='Month'?S.month:(u.date?u.date.getMonth():10);
+  let cal='';const first=D(2026,cm,1);cal+='<div class="t blank"></div>'.repeat((first.getDay()+6)%7);
+  for(let d=first;d.getMonth()===cm;d=add(d,1)){const x=val(M[0],d),k=key(d),fut=d>TODAY;const f=x?Math.min(1,x/M[0].p90):0;
+    cal+=`<div class="t ${fut?'fut':''} ${k===TK?'today':''} ${k===S.sel&&k!==TK?'sel':''}" data-cal="${k}" style="${x?`background:${alpha(M[0].color,.18+.7*f)};${f>.5?'color:#fff':''}`:''}"><span class="d">${d.getDate()}</span>${x?`<span class="a">${x}</span>`:''}</div>`}
+  return`<div class="nav"><button class="navbtn" data-go="overview">‹</button><div class="navtitle">Habit Detail</div><button class="navbtn tint">⚙︎</button></div>
+  <div class="content">
+   <div class="hdr"><div class="emoji">💪</div><div class="name">Pull-ups</div></div>
+   <p class="desc">Every set counts. Log in fives.</p>
+   <div class="badges"><span class="badge">👥 3 Members</span><span class="badge">🔥 6 days</span><span class="badge">+5 per tap</span></div>
+   <div class="card">
+     <div class="seg">${['Week','Month','Year'].map(p=>`<button class="${S.period===p?'on':''}" data-period="${p}">${p}</button>`).join('')}</div>
+     <div class="range"><button class="chev" data-nav="-1" ${P.canPrev?'':'disabled'}>‹</button><span>${P.label}</span><button class="chev" data-nav="1" ${P.canNext?'':'disabled'}>›</button></div>
+     <div class="tot"><b>${T.toLocaleString()}</b><span>together</span>${delta!==null?`<span class="delta ${delta<0?'down':''}">${delta>=0?'↑':'↓'} ${Math.abs(delta)}% ${P.cmp}</span>`:''}</div>
+     ${chart()}
+     <div class="rows" style="margin-top:10px">${M.map((m,i)=>`<div class="row">${av(m)}<div class="who">${m.name}<div class="sub">${S.period==='Week'?activeDays(m):S.period==='Month'?'':'avg '+Math.round(P.tot[i]/11)+' / month'}</div></div><div class="num">${P.tot[i]||'–'}</div></div>`).join('')}</div>
+   </div>
+   ${S.day==='callout'?'':`<div style="margin-top:12px">${VAR[S.day](u)}</div>`}
+   ${S.period==='Year'?'':`<div class="sect">Your ${MON[cm]}<small>tap to add 5</small></div>
+   <div class="card"><div class="dow">${'MTWTFSS'.split('').map(c=>`<div>${c}</div>`).join('')}</div><div class="cal">${cal}</div></div>
+   <div class="note"><b>${u.title}</b><div class="f">Add a private Day Note</div></div>`}
+   <div class="sect">Members<small>3 Members</small></div>
+   <div class="card rows">${M.map((m,i)=>`<div class="row">${av(m)}<div class="who">${m.name}${i===0?' <span class="sub">· Owner</span>':''}<div class="strip" style="margin-top:4px">${Array.from({length:7},(_,j)=>{const x=val(m,add(TODAY,j-6));return`<i style="background:${x?alpha(m.color,.25+.7*Math.min(1,x/m.p90)):alpha(m.color,.1)}"></i>`}).join('')}</div></div><div class="num">${val(m,TODAY)||'–'}</div><span style="color:#c7c7cc">›</span></div>`).join('')}</div>
+  </div>`}
+
+function miniWeek(small){const a=monday(TODAY);const max=allDayMax;const H=small?40:54;
+  const cs=Array.from({length:7},(_,i)=>{const d=add(a,i);if(d>TODAY)return`<div class="c"><div class="gh"></div></div>`;
+    return`<div class="c"><div class="st">${M.map(m=>{const x=val(m,d);return x?`<i style="height:${Math.max(2,x/max*H)}px;background:${m.color}"></i>`:''}).join('')||'<i style="height:2px;background:#ddd"></i>'}</div></div>`}).join('');
+  return`<div class="mweek" data-open="1">${cs}</div>${small?'':`<div class="mwl">${'MTWTFSS'.split('').map((c,i)=>`<div class="${i===4?'td':''}">${c}</div>`).join('')}</div>`}`}
+function yourGrid(group){let h='';const end=add(monday(TODAY),6);for(let d=new Date(START);d<=end;d=add(d,1)){const k=key(d);
+   let bg;if(d>TODAY)bg=alpha('#6E5BD8',.05);else if(group){const t=M.reduce((a,m)=>a+(v[m.id][k]||0),0);bg=t?alpha('#6E5BD8',.15+.75*Math.min(1,t/(allDayMax*.75))):alpha('#6E5BD8',.08)}
+   else{const x=v.you[k];bg=x?alpha(M[0].color,.2+.75*Math.min(1,x/M[0].p90)):alpha(M[0].color,.08)}
+   h+=`<i style="background:${bg};${k===TK?'box-shadow:inset 0 0 0 1.5px #1c1c1e':''}"></i>`}return`<div class="cg" data-open="1">${h}</div>`}
+function todayStrip(){const t=M.reduce((a,m)=>a+(val(m,TODAY)||0),0);
+  return`<div class="todayp">${M.map(m=>{const x=val(m,TODAY);return`<span class="p">${av(m,'sm')}<span class="${x?'':'z'}">${x||'–'}</span></span>`}).join('')}<span class="p" style="padding-left:9px;color:var(--habit)">${t} today</span></div>`}
+function cbtn(small){const x=val(M[0],TODAY);return`<button class="cbtn ${x?'':'empty'} ${small?'sm':''}" data-bump="1">${x?`<div style="text-align:center">${x}<small>+5</small></div>`:'+5'}</button>`}
+
+function overview(){const t=M.reduce((a,m)=>a+(val(m,TODAY)||0),0);const wk=sum(M.map(m=>{let s=0;for(let i=0;i<7;i++)s+=val(m,add(monday(TODAY),i))||0;return s}));
+  const head=`<div class="top" data-open="1"><div class="emoji">💪</div><div class="tt"><b>Pull-ups <span class="ppl">👥 3</span></b><span>Every set counts. Log in fives.</span></div>`;
+  let card;
+  if(S.ov==='week')card=`<div class="hcard">${head}${cbtn()}</div>${miniWeek()}<div class="mrow"><span style="display:flex;gap:4px;align-items:center">${M.map(m=>av(m,'xs')).join('')}</span><span><b style="color:#000">${t}</b> today · <b style="color:#000">${wk}</b> this week</span></div></div>`;
+  else if(S.ov==='strip')card=`<div class="hcard">${head}${cbtn()}</div>${todayStrip()}${yourGrid(false)}</div>`;
+  else if(S.ov==='group')card=`<div class="hcard">${head}${cbtn()}</div>${todayStrip()}${yourGrid(true)}<div class="hint" style="margin-top:6px">Tiles = everyone’s total that day</div></div>`;
+  const other=(e,n,d,c,done)=>`<div class="hcard"><div class="top"><div class="emoji">${e}</div><div class="tt"><b>${n}</b><span>${d}</span></div><div class="cbtn ${done?'':'empty'}" style="background:${done?c:'#fff'};box-shadow:inset 0 0 0 3px ${c};color:${done?'#fff':c}">${done?'✓':''}</div></div>
+    <div class="cg">${Array.from({length:7*18-5},(_,i)=>`<i style="background:${alpha(c,(i*37%11)>5?.55:.1)}"></i>`).join('')}</div></div>`;
+  let body;
+  if(S.ov==='compact'){body=`<div class="duo">
+    <div class="tile"><div class="r1" data-open="1"><span style="font-size:28px">💪</span>${cbtn(true)}</div><div class="nm" data-open="1">Pull-ups <span class="ppl">👥3</span></div><div style="font-size:11px;color:var(--ink2);margin:2px 0 8px">${t} today together</div>${miniWeek(true)}</div>
+    <div class="tile" style="background:#eef4ff"><div class="r1"><span style="font-size:28px">💧</span><div class="cbtn sm empty" style="box-shadow:inset 0 0 0 3px #3F7BE0;color:#3F7BE0">+</div></div><div class="nm">Drink water</div><div style="font-size:11px;color:var(--ink2);margin:2px 0 8px">3 / 8</div><div class="cg" style="grid-template-rows:repeat(7,6px);grid-auto-columns:6px;gap:2px;margin-top:auto">${Array.from({length:7*9},(_,i)=>`<i style="background:${alpha('#3F7BE0',(i*29%7)>3?.5:.12)}"></i>`).join('')}</div></div>
+    <div class="tile" style="background:#eefaf3"><div class="r1"><span style="font-size:28px">📖</span><div class="cbtn sm" style="background:#2FA36B;color:#fff">✓</div></div><div class="nm">Read</div><div style="font-size:11px;color:var(--ink2);margin:2px 0 8px">15 pages</div></div>
+    <div class="tile" style="background:#fff4ee"><div class="r1"><span style="font-size:28px">🏃</span><div class="cbtn sm empty" style="box-shadow:inset 0 0 0 3px #E8735A;color:#E8735A"></div></div><div class="nm">Exercise</div></div>
+  </div>`}
+  else body=card+other('📖','Read','Five pages is enough to keep the thread.','#2FA36B',true)+other('💧','Drink water','Stay hydrated throughout the day.','#3F7BE0',false);
+  return`<div class="nav"><button class="navbtn tint">⚙︎</button><div></div><button class="navbtn tint">+</button></div>
+  <div class="content"><div class="kicker">FRIDAY, NOVEMBER 27</div><div class="big">A little, every day.</div>${body}</div>`}
+
+// ---------- render ----------
+const screen=document.getElementById('screen');
+function render(keepScroll){const st=screen.scrollTop;screen.innerHTML=S.screen==='overview'?overview():detail();if(keepScroll)screen.scrollTop=st;
+  document.getElementById('optDay').innerHTML=Object.entries(DAYV).map(([k,n])=>`<button class="opt ${S.day===k?'on':''}" data-day="${k}">${n}</button>`).join('');
+  document.getElementById('optOv').innerHTML=Object.entries(OVV).map(([k,n])=>`<button class="opt ${S.ov===k?'on':''}" data-ov="${k}">${n}</button>`).join('');
+  document.getElementById('optLbl').innerHTML=Object.entries(LBL).map(([k,n])=>`<button class="opt ${S.lbl===k?'on':''}" data-lbl="${k}">${n}</button>`).join('');
+  const u=unitFor();
+  document.getElementById('gallery').innerHTML=Object.keys(VAR).map(k=>`<div class="gitem ${S.day===k?'on':''}" data-day="${k}"><div class="gt">${DAYV[k]}</div><div class="gd">${DAYD[k]}</div><div class="gbody">${VAR[k](u)}</div></div>`).join('');}
+document.body.addEventListener('click',e=>{const t=e.target.closest('[data-go],[data-open],[data-bump],[data-period],[data-nav],[data-col],[data-cal],[data-day],[data-ov],[data-lbl]');if(!t)return;const ds=t.dataset;let keep=true;
+  if(ds.bump){e.stopPropagation();v.you[TK]=(v.you[TK]||0)+5}
+  else if(ds.open){S.screen='detail';S.period='Week';S.week=monday(TODAY);S.sel=TK;keep=false}
+  else if(ds.go){S.screen=ds.go;keep=false}
+  else if(ds.period){S.period=ds.period;if(ds.period==='Month'){S.month=10}if(ds.period==='Week'){S.week=monday(TODAY)}S.sel=TK;S.selMonth=10}
+  else if(ds.nav){const n=+ds.nav;if(S.period==='Week'){S.week=add(S.week,7*n);const last=add(S.week,6);S.sel=key(last>TODAY?TODAY:last)}
+    else if(S.period==='Month'){S.month+=n;const end=D(2026,S.month+1,0);S.sel=key(end>TODAY?TODAY:end)}}
+  else if(ds.col!==undefined){if(S.period==='Year')S.selMonth=+ds.col;else S.sel=ds.col}
+  else if(ds.cal){const [y,mo,d]=ds.cal.split('-').map(Number);const dt=D(y,mo,d);if(dt<=TODAY){if(S.sel===ds.cal){v.you[ds.cal]=(v.you[ds.cal]||0)+5}S.sel=ds.cal;S.week=monday(dt)}}
+  else if(ds.day)S.day=ds.day;else if(ds.ov){S.ov=ds.ov;S.screen='overview';keep=false}else if(ds.lbl)S.lbl=ds.lbl;
+  render(keep)});
+render();
+</script>
+</body>
+</html>
