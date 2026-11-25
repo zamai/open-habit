@@ -1,0 +1,30 @@
+name: TestFlight (Xcode Cloud)
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch Xcode Cloud archives (empty = the branch this run uses)
+        required: false
+      what_to_test:
+        description: What to test in this build
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    environment: testflight
+    steps:
+      - uses: actions/checkout@v5
+      - name: Archive in Xcode Cloud and distribute to every TestFlight group
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          WHAT_TO_TEST: ${{ inputs.what_to_test }}
+          BRANCH: ${{ inputs.branch || github.ref_name }}
+        run: python3 scripts/ci/wait-testflight.py --xcode-cloud "$BRANCH"
