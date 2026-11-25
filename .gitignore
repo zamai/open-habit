@@ -24,3 +24,10 @@ xcuserdata/
 
 # Locally installed agent skills
 .agents/skills/
+
+# Claude Code: share project settings and skills (the global gitignore ignores .claude);
+# keep worktrees, settings.local.json and other machine-local state ignored
+!.claude/
+.claude/*
+!.claude/settings.json
+!.claude/skills/
