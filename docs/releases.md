@@ -23,14 +23,14 @@ gh workflow run testflight.yml --ref some-branch -f what_to_test='What to test i
 
 The `branch` input defaults to the branch the run uses. It must be set explicitly only to build a different branch than the workflow file comes from.
 
-`scripts/ci/wait-testflight.py --xcode-cloud <branch>` starts the Xcode Cloud workflow named `Release` (override with `XCODE_CLOUD_WORKFLOW`) on that branch. It waits for the archive and upload, then waits for processing. It assigns every configured TestFlight group and sets What to Test. It submits Beta App Review when Apple requires it. It uses the `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_PRIVATE_KEY` secrets in the `testflight` environment.
+`scripts/ci/wait-testflight.py --xcode-cloud <branch>` starts the Xcode Cloud workflow named `Release OH` (override with `XCODE_CLOUD_WORKFLOW`) on that branch. It waits for the archive and upload, then waits for processing. It assigns every configured TestFlight group and sets What to Test. It submits Beta App Review when Apple requires it. It uses the `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_PRIVATE_KEY` secrets in the `testflight` environment.
 
 Xcode Cloud selects the Xcode version, so Apple's newer-SDK upload requirements do not depend on the macOS version of a local Mac. Signing is Apple-managed automatic signing; the 1Password identity and local profiles are not used. Each run spends compute hours from the 25 hours per month included with the Apple Developer Program. The workflow only archives, so a release costs minutes, not the full UI test suite.
 
 One-time setup, done by the Account Holder or an Admin:
 
 1. In Xcode, choose Integrate › Create Workflow, select the OpenHabit iOS app, and grant Xcode Cloud access to the `zamai/open-habit` GitHub repository.
-2. Name the workflow `Release` and set Environment › Xcode Version to Latest Release. The only start condition is Manual Start on any branch; remove Branch Changes so pushes do not spend compute hours. Add an Archive action for iOS with the `OpenHabit` scheme and Distribution Preparation set to App Store Connect. TestFlight (Internal Testing Only) builds cannot reach external testers. Add a TestFlight Internal Testing post-action; the workflow script adds the external groups.
+2. Name the workflow `Release OH` (workflow names must be unique across the team) and set Environment › Xcode Version to Latest Release. The only start condition is Manual Start on any branch; remove Branch Changes so pushes do not spend compute hours. Add an Archive action for iOS with the `OpenHabit` scheme and Distribution Preparation set to App Store Connect. TestFlight (Internal Testing Only) builds cannot reach external testers. Add a TestFlight Internal Testing post-action; the workflow script adds the external groups.
 3. In App Store Connect, go to Xcode Cloud › Settings › Build Number and set the next build number above the highest uploaded build.
 
 ## Local TestFlight publishing (fallback)
