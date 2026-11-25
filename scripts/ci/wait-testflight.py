@@ -137,7 +137,7 @@ def all_pages(path):
 if sys.argv[1] == '--xcode-cloud':
     # Start the Xcode Cloud workflow on a branch, wait for its archive, then continue as a normal upload.
     branch = sys.argv[2]
-    workflow_name = os.environ.get('XCODE_CLOUD_WORKFLOW', 'Release')
+    workflow_name = os.environ.get('XCODE_CLOUD_WORKFLOW', 'Release OH')
     products = get('ciProducts?filter[app]=' + APP_ID)['data']
     if not products:
         raise SystemExit('Open Habit has no Xcode Cloud product; create the first workflow in Xcode (see docs/releases.md).')
