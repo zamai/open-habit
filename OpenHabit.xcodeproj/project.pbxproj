@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05626DEF36723D5B37E53997 /* SharedTogetherViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070E2510E6BA27EFDCB2F81E /* SharedTogetherViews.swift */; };
 		05BAC5CECEC2960F59DC1EF0 /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D164BBCCAE5874C2C25B801 /* SharedStore.swift */; };
 		0634E4F5AF2B1FD69F488A54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08CE54FF173592E32D6B5418 /* Assets.xcassets */; };
 		0B4CC8B373A3D9C257996AE1 /* WidgetLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE5AC14C1BFE87E3A8EBBEE /* WidgetLayoutTests.swift */; };
@@ -123,6 +124,7 @@
 
 /* Begin PBXFileReference section */
 		0121BBA5B424091CF89D5B0C /* OpenHabitWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenHabitWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		070E2510E6BA27EFDCB2F81E /* SharedTogetherViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTogetherViews.swift; sourceTree = "<group>"; };
 		08CE54FF173592E32D6B5418 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0DC598873FCAEF5C6242E2C9 /* HabitWidgetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitWidgetContent.swift; sourceTree = "<group>"; };
 		0F6881D13A3A75264CAC9AF7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -284,6 +286,7 @@
 				7D6E12A19A1FC02234EC8F07 /* Previews.swift */,
 				D403E24DB410F714097FFC5E /* SettingsView.swift */,
 				BD657C29628CD4F337145C30 /* SharedHabitViews.swift */,
+				070E2510E6BA27EFDCB2F81E /* SharedTogetherViews.swift */,
 			);
 			name = App;
 			path = OpenHabit/App;
@@ -646,6 +649,7 @@
 				3592F417ACF2FE6EB8EA6DA5 /* SharedCloudSync.swift in Sources */,
 				2EF182EE28CE6AAA98D614EF /* SharedHabitViews.swift in Sources */,
 				255624308EB40131C9A12700 /* SharedStore.swift in Sources */,
+				05626DEF36723D5B37E53997 /* SharedTogetherViews.swift in Sources */,
 				F035CB87B7BB03CE17FC3114 /* SharingStore.swift in Sources */,
 				7526FDD0C8A8F55B5477C3BA /* WatchSync.swift in Sources */,
 			);

@@ -380,7 +380,7 @@ struct SharedHabitMembersSection: View {
                     .font(.subheadline).foregroundStyle(.secondary)
             }
             VStack(spacing: 0) {
-                ForEach(Array(state.snapshot.orderedMembers(currentMemberID: state.membership.memberID).enumerated()), id: \.element.id) { index, member in
+                ForEach(Array(state.displayMembers(local: model.data).enumerated()), id: \.element.id) { index, member in
                     NavigationLink {
                         SharedMemberDetailView(
                             member: member,
@@ -846,7 +846,7 @@ private struct SharedMetric: View {
     }
 }
 
-private extension SharedMember {
+extension SharedMember {
     var tint: Color {
         Color(
             red: Double((colorRGB >> 16) & 0xFF) / 255,

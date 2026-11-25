@@ -22,7 +22,8 @@ Habit Detail
 ├── Habit Settings button: sliders icon, opens Edit Habit
 ├── Habit Header
 ├── Metric Cards
-├── Month Calendar
+├── Month Calendar: Private Habits only
+├── Together Chart and Share Bar: Shared Habits only
 ├── Inline Note Editor: selected date's private Day Note
 └── Members Section: Shared Habits only
 
@@ -149,6 +150,10 @@ The **Habit Actions** section is the grouped list of Share Habit, Archive Habit,
 
 | Canonical name | Where to look | Behavior |
 | --- | --- | --- |
+| Together Chart | Week / Month / Year card with stacked columns in a Shared Habit's Habit Detail | Replaces the Month Calendar for Shared Habits. One column per day (month in Year), one segment per Member in Member Color. Week is a rolling seven days ending today. Tap a column to select it; this never logs. |
+| Period Totals | Member rows under the Together Chart | Each Member's total and active days for the shown period, in Member order. |
+| Share Bar | Card below the Together Chart | The selected day's total split by Member, with a legend of amounts. Edit My Day opens the Day Note Sheet for that date. |
+| Today Strip | Member initials with today's amounts on a Shared Habit Card in Overview | Shows each Member's amount today and the group's total. Your own Completion Grid stays below it. |
 | Members Section | Members heading and grouped Member Rows after the Inline Note Editor | Shows participants in a Shared Habit. It is the last section in Habit Detail. |
 | Member Row | Colored initial, name, seven small bars, today's count, and chevron | Tap to open Member Progress. The Owner can touch and hold another Member's row to remove them with confirmation. |
 | Member Progress Strip | Seven short bars below a Member Name | Shows that Member's last seven days, not a Month Calendar. |

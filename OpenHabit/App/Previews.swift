@@ -38,6 +38,54 @@ import WidgetKit
 }
 
 #if DEBUG && targetEnvironment(simulator)
+/// A three-person Pull-ups Counter Habit with months of shared history, for designing Shared Habit Detail.
+@MainActor func sharedCounterPreviewModel() -> AppModel {
+    var journal = Journal()
+    let habit = Habit(id: UUID(uuidString: "00000000-0000-0000-0000-0000000000AA")!, name: "Pull-ups", emoji: "💪", detail: "Every set counts. Log in fives.", color: .purple,
+                      streakGoal: StreakGoal(period: .daily), counter: Counter(step: 5, unit: "pull-ups"))
+    try! journal.save(habit)
+    var seed: UInt64 = 7
+    func random() -> Double {
+        seed = seed &* 6364136223846793005 &+ 1442695040888963407
+        return Double(seed >> 11) / Double(1 << 53)
+    }
+    func history(skip: Double, low: Int, high: Int) -> [String: Int] {
+        (1..<120).reduce(into: [:]) { counts, offset in
+            guard random() >= skip else { return }
+            let day = LocalDay.string(Calendar.current.date(byAdding: .day, value: -offset, to: Date())!)
+            counts[day] = 5 * (low + Int(random() * Double(high - low + 1)))
+        }
+    }
+    for (day, amount) in history(skip: 0.2, low: 2, high: 8) { try! journal.setCount(habit.id, day: day, count: amount) }
+    try! journal.setCount(habit.id, day: LocalDay.string(), count: 30)
+    var settings = journal.dataset.settings
+    settings.examplesDismissed = true
+    journal.append(.settings(settings))
+    try! sharedStore().transaction { $0 = journal }
+    let model = AppModel()
+    model.reload()
+    model.loading = false
+    var definition = SharedHabitDefinition(habit: habit, weekStart: .monday)
+    definition.id = UUID()
+    let me = SharedMember(name: "Alex", colorIndex: 2, role: .owner, joinedAt: Date().addingTimeInterval(-86_400 * 200))
+    var taylor = SharedMember(name: "Taylor", colorIndex: 3, role: .member, joinedAt: Date().addingTimeInterval(-86_400 * 150),
+                              counts: history(skip: 0.33, low: 1, high: 5))
+    var marta = SharedMember(name: "Marta", colorIndex: 8, role: .member, joinedAt: Date().addingTimeInterval(-86_400 * 140),
+                             counts: history(skip: 0.45, low: 5, high: 12))
+    taylor.counts[LocalDay.string()] = 15
+    marta.counts[LocalDay.string()] = nil
+    model.sharedHabits[habit.id] = SharedHabitState(
+        membership: SharedHabitMembership(
+            sharedHabitID: definition.id, localHabitID: habit.id, memberID: me.id, role: .owner,
+            visibleFromDay: nil, zoneName: "Preview", zoneOwnerName: "Preview", shareRecordName: "Preview"
+        ),
+        snapshot: SharedHabitSnapshot(definition: definition, members: [me, taylor, marta])
+    )
+    return model
+}
+#endif
+
+#if DEBUG && targetEnvironment(simulator)
 /// Synthetic, repeatable content for the opt-in screen-width audit.
 @MainActor func layoutAuditModel() -> AppModel {
     let model = sharedPreviewModel()

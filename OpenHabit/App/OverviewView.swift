@@ -22,7 +22,14 @@ struct OverviewView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("overviewCompact") private var compact = false
     @State private var sheet: AppSheet?
-    @State private var path: [UUID] = []
+    @State private var path: [UUID] = {
+        #if DEBUG && targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--open-demo-habit") {
+            return [UUID(uuidString: "00000000-0000-0000-0000-0000000000AA")!]
+        }
+        #endif
+        return []
+    }()
     @State private var dragging: UUID?
     /// Card order while a drag is in progress, saved once when the drop finishes.
     @State private var draftOrder: [UUID]?
@@ -141,7 +148,8 @@ struct OverviewView: View {
         }
     }
     @ViewBuilder private func habitCard(_ habit: Habit, now: Date) -> some View {
-        let memberCount = model.sharedHabit(for: habit.id)?.snapshot.members.count
+        let shared = model.sharedHabit(for: habit.id)
+        let memberCount = shared?.snapshot.members.count
         if compact && !typeSize.isAccessibilitySize {
             CompactHabitCard(habit: habit, data: model.data, now: now, sharedMemberCount: memberCount,
                              reordering: reordering,
@@ -149,6 +157,7 @@ struct OverviewView: View {
                              complete: { model.update { try $0.toggle(habit.id) } })
         } else {
             HabitCard(habit: habit, data: model.data, now: now, sharedMemberCount: memberCount,
+                      sharedMembers: shared?.displayMembers(local: model.data),
                       reordering: reordering,
                       open: { if !reordering { path.append(habit.id) } },
                       complete: { model.update { try $0.toggle(habit.id) } })
@@ -286,6 +295,7 @@ struct HabitCard: View {
     let data: Dataset
     let now: Date
     let sharedMemberCount: Int?
+    var sharedMembers: [SharedMember]? = nil
     var reordering = false
     let open: () -> Void
     let complete: () -> Void
@@ -331,6 +341,10 @@ struct HabitCard: View {
                     CompletionButton(habit: habit, count: data.day(habit.id, LocalDay.string(now)).count,
                                      action: complete, alignment: .trailing)
                 }
+            }
+            if let sharedMembers {
+                SharedTodayStrip(members: sharedMembers, tint: habit.tint, today: LocalDay.string(now))
+                    .padding(.leading, historyLeadingInset)
             }
             Button(action: open) {
                 // Counter Habits trade months of history for tiles large enough to read their amounts.

@@ -231,3 +231,23 @@ public extension Dataset {
         return result
     }
 }
+
+public extension SharedHabitState {
+    /// Members in display order. The current Member's counts come from the local Dataset,
+    /// so their new Completions appear before the next synchronization.
+    func displayMembers(local: Dataset) -> [SharedMember] {
+        snapshot.orderedMembers(currentMemberID: membership.memberID).map { member in
+            guard member.id == membership.memberID else { return member }
+            var current = member
+            current.counts = local.sharedCounts(for: membership.localHabitID, visibleFromDay: membership.visibleFromDay)
+            return current
+        }
+    }
+}
+
+public extension SharedMember {
+    /// The sum of recorded amounts from `first` through `last`, both inclusive `YYYY-MM-DD` days.
+    func total(from first: String, through last: String) -> Int {
+        counts.reduce(0) { sum, entry in entry.key >= first && entry.key <= last ? sum + entry.value : sum }
+    }
+}

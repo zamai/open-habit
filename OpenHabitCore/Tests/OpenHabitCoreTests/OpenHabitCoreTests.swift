@@ -403,6 +403,32 @@ final class OpenHabitCoreTests: XCTestCase {
         XCTAssertFalse(encoded.contains("2026-09-07"))
     }
 
+    func testSharedDisplayMembersUseLocalCountsForCurrentMemberAndTotalInclusiveRanges() throws {
+        let localHabit = Habit(name: "Pull-ups", emoji: "💪")
+        var local = Dataset()
+        local.habits = [localHabit]
+        local.days[Dataset.key(localHabit.id, "2026-11-20")] = HabitDay(count: 99)
+        local.days[Dataset.key(localHabit.id, "2026-11-24")] = HabitDay(count: 30, note: "Private")
+        let owner = SharedMember(name: "Taylor", colorIndex: 0, role: .owner, joinedAt: now,
+                                 counts: ["2026-11-22": 10, "2026-11-23": 15, "2026-11-24": 20])
+        let current = SharedMember(name: "Jan", colorIndex: 1, role: .member, joinedAt: now.addingTimeInterval(1),
+                                   counts: ["2026-11-24": 5])
+        let definition = SharedHabitDefinition(habit: localHabit, weekStart: .monday)
+        let state = SharedHabitState(
+            membership: SharedHabitMembership(
+                sharedHabitID: definition.id, localHabitID: localHabit.id, memberID: current.id, role: .member,
+                visibleFromDay: "2026-11-21", zoneName: "z", zoneOwnerName: "o", shareRecordName: "s"
+            ),
+            snapshot: SharedHabitSnapshot(definition: definition, members: [owner, current])
+        )
+
+        let members = state.displayMembers(local: local)
+        XCTAssertEqual(members.map(\.id), [current.id, owner.id])
+        XCTAssertEqual(members[0].counts, ["2026-11-24": 30], "Fresh local counts win; days before the Shared History stay hidden")
+        XCTAssertEqual(members[1].total(from: "2026-11-23", through: "2026-11-24"), 35)
+        XCTAssertEqual(members[1].total(from: "2026-11-25", through: "2026-11-30"), 0)
+    }
+
     func testSharedDefinitionAdoptsCommonFieldsAndKeepsLocalIdentityAndOrganization() {
         var local = Habit(id: UUID(), name: "Gym", emoji: "🏋️", detail: "Old", color: .orange, target: 1, createdAt: now, archived: true)
         local.categoryIDs = [UUID()]

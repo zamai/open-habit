@@ -34,9 +34,14 @@ struct HabitDetailView: View {
                                 }
                             }.frame(maxWidth: .infinity, alignment: .leading)
                             metrics(for: habit)
-                            MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
-                                          select: incrementDay,
-                                          edit: editDayNote)
+                            if let state = model.sharedHabit(for: habit.id) {
+                                SharedTogetherSection(habit: habit, members: state.displayMembers(local: model.data),
+                                                      selected: $selected, editDay: editDayNote)
+                            } else {
+                                MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
+                                              select: incrementDay,
+                                              edit: editDayNote)
+                            }
                             selectedDay(habit).id("selected-day-note")
                             if let state = model.sharedHabit(for: habit.id) {
                                 SharedHabitMembersSection(state: state)
@@ -75,7 +80,7 @@ struct HabitDetailView: View {
         .onAppear { loadSelectedNote() }
         .task(id: habitID) {
             #if DEBUG && targetEnvironment(simulator)
-            if ProcessInfo.processInfo.arguments.contains("--layout-audit") || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
+            if ProcessInfo.processInfo.arguments.contains("--layout-audit") || ProcessInfo.processInfo.arguments.contains("--shared-counter-demo") || ProcessInfo.processInfo.arguments.contains("--preview-shared-detail") || ProcessInfo.processInfo.arguments.contains("--preview-shared-member-detail") { return }
             #endif
             if model.sharedHabit(for: habitID) != nil { await model.sync() }
         }
