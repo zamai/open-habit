@@ -7,21 +7,26 @@ f = {'key_id': os.environ['ASC_KEY_ID'], 'issuer_id': os.environ['ASC_ISSUER_ID'
 if len(f['private_key']) > 1 and f['private_key'][0] == f['private_key'][-1] and f['private_key'][0] in "'\"":
     f['private_key'] = f['private_key'][1:-1]
 def b64(x): return base64.urlsafe_b64encode(x).rstrip(b'=')
-h=b64(json.dumps({'alg':'ES256','kid':f['key_id'],'typ':'JWT'}).encode())
-p=b64(json.dumps({'iss':f['issuer_id'],'iat':int(time.time()),'exp':int(time.time())+1200,'aud':'appstoreconnect-v1'}).encode())
-msg=h+b'.'+p
-fd,path=tempfile.mkstemp(suffix='.p8')
-try:
- with os.fdopen(fd,'w') as out: out.write(f['private_key'])
- sig=subprocess.check_output(['openssl','dgst','-sha256','-sign',path],input=msg)
-finally: os.unlink(path)
-i=2
-assert sig[i]==2
-n=sig[i+1];r=int.from_bytes(sig[i+2:i+2+n],'big');i+=2+n
-assert sig[i]==2
-n=sig[i+1];s=int.from_bytes(sig[i+2:i+2+n],'big')
-token=(msg+b'.'+b64(r.to_bytes(32,'big')+s.to_bytes(32,'big'))).decode()
+def make_token():
+ h=b64(json.dumps({'alg':'ES256','kid':f['key_id'],'typ':'JWT'}).encode())
+ p=b64(json.dumps({'iss':f['issuer_id'],'iat':int(time.time()),'exp':int(time.time())+1200,'aud':'appstoreconnect-v1'}).encode())
+ msg=h+b'.'+p
+ fd,path=tempfile.mkstemp(suffix='.p8')
+ try:
+  with os.fdopen(fd,'w') as out: out.write(f['private_key'])
+  sig=subprocess.check_output(['openssl','dgst','-sha256','-sign',path],input=msg)
+ finally: os.unlink(path)
+ i=2
+ assert sig[i]==2
+ n=sig[i+1];r=int.from_bytes(sig[i+2:i+2+n],'big');i+=2+n
+ assert sig[i]==2
+ n=sig[i+1];s=int.from_bytes(sig[i+2:i+2+n],'big')
+ token=(msg+b'.'+b64(r.to_bytes(32,'big')+s.to_bytes(32,'big'))).decode()
+ return token, time.time()
+token, token_time = make_token()
 def request(method, path, body=None, beta_review_conflict_ok=False):
+ global token, token_time
+ if time.time() - token_time > 900: token, token_time = make_token()
  url = path if path.startswith('https://') else 'https://api.appstoreconnect.apple.com/v1/' + path
  data = json.dumps(body).encode() if body is not None else None
  req=urllib.request.Request(url,data=data,method=method,headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
@@ -122,6 +127,52 @@ if sys.argv[1] == '--retry-external-review':
             raise SystemExit(0)
     print('No valid build is assigned to the external group.')
     raise SystemExit(0)
+
+def all_pages(path):
+    while path:
+        page = get(path)
+        yield from page['data']
+        path = page.get('links', {}).get('next')
+
+if sys.argv[1] == '--xcode-cloud':
+    # Start the Xcode Cloud workflow on a branch, wait for its archive, then continue as a normal upload.
+    branch = sys.argv[2]
+    workflow_name = os.environ.get('XCODE_CLOUD_WORKFLOW', 'Release')
+    products = get('ciProducts?filter[app]=' + APP_ID)['data']
+    if not products:
+        raise SystemExit('Open Habit has no Xcode Cloud product; create the first workflow in Xcode (see docs/releases.md).')
+    workflows = [w for w in all_pages('ciProducts/' + products[0]['id'] + '/workflows?limit=200') if w['attributes']['name'] == workflow_name]
+    if not workflows:
+        raise SystemExit('No Xcode Cloud workflow is named ' + workflow_name + '.')
+    workflow = workflows[0]
+    repository = get('ciWorkflows/' + workflow['id'] + '/repository')['data']
+    refs = [ref for ref in all_pages('scmRepositories/' + repository['id'] + '/gitReferences?limit=200')
+            if ref['attributes'].get('canonicalName') == 'refs/heads/' + branch and not ref['attributes'].get('isDeleted')]
+    if not refs:
+        raise SystemExit('Xcode Cloud does not see branch ' + branch + ' yet; push it and retry.')
+    run = request('POST', 'ciBuildRuns', {'data': {'type': 'ciBuildRuns', 'attributes': {'clean': False}, 'relationships': {
+        'workflow': {'data': {'type': 'ciWorkflows', 'id': workflow['id']}},
+        'sourceBranchOrTag': {'data': {'type': 'scmGitReferences', 'id': refs[0]['id']}}}}})['data']
+    print('Started Xcode Cloud build run', run['attributes'].get('number'), 'on', branch, flush=True)
+    for attempt in range(240):
+        time.sleep(30)
+        attributes = get('ciBuildRuns/' + run['id'])['data']['attributes']
+        print('Xcode Cloud', attributes['executionProgress'], attributes.get('completionStatus') or '', flush=True)
+        if attributes['executionProgress'] == 'COMPLETE':
+            break
+    else:
+        raise SystemExit('Timed out waiting for the Xcode Cloud build run.')
+    if attributes.get('completionStatus') != 'SUCCEEDED':
+        raise SystemExit('Xcode Cloud build run ended ' + str(attributes.get('completionStatus')) + '; inspect it in App Store Connect.')
+    builds = []
+    for attempt in range(40):
+        builds = get('ciBuildRuns/' + run['id'] + '/builds')['data']
+        if builds: break
+        time.sleep(15)
+    if not builds:
+        raise SystemExit('The Xcode Cloud build run produced no TestFlight build; check its TestFlight post-action or archive distribution.')
+    sys.argv[1:] = [builds[0]['attributes']['version']]
+    print('Xcode Cloud uploaded build', sys.argv[1], flush=True)
 
 processing_only = '--processing-only' in sys.argv[2:]
 for attempt in range(60):
