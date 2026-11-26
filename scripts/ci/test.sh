@@ -10,6 +10,8 @@ CREATED_SIMULATOR=""
 SUMMARY_PRINTED=0
 FAILED=()
 RUN_DIR=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/open-habit-tests.XXXXXX")
+# The release gate accepts only content that passed; capture it before anything builds.
+TESTED_TREE=$(bash "$(dirname "$0")/tested-tree.sh" tree)
 
 cleanup() {
   local status=$?
@@ -76,6 +78,7 @@ run_suite ui "${XCODEBUILD[@]}" -resultBundlePath "$RUN_DIR/ui.xcresult" \
 SUMMARY_PRINTED=1
 if [ "${#FAILED[@]}" -eq 0 ]; then
   echo "TESTS PASSED (core, app, ui) in ${SECONDS}s"
+  bash "$(dirname "$0")/tested-tree.sh" record "$TESTED_TREE"
 else
   FAILED_LIST=$(IFS=,; echo "${FAILED[*]}")
   echo "TESTS FAILED: ${FAILED_LIST//,/, } after ${SECONDS}s (result bundles in $RUN_DIR)"

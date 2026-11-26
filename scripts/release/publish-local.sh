@@ -18,6 +18,11 @@ fi
 command -v op >/dev/null
 command -v jq >/dev/null
 if [[ -z "${OPEN_HABIT_SIGNING_KEYCHAIN:-}" ]]; then
+  if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+    echo "Release gate: commit your changes first; a release ships only committed, tested content." >&2
+    exit 1
+  fi
+  bash scripts/ci/tested-tree.sh check HEAD
   exec python3 scripts/release/with-signing-keychain.py "$CONFIG" bash "$PWD/scripts/release/publish-local.sh" "$@"
 fi
 RELEASE_DIR=$(mktemp -d /tmp/open-habit-release.XXXXXX)

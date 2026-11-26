@@ -22,6 +22,7 @@ if [[ -z "${2:-}" ]]; then
     exit 1
   fi
 fi
+bash scripts/ci/tested-tree.sh check "origin/$BRANCH"
 
 CONFIG="${OPEN_HABIT_RELEASE_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/open-habit/release.json}"
 if [[ ! -f "$CONFIG" ]]; then

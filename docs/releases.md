@@ -4,6 +4,8 @@ Open Habit is archived in Xcode Cloud, not on a GitHub-hosted macOS runner. The 
 
 Run `bash scripts/ci/test.sh` locally before committing app changes. The Files round-trip and SpringBoard widget-install tests require separate local checks.
 
+Both publish scripts stop before touching credentials unless the commit being released is on `origin/main` and `scripts/ci/test.sh` passed on that exact content. A pass is keyed by tree content, so a run before committing still counts once the same content is committed.
+
 ## Xcode Cloud TestFlight publishing
 
 Xcode Cloud is the default way to publish. Any branch that is pushed to GitHub can be published. From this Mac:
