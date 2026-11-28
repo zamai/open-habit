@@ -81,6 +81,8 @@ import WidgetKit
         ),
         snapshot: SharedHabitSnapshot(definition: definition, members: [me, taylor, marta])
     )
+    // Persist it like real shared state, so a logged amount reloads with the Members intact.
+    try! sharingStore().write(Array(model.sharedHabits.values))
     return model
 }
 #endif

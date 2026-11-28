@@ -24,7 +24,7 @@ Habit Detail
 ├── Metric Cards
 ├── Month Calendar: Private Habits only
 ├── Together Chart and Share Bar: Shared Habits only
-├── Inline Note Editor: selected date's private Day Note
+├── Inline Note Editor: selected date's private Day Note, Private Habits only
 └── Members Section: Shared Habits only
 
 Habit Settings (screen title: Edit Habit)
@@ -152,9 +152,10 @@ The **Habit Actions** section is the grouped list of Share Habit, Archive Habit,
 | --- | --- | --- |
 | Together Chart | Week / Month / Year card with stacked columns in a Shared Habit's Habit Detail | Replaces the Month Calendar for Shared Habits. One column per day (month in Year), one segment per Member in Member Color. Week is a rolling seven days ending today. Tap a column to select it; this never logs. |
 | Period Totals | Member rows under the Together Chart | Each Member's total and active days for the shown period, in Member order. |
-| Share Bar | Card below the Together Chart | The selected day's total split by Member, with a legend of amounts. Edit My Day opens the Day Note Sheet for that date. |
+| Share Bar | Card below the Together Chart | The selected day's total split by Member, with a legend of amounts. Its right corner holds the Edit My Day pill (pencil) and a Completion Button for the selected day; both are hidden in Year and for future days. |
+| Edit My Day pill | Pencil pill in the Share Bar card | Opens the Day Note Sheet for the selected day, to set an exact amount or the private Day Note. |
 | Today Strip | Member initials with today's amounts on a Shared Habit Card in Overview | Shows each Member's amount today and the group's total. Your own Completion Grid stays below it. |
-| Members Section | Members heading and grouped Member Rows after the Inline Note Editor | Shows participants in a Shared Habit. It is the last section in Habit Detail. |
+| Members Section | Members heading and grouped Member Rows after the Inline Note Editor, or after the Share Bar for Shared Habits | Shows participants in a Shared Habit. It is the last section in Habit Detail. |
 | Member Row | Colored initial, name, seven small bars, today's count, and chevron | Tap to open Member Progress. The Owner can touch and hold another Member's row to remove them with confirmation. |
 | Member Progress Strip | Seven short bars below a Member Name | Shows that Member's last seven days, not a Month Calendar. |
 | Member Progress | Screen opened from a Member Row | Shows that Member's Completion counts and history grid. Other Members' Day Notes are never shown. |

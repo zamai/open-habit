@@ -25,6 +25,9 @@ struct SharedTogetherSection: View {
     let habit: Habit
     let members: [SharedMember]
     @Binding var selected: String
+    /// The current Member's own count for a day, read from local data.
+    let myCount: (String) -> Int
+    let addToDay: (String) -> Void
     let editDay: (String) -> Void
     @State private var period: TogetherPeriod = .week
     @State private var anchor = LocalDay.string()
@@ -185,26 +188,49 @@ struct SharedTogetherSection: View {
                     .font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
             }
             ShareBar(members: members, amounts: amounts)
-            FlowLayout(spacing: 12, lineSpacing: 6) {
-                ForEach(Array(members.enumerated()), id: \.element.id) { index, member in
-                    HStack(spacing: 5) {
-                        MemberInitial(member: member, size: 16)
-                        Text("\(member.name) \(amounts[index] == 0 ? "–" : amounts[index].formatted())")
-                            .font(.footnote.monospacedDigit())
-                            .foregroundStyle(amounts[index] == 0 ? .secondary : .primary)
+            HStack(alignment: .center, spacing: 12) {
+                FlowLayout(spacing: 12, lineSpacing: 6) {
+                    ForEach(Array(members.enumerated()), id: \.element.id) { index, member in
+                        HStack(spacing: 5) {
+                            MemberInitial(member: member, size: 16)
+                            Text("\(member.name) \(amounts[index] == 0 ? "–" : amounts[index].formatted())")
+                                .font(.footnote.monospacedDigit())
+                                .foregroundStyle(amounts[index] == 0 ? .secondary : .primary)
+                        }
+                        .accessibilityElement(children: .combine)
                     }
-                    .accessibilityElement(children: .combine)
                 }
-            }
-            if !isMonth && selected <= today {
-                Button("Edit My Day", systemImage: "pencil") { editDay(selected) }
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.top, 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if !isMonth && selected <= today {
+                    dayActions
+                }
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22))
+    }
+
+    /// Edit pill and the Completion Button for the selected day: logging matches the Overview,
+    /// and exact amounts and the private Day Note live behind Edit.
+    private var dayActions: some View {
+        let dateLabel = LocalDay.date(selected)?.formatted(date: .abbreviated, time: .omitted) ?? selected
+        return HStack(spacing: 10) {
+            Button { editDay(selected) } label: {
+                Image(systemName: "pencil")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(habit.tint)
+                    .frame(width: 44, height: 36)
+                    .background(habit.tint.opacity(0.15), in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Edit My Day")
+            .accessibilityHint("Set an exact amount or a private Day Note for \(dateLabel)")
+            CompletionButton(habit: habit, count: myCount(selected), action: { addToDay(selected) }, size: 40)
+                .accessibilityLabel(habit.counter == nil ? "My Completions on \(dateLabel): \(myCount(selected)) of \(habit.target)"
+                                    : "My amount on \(dateLabel): \(habit.progressText(myCount(selected)))")
+                .accessibilityIdentifier("shared-day-complete")
+        }
     }
 
     private var selectionTitle: String {

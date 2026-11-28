@@ -36,13 +36,15 @@ struct HabitDetailView: View {
                             metrics(for: habit)
                             if let state = model.sharedHabit(for: habit.id) {
                                 SharedTogetherSection(habit: habit, members: state.displayMembers(local: model.data),
-                                                      selected: $selected, editDay: editDayNote)
+                                                      selected: $selected,
+                                                      myCount: { model.data.day(habitID, $0).count },
+                                                      addToDay: incrementDay, editDay: editDayNote)
                             } else {
                                 MonthCalendar(habit: habit, data: model.data, month: $month, selected: $selected,
                                               select: incrementDay,
                                               edit: editDayNote)
+                                selectedDay(habit).id("selected-day-note")
                             }
-                            selectedDay(habit).id("selected-day-note")
                             if let state = model.sharedHabit(for: habit.id) {
                                 SharedHabitMembersSection(state: state)
                             }

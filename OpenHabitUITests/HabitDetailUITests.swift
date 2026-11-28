@@ -360,13 +360,10 @@ final class HabitDetailUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForExistence(timeout: 3), app.debugDescription)
         app.navigationBars["Edit Habit Day"].buttons["Cancel"].tap()
         XCTAssertTrue(app.navigationBars["Edit Habit Day"].waitForNonExistence(timeout: 5))
-        makeHittable(note)
-        if ProcessInfo.processInfo.environment["GENERATE_UI_GLOSSARY"] == "1" {
-            capture("glossary-inline-note")
-        }
+        XCTAssertFalse(note.exists, "Shared Habits edit Day Notes only through Edit My Day")
+        XCTAssertTrue(app.buttons["shared-day-complete"].exists, "The Share Bar card logs the selected day like the Overview")
         makeHittable(members)
-        XCTAssertLessThan(day.frame.minY, note.frame.minY)
-        XCTAssertLessThan(note.frame.minY, members.frame.minY)
+        XCTAssertLessThan(day.frame.minY, members.frame.minY)
         XCTAssertFalse(app.staticTexts["Invitations"].exists)
         XCTAssertFalse(app.buttons["Invite a Member"].exists)
         XCTAssertFalse(app.buttons["Stop Sharing"].exists)
